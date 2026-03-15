@@ -1,0 +1,13 @@
+# Bỏ qua các thư mục build của Visual Studio / .NET
+[Oo]bj/
+[Bb]in/
+.vs/
+*.user
+*.suo
+
+# Bỏ qua các file chứa cấu hình Database cá nhân của từng người
+appsettings.Development.json
+*.env
+
+# Bỏ qua thư mục chứa ảnh do người dùng upload lên (để không làm nặng GitHub)
+KarnelTravelGuide.Web/wwwroot/uploads/
