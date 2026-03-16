@@ -6,6 +6,7 @@
 *.suo
 
 # Bỏ qua các file chứa cấu hình Database cá nhân của từng người
+appsettings.json
 appsettings.Development.json
 *.env
 
