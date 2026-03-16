@@ -1,0 +1,33 @@
+@model KarnelTravelGuide.Web.Models.Entities.TouristSpot
+
+@{
+    ViewData["Title"] = "Confirm Delete";
+}
+
+<div class="card shadow-sm border-0 rounded-4 border-danger" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header bg-danger text-white pt-3 px-4 pb-3 border-0 rounded-top-4">
+        <h4 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Deletion</h4>
+    </div>
+    <div class="card-body p-4">
+        <p class="fs-5">Are you sure you want to delete <strong>@Model.SpotName</strong>?</p>
+        <p class="text-danger small"><i class="bi bi-info-circle me-1"></i> This action cannot be undone. Associated images will also be permanently deleted from the system.</p>
+        
+        <div class="bg-light p-3 rounded mb-4">
+            <dl class="row mb-0">
+                <dt class="col-sm-3 fw-semibold">Spot Name:</dt>
+                <dd class="col-sm-9">@Model.SpotName</dd>
+                
+                <dt class="col-sm-3 fw-semibold">Address:</dt>
+                <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Address) ? "N/A" : Model.Address)</dd>
+            </dl>
+        </div>
+
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="SpotId" />
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-light border"><i class="bi bi-x-circle me-1"></i> Cancel</a>
+                <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i> Yes, Delete it!</button>
+            </div>
+        </form>
+    </div>
+</div>

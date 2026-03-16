@@ -1,0 +1,42 @@
+@model KarnelTravelGuide.Web.Models.Entities.TouristSpot
+
+@{
+    ViewData["Title"] = "Tourist Spot Details";
+}
+
+<div class="card shadow-sm border-0 rounded-4" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header bg-white pt-4 px-4 pb-0 border-0">
+        <h4 class="fw-bold text-dark">Details: @Model.SpotName</h4>
+    </div>
+    <div class="card-body p-4">
+        <dl class="row mb-0">
+            <dt class="col-sm-3 fw-semibold">Spot Name</dt>
+            <dd class="col-sm-9">@Model.SpotName</dd>
+
+            <dt class="col-sm-3 fw-semibold">Address</dt>
+            <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Address) ? "Not updated" : Model.Address)</dd>
+
+            <dt class="col-sm-3 fw-semibold">Image</dt>
+            <dd class="col-sm-9">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl" alt="@Model.SpotName" style="max-width: 100%; height: auto; max-height: 300px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd;" />
+                }
+                else
+                {
+                    <span class="text-muted fst-italic">No image available</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3 fw-semibold mt-3">Description</dt>
+            <dd class="col-sm-9 mt-3">@(string.IsNullOrEmpty(Model.Description) ? "No description provided." : Model.Description)</dd>
+        </dl>
+    </div>
+    <div class="card-footer bg-white border-0 pt-0 pb-4 px-4 d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-light border"><i class="bi bi-arrow-left me-1"></i> Back to List</a>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.SpotId" class="btn btn-warning"><i class="bi bi-pencil-square me-1"></i> Edit</a>
+            <a asp-action="Delete" asp-route-id="@Model.SpotId" class="btn btn-danger"><i class="bi bi-trash me-1"></i> Delete</a>
+        </div>
+    </div>
+</div>

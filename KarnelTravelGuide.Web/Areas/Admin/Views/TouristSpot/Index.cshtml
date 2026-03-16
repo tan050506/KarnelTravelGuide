@@ -1,0 +1,95 @@
+@model IEnumerable<KarnelTravelGuide.Web.Models.Entities.TouristSpot>
+
+@{
+    ViewData["Title"] = "Tourist Spots Management";
+    int index = 1; // Biến đếm tạo số thứ tự ảo cho cột # (Giải quyết yêu cầu số 3)
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold text-dark mb-0">Tourist Spots</h4>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> Add New
+        </a>
+    </div>
+    
+    <div class="card-body p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Image</th>
+                        <th>Spot Name</th>
+                        <th>Address</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@(index++)</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl" alt="@item.SpotName" style="width: 80px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #dee2e6;" />
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary text-light fw-normal"><i class="bi bi-image"></i> No Image</span>
+                                    }
+                                </td>
+                                <td class="fw-bold text-primary">@item.SpotName</td>
+                                <td>@(string.IsNullOrEmpty(item.Address) ? "Not updated" : item.Address)</td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@item.SpotId" class="btn btn-sm btn-outline-info" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.SpotId" class="btn btn-sm btn-outline-warning mx-1" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.SpotId" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                No tourist spots found. Please add a new one!
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '@Html.Raw(TempData["SuccessMessage"])',
+                toast: true,
+                position: 'top', /* Sửa chỗ này thành 'top' để ra giữa */
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        });
+    </script>
+}

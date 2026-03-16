@@ -1,0 +1,74 @@
+@model KarnelTravelGuide.Web.Models.Entities.TouristSpot
+
+@{
+    ViewData["Title"] = "Edit Tourist Spot";
+}
+
+<div class="card shadow-sm border-0 rounded-4" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header bg-white pt-4 px-4 pb-0 border-0">
+        <h4 class="fw-bold text-dark">Edit Tourist Spot: @Model.SpotName</h4>
+    </div>
+    <div class="card-body p-4">
+        <form asp-action="Edit" enctype="multipart/form-data">
+            <input type="hidden" asp-for="SpotId" />
+            <input type="hidden" asp-for="ImageUrl" />
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3 rounded-3"></div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Spot Name <span class="text-danger">*</span></label>
+                <input asp-for="SpotName" class="form-control" required />
+                <span asp-validation-for="SpotName" class="text-danger small fw-semibold"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Address <span class="text-danger">*</span></label>
+                <input asp-for="Address" class="form-control" required />
+                <span asp-validation-for="Address" class="text-danger small fw-semibold"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Change Image</label>
+                <input type="file" name="imageFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
+                <div class="form-text text-muted small">Leave blank to keep the current image.</div>
+                
+                <div class="mt-3 text-center">
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <img id="imagePreview" src="@Model.ImageUrl" alt="Current Image" style="max-width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px dashed #ccc; padding: 5px;" />
+                    }
+                    else
+                    {
+                        <img id="imagePreview" src="#" alt="Image Preview" style="display:none; max-width: 100%; height: 200px; object-fit: cover; border-radius: 8px; border: 1px dashed #ccc; padding: 5px;" />
+                    }
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+                <textarea asp-for="Description" class="form-control" rows="4" required></textarea>
+                <span asp-validation-for="Description" class="text-danger small fw-semibold"></span>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-light border"><i class="bi bi-arrow-left me-1"></i> Back to List</a>
+                <button type="submit" class="btn btn-warning"><i class="bi bi-pencil-square me-1"></i> Update Spot</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function(){
+                var output = document.getElementById('imagePreview');
+                output.src = reader.result;
+                output.style.display = 'block';
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
+}
