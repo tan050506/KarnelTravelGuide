@@ -1,0 +1,116 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">Tổng quan hệ thống</h2>
+        <button class="btn btn-primary"><i class="bi bi-download me-2"></i>Xuất báo cáo</button>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-primary text-white h-100 shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-uppercase fw-semibold mb-1" style="font-size: 0.85rem; opacity: 0.8;">Khách hàng</p>
+                            <h2 class="fw-bold mb-0">@ViewBag.TotalUsers</h2>
+                        </div>
+                        <i class="bi bi-people-fill fs-1" style="opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-success text-white h-100 shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-uppercase fw-semibold mb-1" style="font-size: 0.85rem; opacity: 0.8;">Tổng doanh thu</p>
+                            <h2 class="fw-bold mb-0">@String.Format("{0:N0}", ViewBag.TotalRevenue) đ</h2>
+                        </div>
+                        <i class="bi bi-cash-stack fs-1" style="opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-warning text-dark h-100 shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-uppercase fw-semibold mb-1" style="font-size: 0.85rem; opacity: 0.8;">Hóa đơn Booking</p>
+                            <h2 class="fw-bold mb-0">@ViewBag.TotalBookings</h2>
+                        </div>
+                        <i class="bi bi-calendar-check-fill fs-1" style="opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-danger text-white h-100 shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-uppercase fw-semibold mb-1" style="font-size: 0.85rem; opacity: 0.8;">Phản hồi (Feedback)</p>
+                            <h2 class="fw-bold mb-0">@ViewBag.TotalFeedback</h2>
+                        </div>
+                        <i class="bi bi-chat-left-text-fill fs-1" style="opacity: 0.5;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+            <h5 class="fw-bold">Giao dịch mới nhất</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã Hóa Đơn</th>
+                            <th>Khách Hàng</th>
+                            <th>Ngày Đặt</th>
+                            <th>Tổng Tiền</th>
+                            <th>Trạng Thái</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold text-primary">#INV-1001</td>
+                            <td>Nguyễn Văn A</td>
+                            <td>16/03/2026</td>
+                            <td>1,500,000 đ</td>
+                            <td><span class="badge bg-success">Đã thanh toán</span></td>
+                            <td><a href="#" class="btn btn-sm btn-outline-secondary">Chi tiết</a></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-primary">#INV-1002</td>
+                            <td>Trần Thị B</td>
+                            <td>15/03/2026</td>
+                            <td>3,200,000 đ</td>
+                            <td><span class="badge bg-warning text-dark">Chờ thanh toán</span></td>
+                            <td><a href="#" class="btn btn-sm btn-outline-secondary">Chi tiết</a></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-primary">#INV-1003</td>
+                            <td>Lê Hoàng C</td>
+                            <td>15/03/2026</td>
+                            <td>850,000 đ</td>
+                            <td><span class="badge bg-danger">Đã hủy</span></td>
+                            <td><a href="#" class="btn btn-sm btn-outline-secondary">Chi tiết</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

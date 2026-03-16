@@ -1,4 +1,10 @@
+using KarnelTravelGuide.Web.Data; // Thay bằng đường dẫn chứa file ApplicationDbContext của bạn
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
