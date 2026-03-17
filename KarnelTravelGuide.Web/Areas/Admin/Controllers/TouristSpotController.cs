@@ -48,7 +48,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("SpotName,Address,Description")] TouristSpot touristSpot, IFormFile? imageFile)
         {
-            // 1. Kiểm tra bắt buộc nhập liệu thủ công (Vì Database cho phép null nhưng logic Web thì không)
+            // 1. Kiểm tra bắt buộc nhập liệu thủ công
             if (string.IsNullOrWhiteSpace(touristSpot.Address))
                 ModelState.AddModelError("Address", "Address cannot be empty.");
             
@@ -67,25 +67,30 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
 
             if (ModelState.IsValid)
             {
-                // (Giữ nguyên logic lưu ảnh vật lý vào wwwroot của bạn ở đây...)
-                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "touristspots");
-                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                if (imageFile != null) 
                 {
-                    await imageFile.CopyToAsync(fileStream);
-                }
+                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "touristspots");
+                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
-                touristSpot.ImageUrl = "/images/touristspots/" + uniqueFileName;
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await imageFile.CopyToAsync(fileStream);
+                    }
+
+                    touristSpot.ImageUrl = "/images/touristspots/" + uniqueFileName;
+                }
 
                 _context.Add(touristSpot);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Tourist spot added successfully!";
                 return RedirectToAction(nameof(Index));
             }
+            
+            // DÒNG NÀY RẤT QUAN TRỌNG ĐỂ KHẮC PHỤC LỖI CS0161
+            // Nếu có lỗi nhập liệu, trả lại chính Form đó kèm theo thông báo lỗi
             return View(touristSpot);
         }
 
