@@ -21,7 +21,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             // ViewBag.TotalRevenue = _context.Invoices.Sum(i => i.TotalAmount);
             // ViewBag.TotalBookings = _context.Invoices.Count();
             
-            // Dữ liệu mẫu (Mock data) để hiển thị giao diện trước
+
             ViewBag.TotalUsers = 125;
             ViewBag.TotalRevenue = 45500000; // 45.5 triệu VNĐ
             ViewBag.TotalBookings = 42;
