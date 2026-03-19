@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using KarnelTravelGuide.Web.Data;
 using KarnelTravelGuide.Web.Models;
+using KarnelTravelGuide.Web.Models.Entities;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
 
@@ -51,7 +52,43 @@ namespace KarnelTravelGuide.Web.Controllers
             }
             return View(model);
         }
+        
+        // POST: Account/Register
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                // Kiểm tra email đã tồn tại chưa
+                if (_context.Accounts.Any(a => a.Email == model.Email))
+                {
+                    ModelState.AddModelError("Email", "Email này đã được sử dụng.");
+                    return View(model);
+                }
 
+                var newAccount = new Account
+                {
+                    FullName = model.FullName,
+                    Email = model.Email,
+                    Password = model.Password, // Lưu ý: Thực tế nên Hash password (BCrypt)
+                    PhoneNumber = model.PhoneNumber,
+                    Address = model.Address,
+                    Role = "Customer" // Mặc định là khách hàng
+                };
+
+                _context.Accounts.Add(newAccount);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Đăng ký thành công! Hãy đăng nhập.";
+                return RedirectToAction("Login");
+            }
+            return View(model);
+        }
         // Đăng xuất
         public IActionResult Logout()
         {

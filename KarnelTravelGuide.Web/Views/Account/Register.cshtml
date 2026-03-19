@@ -1,0 +1,53 @@
+@model KarnelTravelGuide.Web.Models.RegisterViewModel
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <h3 class="text-center fw-bold mb-4">Tạo Tài Khoản</h3>
+                    <form asp-action="Register" method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Họ và Tên</label>
+                                <input asp-for="FullName" class="form-control" />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Số điện thoại</label>
+                                <input asp-for="PhoneNumber" class="form-control" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Địa chỉ</label>
+                            <input asp-for="Address" class="form-control" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Mật khẩu</label>
+                                <input asp-for="Password" class="form-control" type="password" />
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Xác nhận mật khẩu</label>
+                                <input asp-for="ConfirmPassword" class="form-control" type="password" />
+                                <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 rounded-3 py-2 fw-bold mt-3">Đăng ký</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
