@@ -1,0 +1,54 @@
+@model KarnelTravelGuide.Web.Models.Entities.Branch
+
+@{
+    ViewData["Title"] = "Cập nhật Chi Nhánh";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid p-0">
+    <h1 class="h3 mb-4 text-gray-800">Cập nhật Chi Nhánh: @Model.BranchName</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="BranchId" />
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="BranchName" class="form-label">Tên chi nhánh</label>
+                        <input asp-for="BranchName" class="form-control" placeholder="Nhập tên chi nhánh" required />
+                        <span asp-validation-for="BranchName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Address" class="form-label">Địa chỉ</label>
+                        <input asp-for="Address" class="form-control" placeholder="Nhập địa chỉ" required />
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="PhoneBranch" class="form-label">Số điện thoại</label>
+                        <input asp-for="PhoneBranch" class="form-control" placeholder="Nhập số điện thoại" required />
+                        <span asp-validation-for="PhoneBranch" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="EmailBranch" class="form-label">Email</label>
+                        <input asp-for="EmailBranch" class="form-control" type="email" placeholder="Nhập email chi nhánh" required />
+                        <span asp-validation-for="EmailBranch" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-warning text-dark">Lưu Thay Đổi</button>
+                    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
