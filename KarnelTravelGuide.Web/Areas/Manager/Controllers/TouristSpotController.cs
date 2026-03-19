@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using KarnelTravelGuide.Web.Data; // Thay bằng namespace chứa ApplicationDbContext của bạn nếu khác
 using KarnelTravelGuide.Web.Models.Entities;
 
-namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
+namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
-    [Area("Admin")]
+    [Area("Manager")]
     public class TouristSpotController : Controller
     {
         private readonly ApplicationDbContext _context;

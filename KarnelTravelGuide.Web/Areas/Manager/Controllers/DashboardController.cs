@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
+namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
-    [Area("Admin")] // Bắt buộc phải có thẻ này để hệ thống nhận diện
+    [Area("Manager")] 
     public class DashboardController : Controller
     {
         public IActionResult Index()
