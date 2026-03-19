@@ -13,13 +13,15 @@ public partial class Account
 
     public string Email { get; set; } = null!;
 
-    public string PhoneNumber { get; set; } = null!;
+    public string? PhoneNumber { get; set; }
 
     public string? Address { get; set; }
 
     public string? Role { get; set; }
 
     public int? BranchId { get; set; }
+
+    public string? AvatarUrl { get; set; }
 
     public virtual Branch? Branch { get; set; }
 

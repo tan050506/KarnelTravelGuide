@@ -3,17 +3,19 @@ using System.Collections.Generic;
 
 namespace KarnelTravelGuide.Web.Models.Entities;
 
-public partial class Hotel
+public partial class Stay
 {
-    public int HotelId { get; set; }
+    public int StayId { get; set; }
 
-    public int SpotId { get; set; }
+    public int? SpotId { get; set; }
 
-    public string HotelName { get; set; } = null!;
+    public string? Name { get; set; }
 
-    public string Address { get; set; } = null!;
+    public string? Address { get; set; }
 
     public int? StarRating { get; set; }
+
+    public string? StayType { get; set; }
 
     public string? Description { get; set; }
 
@@ -23,5 +25,5 @@ public partial class Hotel
 
     public virtual ICollection<Room> Rooms { get; set; } = new List<Room>();
 
-    public virtual TouristSpot Spot { get; set; } = null!;
+    public virtual TouristSpot? Spot { get; set; }
 }

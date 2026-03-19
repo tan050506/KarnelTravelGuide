@@ -7,23 +7,29 @@ public partial class Invoice
 {
     public int InvoiceId { get; set; }
 
-    public int AccountId { get; set; }
+    public int? AccountId { get; set; }
 
     public DateTime? CreatedDate { get; set; }
 
-    public decimal SubTotal { get; set; }
+    public decimal? SubTotal { get; set; }
 
     public decimal? DiscountAmount { get; set; }
 
-    public decimal FinalTotal { get; set; }
+    public int? RoomBookingId { get; set; }
+
+    public int? ResBookingId { get; set; }
+
+    public int? TicketBookingId { get; set; }
+
+    public decimal? FinalTotal { get; set; }
 
     public string? PaymentStatus { get; set; }
 
-    public virtual Account Account { get; set; } = null!;
+    public virtual Account? Account { get; set; }
 
-    public virtual ICollection<RestaurantBooking> RestaurantBookings { get; set; } = new List<RestaurantBooking>();
+    public virtual RestaurantBooking? ResBooking { get; set; }
 
-    public virtual ICollection<RoomBooking> RoomBookings { get; set; } = new List<RoomBooking>();
+    public virtual RoomBooking? RoomBooking { get; set; }
 
-    public virtual ICollection<TicketBooking> TicketBookings { get; set; } = new List<TicketBooking>();
+    public virtual TicketBooking? TicketBooking { get; set; }
 }

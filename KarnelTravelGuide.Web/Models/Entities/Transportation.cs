@@ -7,23 +7,23 @@ public partial class Transportation
 {
     public int TransportationId { get; set; }
 
-    public string TransportType { get; set; } = null!;
+    public string? TransportType { get; set; }
 
-    public int DepartureSpotId { get; set; }
+    public int? FromBranchId { get; set; }
 
-    public int DestinationSpotId { get; set; }
+    public int? ToSpotId { get; set; }
 
-    public DateTime DepartureTime { get; set; }
+    public DateTime? DepartureTime { get; set; }
 
-    public decimal PriceTransport { get; set; }
+    public decimal? PriceTransport { get; set; }
 
     public string? Description { get; set; }
 
     public string? ImageUrl { get; set; }
 
-    public virtual TouristSpot DepartureSpot { get; set; } = null!;
-
-    public virtual TouristSpot DestinationSpot { get; set; } = null!;
+    public virtual Branch? FromBranch { get; set; }
 
     public virtual ICollection<TicketBooking> TicketBookings { get; set; } = new List<TicketBooking>();
+
+    public virtual TouristSpot? ToSpot { get; set; }
 }

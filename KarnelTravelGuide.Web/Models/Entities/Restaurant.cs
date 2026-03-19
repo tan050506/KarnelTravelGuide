@@ -7,13 +7,13 @@ public partial class Restaurant
 {
     public int RestaurantId { get; set; }
 
-    public int SpotId { get; set; }
+    public int? SpotId { get; set; }
 
-    public string RestaurantName { get; set; } = null!;
+    public string? RestaurantName { get; set; }
 
-    public string Address { get; set; } = null!;
+    public string? Address { get; set; }
 
-    public decimal PriceRes { get; set; }
+    public decimal? PriceRes { get; set; }
 
     public int? StarRating { get; set; }
 
@@ -25,5 +25,5 @@ public partial class Restaurant
 
     public virtual ICollection<RestaurantBooking> RestaurantBookings { get; set; } = new List<RestaurantBooking>();
 
-    public virtual TouristSpot Spot { get; set; } = null!;
+    public virtual TouristSpot? Spot { get; set; }
 }

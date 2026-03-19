@@ -13,15 +13,15 @@ public partial class TouristSpot
 
     public string? Description { get; set; }
 
+    public int? BranchId { get; set; }
+
     public string? ImageUrl { get; set; }
 
-    public virtual ICollection<Hotel> Hotels { get; set; } = new List<Hotel>();
-
-    public virtual ICollection<Resort> Resorts { get; set; } = new List<Resort>();
+    public virtual Branch? Branch { get; set; }
 
     public virtual ICollection<Restaurant> Restaurants { get; set; } = new List<Restaurant>();
 
-    public virtual ICollection<Transportation> TransportationDepartureSpots { get; set; } = new List<Transportation>();
+    public virtual ICollection<Stay> Stays { get; set; } = new List<Stay>();
 
-    public virtual ICollection<Transportation> TransportationDestinationSpots { get; set; } = new List<Transportation>();
+    public virtual ICollection<Transportation> Transportations { get; set; } = new List<Transportation>();
 }
