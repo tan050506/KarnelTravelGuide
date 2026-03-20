@@ -44,6 +44,10 @@ namespace KarnelTravelGuide.Web.Controllers
                     {
                         return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
                     }
+                    else if (user.Role == "Manager")
+                    {
+                        return RedirectToAction("Index", "Dashboard", new { area = "Manager" });
+                    }
                     
                     return RedirectToAction("Index", "Home");
                 }
