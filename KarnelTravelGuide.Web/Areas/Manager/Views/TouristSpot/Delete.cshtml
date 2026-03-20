@@ -1,32 +1,24 @@
 @model KarnelTravelGuide.Web.Models.Entities.TouristSpot
-
 @{
-    ViewData["Title"] = "Confirm Delete";
+    ViewData["Title"] = "Delete Tourist Spot";
 }
 
-<div class="card shadow-sm border-0 rounded-4 border-danger" style="max-width: 800px; margin: 0 auto;">
-    <div class="card-header bg-danger text-white pt-3 px-4 pb-3 border-0 rounded-top-4">
-        <h4 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Deletion</h4>
-    </div>
-    <div class="card-body p-4">
-        <p class="fs-5">Are you sure you want to delete <strong>@Model.SpotName</strong>?</p>
-        <p class="text-danger small"><i class="bi bi-info-circle me-1"></i> This action cannot be undone. Associated images will also be permanently deleted from the system.</p>
-        
-        <div class="bg-light p-3 rounded mb-4">
-            <dl class="row mb-0">
-                <dt class="col-sm-3 fw-semibold">Spot Name:</dt>
-                <dd class="col-sm-9">@Model.SpotName</dd>
-                
-                <dt class="col-sm-3 fw-semibold">Address:</dt>
-                <dd class="col-sm-9">@(string.IsNullOrEmpty(Model.Address) ? "N/A" : Model.Address)</dd>
-            </dl>
+<div class="card shadow border-danger border-2 rounded-4" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-body p-5 text-center">
+        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>
+        <h3 class="fw-bold text-dark mt-3">Are you sure?</h3>
+        <p class="text-muted">You are about to delete <strong>@Model.SpotName</strong>. This action cannot be undone and the associated image will also be permanently removed.</p>
+
+        <div class="bg-light p-3 rounded-3 text-start mb-4">
+            <p class="mb-1"><i class="bi bi-geo-alt text-danger me-2"></i><strong>Location:</strong> @Model.Address</p>
+            <p class="mb-0"><i class="bi bi-building text-info me-2"></i><strong>Branch:</strong> @Model.Branch?.BranchName</p>
         </div>
 
-        <form asp-action="Delete">
+        <form asp-action="Delete" method="post">
             <input type="hidden" asp-for="SpotId" />
-            <div class="d-flex justify-content-between">
-                <a asp-action="Index" class="btn btn-light border"><i class="bi bi-x-circle me-1"></i> Cancel</a>
-                <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i> Yes, Delete it!</button>
+            <div class="d-flex justify-content-center gap-3">
+                <a asp-action="Index" class="btn btn-light border px-4">Cancel</a>
+                <button type="submit" class="btn btn-danger px-4"><i class="bi bi-trash me-1"></i> Yes, Delete it!</button>
             </div>
         </form>
     </div>

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using KarnelTravelGuide.Web.Data; // Thay bằng namespace chứa ApplicationDbContext của bạn nếu khác
+using KarnelTravelGuide.Web.Data;
 using KarnelTravelGuide.Web.Models.Entities;
 
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
@@ -17,84 +17,91 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // GET: Admin/TouristSpot
-        public async Task<IActionResult> Index()
+        // HÀM GIẢ LẬP: Lấy Branch hiện tại của Manager (Sau này sẽ thay bằng lấy từ Session/User.Identity)
+        private async Task<Branch> GetCurrentManagerBranchAsync()
         {
-            var spots = await _context.TouristSpots.ToListAsync();
-            return View(spots);
+            var branch = await _context.Branches.FirstOrDefaultAsync();
+            if (branch == null)
+            {
+                // Nếu chưa có Branch nào trong DB, tự tạo 1 cái để test không bị lỗi
+                branch = new Branch { BranchName = "Central Branch (Auto-generated)", PhoneBranch = "1900-0000" };
+                _context.Branches.Add(branch);
+                await _context.SaveChangesAsync();
+            }
+            return branch;
         }
 
-        // GET: Admin/TouristSpot/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // 1. GET: Danh sách & Tìm kiếm
+        public async Task<IActionResult> Index(string searchString)
         {
-            if (id == null) return NotFound();
+            var currentBranch = await GetCurrentManagerBranchAsync();
+            ViewData["CurrentFilter"] = searchString;
 
-            var touristSpot = await _context.TouristSpots
-                .FirstOrDefaultAsync(m => m.SpotId == id);
+            // Chỉ lấy điểm du lịch thuộc Branch của Manager này
+            var spots = _context.TouristSpots
+                .Where(t => t.BranchId == currentBranch.BranchId)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                spots = spots.Where(s => s.SpotName.Contains(searchString) || s.Address.Contains(searchString));
+            }
+
+            return View(await spots.ToListAsync());
+        }
+
+        // 2. GET: Create
+        public async Task<IActionResult> Create()
+        {
+            var currentBranch = await GetCurrentManagerBranchAsync();
+            // Truyền thông tin Branch ra View để hiển thị Read-only
+            ViewBag.BranchName = currentBranch.BranchName;
+            ViewBag.BranchId = currentBranch.BranchId;
             
-            if (touristSpot == null) return NotFound();
-
-            return View(touristSpot);
-        }
-
-        // GET: Admin/TouristSpot/Create
-        public IActionResult Create()
-        {
             return View();
         }
 
-        // POST: Admin/TouristSpot/Create
+        // 3. POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("SpotName,Address,Description")] TouristSpot touristSpot, IFormFile? imageFile)
+        public async Task<IActionResult> Create([Bind("SpotName,Address,Description,BranchId")] TouristSpot touristSpot, IFormFile? imageFile)
         {
-            // 1. Kiểm tra bắt buộc nhập liệu thủ công
-            if (string.IsNullOrWhiteSpace(touristSpot.Address))
-                ModelState.AddModelError("Address", "Address cannot be empty.");
-            
-            if (string.IsNullOrWhiteSpace(touristSpot.Description))
-                ModelState.AddModelError("Description", "Description cannot be empty.");
-            
-            // Bắt buộc phải có ảnh khi tạo mới
-            if (imageFile == null || imageFile.Length == 0)
-                ModelState.AddModelError(string.Empty, "You must upload an image for the tourist spot.");
+            if (string.IsNullOrWhiteSpace(touristSpot.SpotName)) ModelState.AddModelError("SpotName", "Spot Name is required.");
+            if (imageFile == null || imageFile.Length == 0) ModelState.AddModelError(string.Empty, "Image is required.");
 
-            ModelState.Remove("Hotels");
-            ModelState.Remove("Resorts");
+            ModelState.Remove("Branch"); // Bỏ qua validate khóa ngoại
             ModelState.Remove("Restaurants");
-            ModelState.Remove("TransportationDepartureSpots");
-            ModelState.Remove("TransportationDestinationSpots");
+            ModelState.Remove("Stays");
+            ModelState.Remove("Transportations");
 
             if (ModelState.IsValid)
             {
-                if (imageFile != null) 
+                // Upload ảnh
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "touristspots");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile!.FileName;
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
                 {
-                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "touristspots");
-                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await imageFile.CopyToAsync(fileStream);
-                    }
-
-                    touristSpot.ImageUrl = "/images/touristspots/" + uniqueFileName;
+                    await imageFile.CopyToAsync(fileStream);
                 }
 
+                touristSpot.ImageUrl = "/images/touristspots/" + uniqueFileName;
                 _context.Add(touristSpot);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Tourist spot added successfully!";
                 return RedirectToAction(nameof(Index));
             }
-            
-            // DÒNG NÀY RẤT QUAN TRỌNG ĐỂ KHẮC PHỤC LỖI CS0161
-            // Nếu có lỗi nhập liệu, trả lại chính Form đó kèm theo thông báo lỗi
+
+            // Nếu lỗi, load lại BranchName
+            var currentBranch = await GetCurrentManagerBranchAsync();
+            ViewBag.BranchName = currentBranch.BranchName;
             return View(touristSpot);
         }
 
-        // GET: Admin/TouristSpot/Edit/5
+        // 4. GET: Edit
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -102,49 +109,38 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var touristSpot = await _context.TouristSpots.FindAsync(id);
             if (touristSpot == null) return NotFound();
 
+            var currentBranch = await GetCurrentManagerBranchAsync();
+            ViewBag.BranchName = currentBranch.BranchName;
             return View(touristSpot);
         }
 
-        // POST: Admin/TouristSpot/Edit/5
+        // 5. POST: Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("SpotId,SpotName,Address,Description,ImageUrl")] TouristSpot touristSpot, IFormFile? imageFile)
+        public async Task<IActionResult> Edit(int id, [Bind("SpotId,SpotName,Address,Description,ImageUrl,BranchId")] TouristSpot touristSpot, IFormFile? imageFile)
         {
             if (id != touristSpot.SpotId) return NotFound();
 
-            // Kiểm tra bắt buộc Address và Description
-            if (string.IsNullOrWhiteSpace(touristSpot.Address))
-                ModelState.AddModelError("Address", "Address cannot be empty.");
-            
-            if (string.IsNullOrWhiteSpace(touristSpot.Description))
-                ModelState.AddModelError("Description", "Description cannot be empty.");
-
-            // Lưu ý ở trang Edit: Không bắt buộc chọn file ảnh nếu đã có ảnh cũ (ImageUrl không rỗng)
-            if ((imageFile == null || imageFile.Length == 0) && string.IsNullOrWhiteSpace(touristSpot.ImageUrl))
-                ModelState.AddModelError(string.Empty, "You must have an image for this spot.");
-
-            ModelState.Remove("Hotels");
-            ModelState.Remove("Resorts");
+            ModelState.Remove("Branch");
             ModelState.Remove("Restaurants");
-            ModelState.Remove("TransportationDepartureSpots");
-            ModelState.Remove("TransportationDestinationSpots");
+            ModelState.Remove("Stays");
+            ModelState.Remove("Transportations");
 
             if (ModelState.IsValid)
             {
-                // (Giữ nguyên logic cập nhật ảnh và DB của bạn ở đây...)
                 try
                 {
                     if (imageFile != null && imageFile.Length > 0)
                     {
+                        // Xóa ảnh cũ
                         if (!string.IsNullOrEmpty(touristSpot.ImageUrl))
                         {
                             string oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, touristSpot.ImageUrl.TrimStart('/'));
                             if (System.IO.File.Exists(oldImagePath)) System.IO.File.Delete(oldImagePath);
                         }
 
+                        // Lưu ảnh mới
                         string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "touristspots");
-                        if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
                         string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
                         string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
@@ -166,23 +162,41 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+            
+            var currentBranch = await GetCurrentManagerBranchAsync();
+            ViewBag.BranchName = currentBranch.BranchName;
             return View(touristSpot);
         }
 
-        // GET: Admin/TouristSpot/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        // 6. GET: Details (Trang Read)
+        public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
 
             var touristSpot = await _context.TouristSpots
+                .Include(t => t.Branch) // Load thêm tên Branch để hiển thị
                 .FirstOrDefaultAsync(m => m.SpotId == id);
-                
+
             if (touristSpot == null) return NotFound();
 
             return View(touristSpot);
         }
 
-        // POST: Admin/TouristSpot/Delete/5
+        // 7. GET: Delete (Trang Hỏi xác nhận Xóa)
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var touristSpot = await _context.TouristSpots
+                .Include(t => t.Branch)
+                .FirstOrDefaultAsync(m => m.SpotId == id);
+
+            if (touristSpot == null) return NotFound();
+
+            return View(touristSpot);
+        }
+
+        // 8. POST: Delete (Xử lý Xóa thật trong Database)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -190,21 +204,16 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var touristSpot = await _context.TouristSpots.FindAsync(id);
             if (touristSpot != null)
             {
-                // XÓA ẢNH VẬT LÝ TRONG WWWROOT KHI XÓA ĐỊA ĐIỂM
+                // Xóa file ảnh trong thư mục
                 if (!string.IsNullOrEmpty(touristSpot.ImageUrl))
                 {
                     string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, touristSpot.ImageUrl.TrimStart('/'));
-                    if (System.IO.File.Exists(imagePath))
-                    {
-                        System.IO.File.Delete(imagePath);
-                    }
+                    if (System.IO.File.Exists(imagePath)) System.IO.File.Delete(imagePath);
                 }
-
                 _context.TouristSpots.Remove(touristSpot);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Tourist spot deleted successfully!";
             }
-            
             return RedirectToAction(nameof(Index));
         }
 
