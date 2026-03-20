@@ -7,17 +7,20 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; }
+        /* ĐÃ SỬA: Thêm overflow-x: hidden để cấm cuộn ngang */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; overflow-x: hidden; }
         .sidebar { min-height: 100vh; background-color: #1e293b; color: #cbd5e1; }
         .sidebar a { color: #cbd5e1; text-decoration: none; padding: 10px 20px; display: flex; align-items: center; transition: all 0.3s; font-size: 0.95rem; }
         .sidebar a:hover, .sidebar a.active { background-color: #334155; color: #fff; border-left: 4px solid #3b82f6; }
         .section-title { font-size: 0.75rem; letter-spacing: 1px; color: #64748b; margin: 20px 20px 10px 20px; font-weight: 700; text-transform: uppercase; }
-        .content-area { width: 100%; }
+        
+        /* ĐÃ XÓA dòng .content-area { width: 100%; } gây lỗi tràn viền */
+        
         .top-navbar { background-color: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-    <div class="d-flex">
+    <div class="d-flex w-100">
         <div class="sidebar col-md-2 p-0 flex-shrink-0 shadow-sm">
             <div class="text-center py-4 border-bottom border-secondary">
                 <h5 class="m-0 text-white fw-bold"><i class="bi bi-briefcase-fill text-primary me-2"></i>MANAGER</h5>
@@ -27,19 +30,19 @@
                 <a asp-area="Manager" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-grid-1x2-fill me-3"></i> Dashboard</a>
                 
                 <div class="section-title">Data Management</div>
-                <a asp-area="Manager" asp-controller="TouristSpot" asp-action="Index"><i class="bi bi-map me-3"></i> Tourist Spots</a>
+                <a asp-area="Manager" asp-controller="TouristSpot" asp-action="Index"><i class="bi bi-map me-3"></i> Tourist Spot</a>
                 <a asp-area="Manager" asp-controller="Transportation" asp-action="Index"><i class="bi bi-bus-front me-3"></i> Transportation</a>
-                <a asp-area="Manager" asp-controller="Stay" asp-action="Index"><i class="bi bi-buildings me-3"></i> Stays</a>
-                <a asp-area="Manager" asp-controller="Restaurant" asp-action="Index"><i class="bi bi-shop me-3"></i> Restaurants</a>
+                <a asp-area="Manager" asp-controller="Stay" asp-action="Index"><i class="bi bi-buildings me-3"></i> Stay</a>
+                <a asp-area="Manager" asp-controller="Restaurant" asp-action="Index"><i class="bi bi-shop me-3"></i> Restaurant</a>
 
                 <div class="section-title">Booking Management</div>
-                <a asp-area="Manager" asp-controller="RoomBooking" asp-action="Index"><i class="bi bi-door-open me-3"></i> Room Bookings</a>
-                <a asp-area="Manager" asp-controller="RestaurantBooking" asp-action="Index"><i class="bi bi-cup-hot me-3"></i> Table Reservations</a>
-                <a asp-area="Manager" asp-controller="TicketBooking" asp-action="Index"><i class="bi bi-ticket-detailed me-3"></i> Ticket Bookings</a>
+                <a asp-area="Manager" asp-controller="RoomBooking" asp-action="Index"><i class="bi bi-door-open me-3"></i> Room Booking</a>
+                <a asp-area="Manager" asp-controller="RestaurantBooking" asp-action="Index"><i class="bi bi-cup-hot me-3"></i> Table Reservation</a>
+                <a asp-area="Manager" asp-controller="TicketBooking" asp-action="Index"><i class="bi bi-ticket-detailed me-3"></i> Ticket Booking</a>
 
                 <div class="section-title">Operations & Support</div>
-                <a asp-area="Manager" asp-controller="Invoice" asp-action="Index" class="text-warning fw-bold"><i class="bi bi-receipt-cutoff me-3"></i> Invoice Processing</a>
-                <a asp-area="Manager" asp-controller="Feedback" asp-action="Index"><i class="bi bi-chat-right-text me-3"></i> Customer Feedback</a>
+                <a asp-area="Manager" asp-controller="Invoice" asp-action="Index" class="text-warning fw-bold"><i class="bi bi-receipt-cutoff me-3"></i> Invoice</a>
+                <a asp-area="Manager" asp-controller="Feedback" asp-action="Index"><i class="bi bi-chat-right-text me-3"></i> Feedback</a>
                 
                 <div class="mt-4 border-top border-secondary pt-3">
                     <a href="/Home/Index" class="text-danger"><i class="bi bi-box-arrow-left me-3"></i> Logout</a>
@@ -47,7 +50,7 @@
             </div>
         </div>
 
-        <div class="content-area col-md-10 d-flex flex-column">
+        <div class="content-area col-md-10 px-0 d-flex flex-column">
             <div class="top-navbar px-4 py-3 d-flex justify-content-between align-items-center mb-4">
                 <h5 class="m-0 text-dark fw-semibold">@ViewData["Title"]</h5>
                 <div class="d-flex align-items-center">
@@ -55,7 +58,7 @@
                 </div>
             </div>
             
-            <div class="container-fluid px-4 flex-grow-1">
+            <div class="container px-4 flex-grow-1" style="max-width: 1400px;">
                 @RenderBody()
             </div>
             

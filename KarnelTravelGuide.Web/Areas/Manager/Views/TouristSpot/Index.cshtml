@@ -1,6 +1,6 @@
 @model IEnumerable<KarnelTravelGuide.Web.Models.Entities.TouristSpot>
 @{
-    ViewData["Title"] = "Tourist Spots Management";
+    ViewData["Title"] = "Tourist Spot Management";
     int index = 1;
 }
 
@@ -19,15 +19,16 @@
 
 <div class="card shadow-sm border-0 rounded-4">
     <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+        <div class="table-responsive overflow-hidden">
+            <table class="table table-hover align-middle mb-0 w-100" style="table-layout: fixed;">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4">#</th>
-                        <th>Image</th>
-                        <th>Spot Name</th>
-                        <th>Address</th>
-                        <th class="text-end pe-4">Actions</th>
+                        <th class="text-center" style="width: 5%;">#</th>
+                        <th class="text-center" style="width: 12%;">Image</th>
+                        <th style="width: 23%;">Spot Name</th>
+                        <th class="text-center" style="width: 15%;">Branch</th>
+                        <th style="width: 30%;">Address</th>
+                        <th class="text-center" style="width: 15%;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -36,17 +37,19 @@
                         foreach (var item in Model)
                         {
                             <tr>
-                                <td class="ps-4 fw-bold text-muted">@(index++)</td>
-                                <td>
+                                <td class="fw-bold text-muted text-center">@(index++)</td>
+                                <td class="text-center">
                                     @if (!string.IsNullOrEmpty(item.ImageUrl))
                                     {
-                                        <img src="@item.ImageUrl" style="width: 70px; height: 50px; object-fit: cover; border-radius: 6px;" />
+                                        <img src="@item.ImageUrl" style="width: 80px; height: 50px; object-fit: cover; border-radius: 6px;" />
                                     }
                                 </td>
-                                <td class="fw-bold text-primary">@item.SpotName</td>
-                                <td><i class="bi bi-geo-alt text-danger small"></i> @item.Address</td>
-                                <td class="text-end pe-4">
-                                    <a asp-action="Detail" asp-route-id="@item.SpotId" class="btn btn-sm btn-outline-info" title="View Detail"><i class="bi bi-eye"></i></a>
+                                <td class="fw-bold text-primary text-truncate" title="@item.SpotName">@item.SpotName</td>
+                                <td class="text-center"><span class="badge bg-info text-dark">@item.Branch?.BranchName</span></td>
+                                <td class="text-truncate" title="@item.Address"><i class="bi bi-geo-alt text-danger small"></i> @item.Address</td>
+                                
+                                <td class="text-center">
+                                    <a asp-action="Details" asp-route-id="@item.SpotId" class="btn btn-sm btn-outline-info" title="View Details"><i class="bi bi-eye"></i></a>
                                     <a asp-action="Edit" asp-route-id="@item.SpotId" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil-square"></i></a>
                                     <a asp-action="Delete" asp-route-id="@item.SpotId" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
                                 </td>
@@ -55,7 +58,7 @@
                     }
                     else
                     {
-                        <tr><td colspan="5" class="text-center py-4 text-muted">No tourist spots found in your branch.</td></tr>
+                        <tr><td colspan="6" class="text-center py-4 text-muted">No tourist spots found in your branch.</td></tr>
                     }
                 </tbody>
             </table>

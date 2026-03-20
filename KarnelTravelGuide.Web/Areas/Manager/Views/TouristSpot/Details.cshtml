@@ -9,33 +9,39 @@
         <span class="badge bg-info text-dark px-3 py-2">@Model.Branch?.BranchName</span>
     </div>
     <div class="card-body p-4">
-        <div class="row">
-            <div class="col-md-5 text-center mb-3 mb-md-0">
+        <div class="row align-items-center">
+            <div class="col-md-5 text-center mb-4 mb-md-0">
                 @if (!string.IsNullOrEmpty(Model.ImageUrl))
                 {
-                    <img src="@Model.ImageUrl" class="img-fluid rounded-3 shadow-sm" alt="@Model.SpotName" style="max-height: 250px; object-fit: cover;" />
+                    <img src="@Model.ImageUrl" class="img-fluid rounded-3 shadow-sm border" alt="@Model.SpotName" style="max-height: 280px; width: 100%; object-fit: cover;" />
                 }
                 else
                 {
-                    <div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="height: 250px;">
-                        <span class="text-muted">No Image Available</span>
+                    <div class="bg-light rounded-3 d-flex align-items-center justify-content-center border" style="height: 280px; width: 100%;">
+                        <div class="text-muted">
+                            <i class="bi bi-image text-secondary d-block mb-2" style="font-size: 3rem;"></i>
+                            <span>No Image Available</span>
+                        </div>
                     </div>
                 }
             </div>
-            <div class="col-md-7">
+            <div class="col-md-7 ps-md-4">
                 <h3 class="fw-bold text-dark mb-3">@Model.SpotName</h3>
-                <p class="text-muted mb-2"><i class="bi bi-geo-alt-fill text-danger me-2"></i><strong>Address:</strong> @Model.Address</p>
-                <hr />
-                <p class="fw-semibold mb-1">Description:</p>
-                <p class="text-secondary" style="white-space: pre-line;">@(string.IsNullOrEmpty(Model.Description) ? "No description provided." : Model.Description)</p>
+                <div class="mb-3">
+                    <i class="bi bi-geo-alt-fill text-danger fs-5 me-2 align-middle"></i>
+                    <span class="fs-6 text-dark">@Model.Address</span>
+                </div>
+                <hr class="text-muted opacity-25" />
+                <h6 class="fw-bold text-secondary mb-2">Description:</h6>
+                <p class="text-dark" style="white-space: pre-line; line-height: 1.6;">@(string.IsNullOrEmpty(Model.Description) ? "No description provided." : Model.Description)</p>
             </div>
         </div>
     </div>
     <div class="card-footer bg-light px-4 py-3 border-0 rounded-bottom-4 d-flex justify-content-between">
-        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Back to List</a>
+        <a asp-action="Index" class="btn btn-outline-secondary fw-semibold"><i class="bi bi-arrow-left me-1"></i> Back to List</a>
         <div>
-            <a asp-action="Edit" asp-route-id="@Model.SpotId" class="btn btn-primary me-2"><i class="bi bi-pencil-square me-1"></i> Edit</a>
-            <a asp-action="Delete" asp-route-id="@Model.SpotId" class="btn btn-danger"><i class="bi bi-trash me-1"></i> Delete</a>
+            <a asp-action="Edit" asp-route-id="@Model.SpotId" class="btn btn-primary fw-semibold me-2"><i class="bi bi-pencil-square me-1"></i> Edit</a>
+            <a asp-action="Delete" asp-route-id="@Model.SpotId" class="btn btn-danger fw-semibold"><i class="bi bi-trash me-1"></i> Delete</a>
         </div>
     </div>
 </div>
