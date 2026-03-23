@@ -4,47 +4,56 @@ using KarnelTravelGuide.Web.Models;
 using KarnelTravelGuide.Web.Models.Entities;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
+using System;
+using Microsoft.EntityFrameworkCore; // Bắt buộc phải có để dùng .Include()
 
 namespace KarnelTravelGuide.Web.Controllers
 {
     public class AccountController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public AccountController(ApplicationDbContext context)
+        public AccountController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
-        // Hiển thị trang Login
         [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
 
-        // Xử lý khi nhấn nút Đăng nhập
         [HttpPost]
         public IActionResult Login(LoginViewModel model)
         {
             if (ModelState.IsValid)
             {
-                // So sánh Email và Password (tạm thời so sánh chuỗi gốc theo DB của bạn)
-                var user = _context.Accounts.FirstOrDefault(a => a.Email == model.Email && a.Password == model.Password);
+                // SỬA: Thêm .Include(a => a.Role) để lấy tên Quyền
+                var user = _context.Accounts
+                    .Include(a => a.Role) 
+                    .FirstOrDefault(a => a.Email == model.Email && a.Password == model.Password);
                 
                 if (user != null)
                 {
-                    // Lưu thông tin người dùng vào Session
-                    HttpContext.Session.SetString("UserName", user.FullName);
-                    HttpContext.Session.SetString("UserRole", user.Role ?? "Customer");
+                    HttpContext.Session.SetString("UserName", user.FullName ?? "");
+                    
+                    // SỬA: Lấy RoleName thay vì Role
+                    string userRoleName = user.Role?.RoleName ?? "Customer";
+                    HttpContext.Session.SetString("UserRole", userRoleName);
                     HttpContext.Session.SetInt32("UserId", user.AccountId);
 
-                    // Phân quyền: Nếu là Admin thì vào trang quản trị
-                    if (user.Role == "Admin")
+                    // SỬA: So sánh RoleName
+                    if (userRoleName == "Admin")
                     {
                         return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
                     }
-                    else if (user.Role == "Manager")
+                    else if (userRoleName == "Manager")
                     {
                         return RedirectToAction("Index", "Dashboard", new { area = "Manager" });
                     }
@@ -57,32 +66,35 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(model);
         }
         
-        // POST: Account/Register
         [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
+
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
-                // Kiểm tra email đã tồn tại chưa
                 if (_context.Accounts.Any(a => a.Email == model.Email))
                 {
                     ModelState.AddModelError("Email", "Email này đã được sử dụng.");
                     return View(model);
                 }
 
+                // SỬA: Tìm RoleId của Customer
+                var customerRole = _context.Roles.FirstOrDefault(r => r.RoleName == "Customer");
+
                 var newAccount = new Account
                 {
                     FullName = model.FullName,
                     Email = model.Email,
-                    Password = model.Password, // Lưu ý: Thực tế nên Hash password (BCrypt)
+                    Password = model.Password,
                     PhoneNumber = model.PhoneNumber,
                     Address = model.Address,
-                    Role = "Customer" // Mặc định là khách hàng
+                    // SỬA: Gán RoleId thay vì gán chuỗi Role = "Customer"
+                    RoleId = customerRole != null ? customerRole.RoleId : 3 
                 };
 
                 _context.Accounts.Add(newAccount);
@@ -93,7 +105,61 @@ namespace KarnelTravelGuide.Web.Controllers
             }
             return View(model);
         }
-        // Đăng xuất
+
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null) return RedirectToAction("Login");
+
+            var user = await _context.Accounts.FindAsync(userId);
+            if (user == null) return RedirectToAction("Login");
+
+            return View(user);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(Account model, IFormFile? avatarFile, string? newPassword)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null) return RedirectToAction("Login");
+
+            var user = await _context.Accounts.FindAsync(userId);
+            if (user == null) return RedirectToAction("Login");
+
+            user.FullName = model.FullName;
+            user.PhoneNumber = model.PhoneNumber;
+            user.Address = model.Address;
+
+            if (!string.IsNullOrWhiteSpace(newPassword))
+            {
+                user.Password = newPassword;
+            }
+
+            if (avatarFile != null && avatarFile.Length > 0)
+            {
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "avatars");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + avatarFile.FileName;
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await avatarFile.CopyToAsync(fileStream);
+                }
+                user.AvatarUrl = "/images/avatars/" + uniqueFileName;
+            }
+
+            _context.Update(user);
+            await _context.SaveChangesAsync();
+
+            HttpContext.Session.SetString("UserName", user.FullName ?? "");
+            TempData["SuccessMessage"] = "Profile updated successfully!";
+            return RedirectToAction("Profile");
+        }
+
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();

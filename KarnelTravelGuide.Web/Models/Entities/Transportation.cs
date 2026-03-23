@@ -7,6 +7,8 @@ public partial class Transportation
 {
     public int TransportationId { get; set; }
 
+    public string? TransportName { get; set; }
+
     public string? TransportType { get; set; }
 
     public int? FromBranchId { get; set; }
@@ -20,8 +22,6 @@ public partial class Transportation
     public string? Description { get; set; }
 
     public string? ImageUrl { get; set; }
-
-    public string? TransportName { get; set; }
 
     public virtual Branch? FromBranch { get; set; }
 

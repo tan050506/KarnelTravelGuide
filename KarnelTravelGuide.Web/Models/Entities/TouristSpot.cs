@@ -7,15 +7,15 @@ public partial class TouristSpot
 {
     public int SpotId { get; set; }
 
-    public string SpotName { get; set; } = null!;
+    public string? SpotName { get; set; }
 
     public string? Address { get; set; }
 
     public string? Description { get; set; }
 
-    public int? BranchId { get; set; }
-
     public string? ImageUrl { get; set; }
+
+    public int? BranchId { get; set; }
 
     public virtual Branch? Branch { get; set; }
 

@@ -33,9 +33,9 @@
                             <td class="align-middle">@item.Email</td>
                             <td class="align-middle">@item.PhoneNumber</td>
                             <td class="align-middle">
-                                @if(item.Role == "Admin") {
+                                @if(item.Role?.RoleName == "Admin") {
                                     <span class="badge bg-danger">Admin</span>
-                                } else if(item.Role == "Manager") {
+                                } else if(item.Role?.RoleName == "Manager") {
                                     <span class="badge bg-warning text-dark">Manager</span>
                                 } else {
                                     <span class="badge bg-success">Customer</span>

@@ -13,8 +13,6 @@ public partial class Feedback
 
     public int? RestaurantId { get; set; }
 
-    public int? StarRating { get; set; }
-
     public string? Message { get; set; }
 
     public string? ReplyMessage { get; set; }

@@ -21,7 +21,10 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
         // GET: /Admin/Account/Index
         public async Task<IActionResult> Index()
         {
-            var accounts = await _context.Accounts.Include(a => a.Branch).ToListAsync();
+            var accounts = await _context.Accounts
+                .Include(a => a.Branch)
+                .Include(a => a.Role) // Thêm dòng này để lấy tên Quyền
+                .ToListAsync();
             return View(accounts);
         }
 
@@ -29,6 +32,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
         public IActionResult Create()
         {
             ViewBag.BranchId = new SelectList(_context.Branches, "BranchId", "BranchName");
+            ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName"); // Lấy danh sách Role
             return View();
         }
 
@@ -39,13 +43,12 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                // TODO: Password hashing if necessary. 
-                // Currently just saving as plain or handled by another service.
                 _context.Add(account);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             ViewBag.BranchId = new SelectList(_context.Branches, "BranchId", "BranchName", account.BranchId);
+            ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName", account.RoleId);
             return View(account);
         }
 
@@ -58,6 +61,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             if (account == null) return NotFound();
 
             ViewBag.BranchId = new SelectList(_context.Branches, "BranchId", "BranchName", account.BranchId);
+            ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName", account.RoleId); // Lấy danh sách Role
             return View(account);
         }
 
@@ -83,6 +87,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewBag.BranchId = new SelectList(_context.Branches, "BranchId", "BranchName", account.BranchId);
+            ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName", account.RoleId);
             return View(account);
         }
 

@@ -1,116 +1,71 @@
 ﻿@{
-    ViewData["Title"] = "Trang chủ - Karnel Travel Guide";
+    ViewData["Title"] = "Home Page";
 }
 
-<div class="position-relative bg-dark text-white text-center" style="background: url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover; height: 60vh; min-height: 400px;">
-    <div class="position-absolute top-0 start-0 w-100 h-100" style="background-color: rgba(0, 0, 0, 0.5);"></div>
-    <div class="position-relative d-flex flex-column justify-content-center align-items-center h-100 px-3">
-        <h1 class="display-4 fw-bold mb-3">Khám phá thế giới cùng Karnel Travel</h1>
-        <p class="lead mb-4">Đặt vé xe, phòng khách sạn và nhà hàng dễ dàng trên một nền tảng duy nhất.</p>
-        
-        <div class="bg-white p-3 rounded shadow w-100" style="max-width: 800px;">
-            <form action="/TouristSpot/Search" method="GET" class="row g-2 align-items-center">
+<div class="container-fluid p-0 mb-5">
+    <div class="text-white text-center py-5 shadow-sm" style="background: linear-gradient(135deg, #0d6efd 0%, #084298 100%);">
+        <div class="container py-5">
+            <h1 class="display-3 fw-bold mb-3" style="letter-spacing: -1px;">Discover Vietnam with Karnel</h1>
+            <p class="lead mb-4 fw-light opacity-75">Your ultimate guide for Stays, Transportation, and Dining experiences.</p>
+            
+            <div class="row justify-content-center mt-4">
                 <div class="col-md-8">
-                    <input type="text" name="keyword" class="form-control form-control-lg" placeholder="Bạn muốn đi đâu? (VD: Đà Lạt, Nha Trang...)" required>
+                    <form class="d-flex bg-white p-2 rounded-pill shadow" asp-controller="TouristSpot" asp-action="Index" method="get">
+                        <input type="text" name="searchString" class="form-control border-0 rounded-pill px-4" placeholder="Where do you want to go?" style="box-shadow: none;">
+                        <button class="btn btn-primary rounded-pill px-4 fw-bold" type="submit">Search</button>
+                    </form>
                 </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">Tìm kiếm ngay</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="container my-5">
-    <div class="row align-items-center bg-light p-4 rounded shadow-sm border-start border-5 border-warning">
-        <div class="col-md-8">
-            <h3 class="fw-bold text-danger">🔥 Ưu đãi độc quyền từ Karnel!</h3>
-            <p class="mb-md-0 fs-5">Hệ thống sẽ <strong>tự động giảm giá</strong> vào tổng hóa đơn khi bạn đặt từ 2 dịch vụ khác nhau trở lên (VD: Vé xe + Phòng khách sạn, hoặc Phòng + Bàn nhà hàng).</p>
-        </div>
-        <div class="col-md-4 text-md-end text-center mt-3 mt-md-0">
-            <a href="/Combo" class="btn btn-warning btn-lg fw-bold px-4">Xem chi tiết</a>
-        </div>
-    </div>
-</div>
-
-<div class="container my-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">Điểm đến thịnh hành</h2>
-        <a href="/TouristSpot" class="text-decoration-none fw-bold">Xem tất cả <i class="bi bi-arrow-right"></i></a>
+<div class="container mb-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-dark mb-2">Our Core Services</h2>
+        <div style="width: 50px; height: 4px; background-color: #0d6efd; margin: 0 auto;"></div>
     </div>
 
     <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0">
-                <img src="https://images.unsplash.com/photo-1599708153386-62bf0bd56360?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Hội An" style="height: 200px; object-fit: cover;">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold">Phố cổ Hội An</h5>
-                    <p class="card-text text-muted">Khám phá vẻ đẹp cổ kính, lãng mạn của những chiếc đèn lồng và kiến trúc di sản.</p>
-                </div>
-                <div class="card-footer bg-white border-0 pb-3">
-                    <a href="/TouristSpot/Details/1" class="btn btn-outline-primary w-100">Khám phá</a>
-                </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm rounded-4 text-center p-4 transition-hover">
+                <div class="mb-3"><i class="bi bi-map text-primary" style="font-size: 3rem;"></i></div>
+                <h5 class="fw-bold">Destinations</h5>
+                <p class="text-muted small">Explore the most beautiful and famous tourist spots across the country.</p>
+                <a asp-controller="TouristSpot" asp-action="Index" class="btn btn-outline-primary rounded-pill mt-auto">Explore Now</a>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm rounded-4 text-center p-4 transition-hover">
+                <div class="mb-3"><i class="bi bi-bus-front text-primary" style="font-size: 3rem;"></i></div>
+                <h5 class="fw-bold">Transportation</h5>
+                <p class="text-muted small">Book buses, flights, or ferries to your favorite destinations easily.</p>
+                <a asp-controller="Transportation" asp-action="Index" class="btn btn-outline-primary rounded-pill mt-auto">View Routes</a>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0">
-                <img src="https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Đà Lạt" style="height: 200px; object-fit: cover;">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold">Thành phố Đà Lạt</h5>
-                    <p class="card-text text-muted">Tận hưởng không khí se lạnh, những đồi thông reo và các khu resort nghỉ dưỡng đẳng cấp.</p>
-                </div>
-                <div class="card-footer bg-white border-0 pb-3">
-                    <a href="/TouristSpot/Details/2" class="btn btn-outline-primary w-100">Khám phá</a>
-                </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm rounded-4 text-center p-4 transition-hover">
+                <div class="mb-3"><i class="bi bi-buildings text-primary" style="font-size: 3rem;"></i></div>
+                <h5 class="fw-bold">Stays & Hotels</h5>
+                <p class="text-muted small">Find the best resorts, hotels, and homestays for a perfect trip.</p>
+                <a asp-controller="Stay" asp-action="Index" class="btn btn-outline-primary rounded-pill mt-auto">Book Room</a>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0">
-                <img src="https://images.unsplash.com/photo-1528127269322-539801943592?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Nha Trang" style="height: 200px; object-fit: cover;">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold">Biển xanh Nha Trang</h5>
-                    <p class="card-text text-muted">Trải nghiệm các khách sạn ven biển, hải sản tươi sống và phương tiện di chuyển tiện lợi.</p>
-                </div>
-                <div class="card-footer bg-white border-0 pb-3">
-                    <a href="/TouristSpot/Details/3" class="btn btn-outline-primary w-100">Khám phá</a>
-                </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm rounded-4 text-center p-4 transition-hover">
+                <div class="mb-3"><i class="bi bi-cup-hot text-primary" style="font-size: 3rem;"></i></div>
+                <h5 class="fw-bold">Restaurants</h5>
+                <p class="text-muted small">Reserve a table at top-rated local restaurants and enjoy the cuisine.</p>
+                <a asp-controller="Restaurant" asp-action="Index" class="btn btn-outline-primary rounded-pill mt-auto">Find Dining</a>
             </div>
         </div>
     </div>
 </div>
 
-<div class="container my-5 text-center">
-    <h2 class="fw-bold mb-5">Dịch vụ của chúng tôi</h2>
-    <div class="row g-4">
-        <div class="col-md-3 col-6">
-            <div class="p-4 border rounded shadow-sm bg-white h-100">
-                <h1 class="text-primary mb-3">🚗</h1>
-                <h5 class="fw-bold">Vé xe</h5>
-                <p class="text-muted small">Đặt vé xe khách, tàu hỏa nhanh chóng.</p>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="p-4 border rounded shadow-sm bg-white h-100">
-                <h1 class="text-success mb-3">🏨</h1>
-                <h5 class="fw-bold">Khách sạn</h5>
-                <p class="text-muted small">Phòng nghỉ đa dạng, giá tốt nhất.</p>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="p-4 border rounded shadow-sm bg-white h-100">
-                <h1 class="text-info mb-3">🏝️</h1>
-                <h5 class="fw-bold">Resort</h5>
-                <p class="text-muted small">Nghỉ dưỡng sang trọng, đẳng cấp.</p>
-            </div>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="p-4 border rounded shadow-sm bg-white h-100">
-                <h1 class="text-warning mb-3">🍽️</h1>
-                <h5 class="fw-bold">Nhà hàng</h5>
-                <p class="text-muted small">Đặt bàn trước, thưởng thức tinh hoa.</p>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+    .transition-hover { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .transition-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+</style>

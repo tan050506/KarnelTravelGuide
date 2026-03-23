@@ -1,0 +1,94 @@
+@model KarnelTravelGuide.Web.Models.Entities.Account
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<style>
+    /* CSS CHUẨN FORM 04 */
+    .gui-title { font-size: 36px; color: #000000; font-weight: bold; text-align: left; margin-bottom: 20px; }
+    .gui-form { background-color: #696868; padding: 30px; border-radius: 12px; }
+    .gui-caption { color: #FFFFFF; font-size: 16px; font-weight: 500; margin-bottom: 8px; }
+    /* Nền control cũng theo chuẩn đồng bộ */
+    .gui-control { background-color: #f8f9fa; color: #000000; border: none; }
+    .gui-btn-container { text-align: center; margin-top: 30px; }
+</style>
+
+<div class="container mt-5 mb-5" style="max-width: 800px;">
+    <h2 class="gui-title">Account Profile</h2>
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="gui-form shadow-lg">
+        <form asp-action="Profile" method="post" enctype="multipart/form-data">
+            
+            <div class="row">
+                <div class="col-md-4 text-center mb-4">
+                    <div class="mb-3">
+                        @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                        {
+                            <img id="avatarPreview" src="@Model.AvatarUrl" class="rounded-circle border border-3 border-light shadow" style="width: 150px; height: 150px; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <img id="avatarPreview" src="https://ui-avatars.com/api/?name=@Model.FullName&background=random&size=150" class="rounded-circle border border-3 border-light shadow" style="width: 150px; height: 150px; object-fit: cover;" />
+                        }
+                    </div>
+                    <label class="gui-caption">Update Avatar</label>
+                    <input type="file" name="avatarFile" class="form-control gui-control form-control-sm" accept="image/*" onchange="previewImage(event)" />
+                </div>
+
+                <div class="col-md-8">
+                    <div class="mb-3 text-center">
+                        <label class="gui-caption text-center d-block">Full Name</label>
+                        <input asp-for="FullName" class="form-control gui-control text-center" required />
+                    </div>
+
+                    <div class="mb-3 text-center">
+                        <label class="gui-caption text-center d-block">Email Address (Read-only)</label>
+                        <input asp-for="Email" class="form-control gui-control text-center bg-secondary text-white" readonly />
+                    </div>
+
+                    <div class="mb-3 text-center">
+                        <label class="gui-caption text-center d-block">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control gui-control text-center" />
+                    </div>
+
+                    <div class="mb-3 text-center">
+                        <label class="gui-caption text-center d-block">Address</label>
+                        <input asp-for="Address" class="form-control gui-control text-center" />
+                    </div>
+
+                    <div class="mb-3 text-center">
+                        <label class="gui-caption text-center d-block">New Password (Optional)</label>
+                        <input type="password" name="newPassword" class="form-control gui-control text-center" placeholder="Leave blank to keep current password" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="gui-btn-container">
+                <button type="submit" class="btn btn-light fw-bold px-5 py-2 text-dark rounded-pill shadow-sm">
+                    <i class="bi bi-save me-2"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function(){
+                var output = document.getElementById('avatarPreview');
+                output.src = reader.result;
+            };
+            if(event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
+        }
+    </script>
+}

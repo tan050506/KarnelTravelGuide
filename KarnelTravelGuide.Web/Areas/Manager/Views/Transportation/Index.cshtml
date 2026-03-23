@@ -8,7 +8,7 @@
     <div class="card-body p-4 d-flex justify-content-between align-items-center">
         <form asp-action="Index" method="get" class="d-flex w-50">
             <div class="input-group">
-                <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control bg-light border-0" placeholder="Search by transport, type or destination...">
+                <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control bg-light border-0" placeholder="Search by vehicle, type or destination...">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
                 <a asp-action="Index" class="btn btn-outline-secondary">Reset</a>
             </div>
@@ -25,12 +25,12 @@
                     <tr>
                         <th class="text-center" style="width: 5%;">#</th>
                         <th class="text-center" style="width: 10%;">Image</th>
-                        <th style="width: 15%;">Transport Name</th>
+                        <th style="width: 16%;">Transport Name</th>
                         <th style="width: 10%;">Type</th>
-                        <th style="width: 25%;">Route & Address</th>
-                        <th style="width: 10%;">Time</th>
-                        <th style="width: 11%;">Price</th>
-                        <th class="text-center" style="width: 14%;">Actions</th>
+                        <th style="width: 22%;">Route</th>
+                        <th style="width: 12%;">Departure</th>
+                        <th style="width: 12%;">Price / Pax</th>
+                        <th class="text-center" style="width: 13%;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -75,7 +75,7 @@
                                     <strong class="text-danger fs-5"><i class="bi bi-clock"></i> @item.DepartureTime?.ToString("HH:mm")</strong>
                                 </td>
                                 
-                                <td class="fw-bold text-success fs-6">$@item.PriceTransport?.ToString("0")</td>
+                                <td class="fw-bold text-success fs-6">$@item.PriceTransport?.ToString("N0")</td>
                                 
                                 <td class="text-center">
                                     <a asp-action="Details" asp-route-id="@item.TransportationId" class="btn btn-sm btn-outline-info" title="View Details"><i class="bi bi-eye"></i></a>
@@ -87,7 +87,7 @@
                     }
                     else
                     {
-                        <tr><td colspan=\"8\" class=\"text-center py-4 text-muted\">No transportation routes found.</td></tr>
+                        <tr><td colspan="8" class="text-center py-4 text-muted">No transportation routes found.</td></tr>
                     }
                 </tbody>
             </table>

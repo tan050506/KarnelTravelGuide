@@ -15,7 +15,7 @@ public partial class RoomBooking
 
     public decimal? TotalAmount { get; set; }
 
-    public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
+    public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
     public virtual Room? Room { get; set; }
 }

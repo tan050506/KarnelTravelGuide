@@ -29,7 +29,7 @@ namespace KarnelTravelGuide.Web.Data
                     Password = "Admin@123", // Lưu ý: Ở bản Identity nó tự Hash, còn ở đây bạn đang lưu text thuần
                     PhoneNumber = "0999000111",
                     Address = "Karnel Travel",
-                    Role = "Admin",
+                    RoleId = 1,
                     AvatarUrl = "/images/avatars/default-admin.jpg"
                 };
 
