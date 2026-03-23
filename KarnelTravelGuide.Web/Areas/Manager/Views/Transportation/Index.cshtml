@@ -1,0 +1,96 @@
+@model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Transportation>
+@{
+    ViewData["Title"] = "Transportation Management";
+    int index = 1;
+}
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-body p-4 d-flex justify-content-between align-items-center">
+        <form asp-action="Index" method="get" class="d-flex w-50">
+            <div class="input-group">
+                <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control bg-light border-0" placeholder="Search by transport, type or destination...">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </form>
+        <a asp-action="Create" class="btn btn-success fw-semibold"><i class="bi bi-plus-lg me-1"></i> Add New Route</a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive overflow-hidden">
+            <table class="table table-hover align-middle mb-0 w-100" style="table-layout: fixed;">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center" style="width: 5%;">#</th>
+                        <th class="text-center" style="width: 10%;">Image</th>
+                        <th style="width: 15%;">Transport Name</th>
+                        <th style="width: 10%;">Type</th>
+                        <th style="width: 25%;">Route & Address</th>
+                        <th style="width: 10%;">Time</th>
+                        <th style="width: 11%;">Price</th>
+                        <th class="text-center" style="width: 14%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold text-muted text-center">@(index++)</td>
+                                
+                                <td class="text-center">
+                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl" style="width: 70px; height: 45px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" />
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-light rounded text-muted d-flex align-items-center justify-content-center" style="width: 70px; height: 45px; margin: 0 auto; font-size: 0.8rem;">No Img</div>
+                                    }
+                                </td>
+                                
+                                <td class="fw-bold text-dark text-truncate" title="@item.TransportName">
+                                    @item.TransportName
+                                </td>
+
+                                <td>
+                                    @if (item.TransportType == "Air") { <span class="badge bg-primary"><i class="bi bi-airplane-fill me-1"></i> Air</span> }
+                                    else if (item.TransportType == "Land") { <span class="badge bg-success"><i class="bi bi-car-front-fill me-1"></i> Land</span> }
+                                    else { <span class="badge bg-info text-dark"><i class="bi bi-water me-1"></i> Water</span> }
+                                </td>
+                                
+                                <td class="text-truncate">
+                                    <div class="mb-1 text-truncate" title="@item.FromBranch?.BranchName (@item.FromBranch?.Address)">
+                                        <small class="text-muted fw-bold">From:</small> <span class="text-dark">@item.FromBranch?.BranchName</span>
+                                    </div>
+                                    <div class="text-truncate" title="@item.ToSpot?.SpotName (@item.ToSpot?.Address)">
+                                        <small class="text-muted fw-bold">To:</small> <strong class="text-primary">@item.ToSpot?.SpotName</strong>
+                                    </div>
+                                </td>
+                                
+                                <td>
+                                    <strong class="text-danger fs-5"><i class="bi bi-clock"></i> @item.DepartureTime?.ToString("HH:mm")</strong>
+                                </td>
+                                
+                                <td class="fw-bold text-success fs-6">$@item.PriceTransport?.ToString("0")</td>
+                                
+                                <td class="text-center">
+                                    <a asp-action="Details" asp-route-id="@item.TransportationId" class="btn btn-sm btn-outline-info" title="View Details"><i class="bi bi-eye"></i></a>
+                                    <a asp-action="Edit" asp-route-id="@item.TransportationId" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                                    <a asp-action="Delete" asp-route-id="@item.TransportationId" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan=\"8\" class=\"text-center py-4 text-muted\">No transportation routes found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

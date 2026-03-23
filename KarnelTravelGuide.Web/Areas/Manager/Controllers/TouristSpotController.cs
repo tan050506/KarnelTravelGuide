@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KarnelTravelGuide.Web.Data;
 using KarnelTravelGuide.Web.Models.Entities;
+using Microsoft.AspNetCore.Http; // Bắt buộc phải có thư viện này để dùng Session
 
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
@@ -17,18 +18,36 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // HÀM GIẢ LẬP: Lấy Branch hiện tại của Manager (Sau này sẽ thay bằng lấy từ Session/User.Identity)
+        // LẤY CHI NHÁNH CỦA MANAGER ĐANG ĐĂNG NHẬP (Lấy từ Session)
         private async Task<Branch> GetCurrentManagerBranchAsync()
         {
-            var branch = await _context.Branches.FirstOrDefaultAsync();
-            if (branch == null)
+            // 1. Lấy ID của người dùng đang đăng nhập từ Session
+            int? userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId.HasValue)
             {
-                // Nếu chưa có Branch nào trong DB, tự tạo 1 cái để test không bị lỗi
-                branch = new Branch { BranchName = "Central Branch (Auto-generated)", PhoneBranch = "1900-0000" };
-                _context.Branches.Add(branch);
+                // 2. Tìm đúng tài khoản đó trong Database và kéo theo thông tin Chi nhánh (Branch)
+                var currentManager = await _context.Accounts
+                    .Include(a => a.Branch)
+                    .FirstOrDefaultAsync(a => a.AccountId == userId.Value);
+
+                // 3. Nếu tìm thấy Manager và họ đã được Admin gán Chi nhánh, trả về Chi nhánh đó
+                if (currentManager != null && currentManager.Branch != null)
+                {
+                    return currentManager.Branch;
+                }
+            }
+
+            // Fallback: Đề phòng trường hợp bạn code bị rớt Session hoặc quên đăng nhập lúc test, 
+            // hàm sẽ tạm lấy Branch đầu tiên để trang web không bị sập (lỗi màn hình vàng)
+            var fallbackBranch = await _context.Branches.FirstOrDefaultAsync();
+            if (fallbackBranch == null)
+            {
+                fallbackBranch = new Branch { BranchName = "Central Branch (Auto-generated)", PhoneBranch = "1900-0000" };
+                _context.Branches.Add(fallbackBranch);
                 await _context.SaveChangesAsync();
             }
-            return branch;
+            return fallbackBranch;
         }
 
         // 1. GET: Danh sách & Tìm kiếm
@@ -39,6 +58,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             // Chỉ lấy điểm du lịch thuộc Branch của Manager này
             var spots = _context.TouristSpots
+                .Include(t => t.Branch) // Include thêm Branch để hiển thị tên ngoài danh sách
                 .Where(t => t.BranchId == currentBranch.BranchId)
                 .AsQueryable();
 
@@ -141,6 +161,8 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
                         // Lưu ảnh mới
                         string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "touristspots");
+                        if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
                         string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
                         string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
@@ -168,7 +190,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(touristSpot);
         }
 
-        // 6. GET: Details (Trang Read)
+        // 6. GET: Details (Trang Xem chi tiết)
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

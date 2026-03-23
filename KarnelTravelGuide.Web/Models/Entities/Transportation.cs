@@ -21,6 +21,8 @@ public partial class Transportation
 
     public string? ImageUrl { get; set; }
 
+    public string? TransportName { get; set; }
+
     public virtual Branch? FromBranch { get; set; }
 
     public virtual ICollection<TicketBooking> TicketBookings { get; set; } = new List<TicketBooking>();
