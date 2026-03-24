@@ -1,0 +1,50 @@
+@model KarnelTravelGuide.Web.Models.Entities.Stay
+@{ ViewData["Title"] = "Edit Stay"; }
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold text-secondary">Edit Stay #@Model.StayId</h5>
+    </div>
+    <div class="card-body p-4">
+        <form asp-action="Edit" enctype="multipart/form-data">
+            <input type="hidden" asp-for="StayId" />
+            <input type="hidden" asp-for="ImageUrl" />
+            <input type="hidden" asp-for="StarRating" /> <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Name" class="form-label fw-bold">Stay Name</label>
+                    <input asp-for="Name" class="form-control" required />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="SpotId" class="form-label fw-bold">Tourist Spot</label>
+                    <select asp-for="SpotId" class="form-select" asp-items="ViewBag.SpotId">
+                        <option value="">-- Select Spot --</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="StayType" class="form-label fw-bold">Stay Type</label>
+                    <select asp-for="StayType" class="form-select">
+                        <option value="Hotel">Hotel</option>
+                        <option value="Resort">Resort</option>
+                    </select>
+                </div>
+                <div class="col-12 mb-3">
+                    <label asp-for="Address" class="form-label fw-bold">Address</label>
+                    <input asp-for="Address" class="form-control" />
+                </div>
+                <div class="col-12 mb-3">
+                    <label class="form-label fw-bold">Change Image (Leave blank to keep current)</label>
+                    <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                    @if(!string.IsNullOrEmpty(Model.ImageUrl)){
+                        <div class="mt-2"><img src="@Model.ImageUrl" height="80" class="rounded shadow-sm" /></div>
+                    }
+                </div>
+                <div class="col-12 mb-4">
+                    <label asp-for="Description" class="form-label fw-bold">Description</label>
+                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Update Stay</button>
+            <a asp-action="Index" class="btn btn-light ms-2">Cancel</a>
+        </form>
+    </div>
+</div>
