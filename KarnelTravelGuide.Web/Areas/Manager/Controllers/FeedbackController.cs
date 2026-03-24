@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
+namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
-    [Area("Admin")]
+    [Area("Manager")]
     public class FeedbackController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -17,7 +17,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             _context = context;
         }
 
-        // GET: /Admin/Feedback/Index
+        // GET: /Manager/Feedback/Index
         public async Task<IActionResult> Index()
         {
             var feedbacks = await _context.Feedbacks
@@ -30,7 +30,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             return View(feedbacks);
         }
 
-        // GET: /Admin/Feedback/Reply/5
+        // GET: /Manager/Feedback/Reply/5
         public async Task<IActionResult> Reply(int? id)
         {
             if (id == null) return NotFound();
@@ -46,7 +46,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             return View(feedback);
         }
 
-        // POST: /Admin/Feedback/Reply/5
+        // POST: /Manager/Feedback/Reply/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reply(int id, [Bind("FeedbackId,ReplyMessage")] Feedback feedbackUpdates)
@@ -76,7 +76,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             return View(feedback);
         }
 
-        // POST: /Admin/Feedback/Delete/5
+        // POST: /Manager/Feedback/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

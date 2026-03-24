@@ -1,71 +1,123 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Discover the World";
 }
 
-<div class="container-fluid p-0 mb-5">
-    <div class="text-white text-center py-5 shadow-sm" style="background: linear-gradient(135deg, #0d6efd 0%, #084298 100%);">
-        <div class="container py-5">
-            <h1 class="display-3 fw-bold mb-3" style="letter-spacing: -1px;">Discover Vietnam with Karnel</h1>
-            <p class="lead mb-4 fw-light opacity-75">Your ultimate guide for Stays, Transportation, and Dining experiences.</p>
-            
-            <div class="row justify-content-center mt-4">
-                <div class="col-md-8">
-                    <form class="d-flex bg-white p-2 rounded-pill shadow" asp-controller="TouristSpot" asp-action="Index" method="get">
-                        <input type="text" name="searchString" class="form-control border-0 rounded-pill px-4" placeholder="Where do you want to go?" style="box-shadow: none;">
-                        <button class="btn btn-primary rounded-pill px-4 fw-bold" type="submit">Search</button>
-                    </form>
-                </div>
+<style>
+    /* Hero Section hiện đại */
+    .hero-banner {
+        position: relative;
+        height: 85vh;
+        min-height: 600px;
+        /* ĐÃ SỬA: Đổi no-resolution thành no-repeat để ảnh nền hiện lên */
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), 
+                    url('https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0 0 40px 40px;
+        margin-top: -80px; 
+        padding-top: 80px;
+    }
+    
+    .search-box {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 50px;
+        padding: 8px 8px 8px 15px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        width: 100%;
+        max-width: 650px; /* Giới hạn độ dài để thanh search không quá to */
+        margin: 0 auto; /* ĐÃ SỬA: Ép thanh search vào giữa màn hình */
+    }
+    
+    .search-input { border: none; font-size: 1.1rem; box-shadow: none !important; background: transparent; }
+    .search-input:focus { outline: none; }
+    
+    /* Service Cards */
+    .service-card {
+        border: none;
+        border-radius: 24px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        background: white;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    .service-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    .icon-wrapper {
+        width: 80px; height: 80px;
+        border-radius: 20px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+    }
+    .bg-light-blue { background-color: #e3f2fd; color: #0984e3; }
+    .bg-light-orange { background-color: #fff3e0; color: #fdcb6e; }
+    .bg-light-green { background-color: #e8f5e9; color: #00b894; }
+    .bg-light-purple { background-color: #f3e5f5; color: #6c5ce7; }
+</style>
+
+<div class="hero-banner mb-5">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-9 text-white">
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill mb-3 fw-bold text-uppercase shadow-sm">Let's Travel The World</span>
+                <h1 class="display-3 fw-bold mb-4" style="line-height: 1.2;">Find Your Next <br/> <span style="color: #00cec9;">Perfect</span> Destination</h1>
+                <p class="lead mb-5 opacity-75 fw-light mx-auto" style="max-width: 600px;">Discover amazing places at exclusive deals. We provide the best stays, flights, and dining experiences tailored just for you.</p>
+                
+                <form class="search-box d-flex align-items-center" asp-controller="TouristSpot" asp-action="Index" method="get">
+                    <i class="bi bi-search fs-5 text-muted me-2"></i>
+                    <input type="text" name="searchString" class="form-control search-input" placeholder="Where do you want to go?">
+                    <button class="btn btn-primary-custom btn-modern px-5 py-2 ms-2" type="submit">Search</button>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
-<div class="container mb-5">
+<div class="container py-5 my-5">
     <div class="text-center mb-5">
-        <h2 class="fw-bold text-dark mb-2">Our Core Services</h2>
-        <div style="width: 50px; height: 4px; background-color: #0d6efd; margin: 0 auto;"></div>
+        <h6 class="text-primary fw-bold text-uppercase tracking-wide">Category</h6>
+        <h2 class="display-6 fw-bold text-dark">We Offer Best Services</h2>
     </div>
 
     <div class="row g-4">
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm rounded-4 text-center p-4 transition-hover">
-                <div class="mb-3"><i class="bi bi-map text-primary" style="font-size: 3rem;"></i></div>
-                <h5 class="fw-bold">Destinations</h5>
-                <p class="text-muted small">Explore the most beautiful and famous tourist spots across the country.</p>
-                <a asp-controller="TouristSpot" asp-action="Index" class="btn btn-outline-primary rounded-pill mt-auto">Explore Now</a>
-            </div>
-        </div>
-        
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm rounded-4 text-center p-4 transition-hover">
-                <div class="mb-3"><i class="bi bi-bus-front text-primary" style="font-size: 3rem;"></i></div>
-                <h5 class="fw-bold">Transportation</h5>
-                <p class="text-muted small">Book buses, flights, or ferries to your favorite destinations easily.</p>
-                <a asp-controller="Transportation" asp-action="Index" class="btn btn-outline-primary rounded-pill mt-auto">View Routes</a>
+        <div class="col-lg-3 col-md-6">
+            <div class="card service-card h-100 p-4">
+                <div class="icon-wrapper bg-light-blue"><i class="bi bi-map-fill"></i></div>
+                <h4 class="fw-bold mb-3">Destinations</h4>
+                <p class="text-muted mb-4 small">Explore beautiful landscapes and famous tourist spots handpicked for you.</p>
+                <a asp-controller="TouristSpot" asp-action="Index" class="text-decoration-none fw-bold mt-auto" style="color: #0984e3;">Explore <i class="bi bi-arrow-right"></i></a>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm rounded-4 text-center p-4 transition-hover">
-                <div class="mb-3"><i class="bi bi-buildings text-primary" style="font-size: 3rem;"></i></div>
-                <h5 class="fw-bold">Stays & Hotels</h5>
-                <p class="text-muted small">Find the best resorts, hotels, and homestays for a perfect trip.</p>
-                <a asp-controller="Stay" asp-action="Index" class="btn btn-outline-primary rounded-pill mt-auto">Book Room</a>
+        <div class="col-lg-3 col-md-6">
+            <div class="card service-card h-100 p-4">
+                <div class="icon-wrapper bg-light-orange"><i class="bi bi-buildings-fill"></i></div>
+                <h4 class="fw-bold mb-3">Hotels & Stays</h4>
+                <p class="text-muted mb-4 small">Enjoy luxury resorts or cozy homestays with the best price guarantee.</p>
+                <a asp-controller="Stay" asp-action="Index" class="text-decoration-none fw-bold mt-auto" style="color: #fdcb6e;">Book Room <i class="bi bi-arrow-right"></i></a>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm rounded-4 text-center p-4 transition-hover">
-                <div class="mb-3"><i class="bi bi-cup-hot text-primary" style="font-size: 3rem;"></i></div>
-                <h5 class="fw-bold">Restaurants</h5>
-                <p class="text-muted small">Reserve a table at top-rated local restaurants and enjoy the cuisine.</p>
-                <a asp-controller="Restaurant" asp-action="Index" class="btn btn-outline-primary rounded-pill mt-auto">Find Dining</a>
+        <div class="col-lg-3 col-md-6">
+            <div class="card service-card h-100 p-4">
+                <div class="icon-wrapper bg-light-green"><i class="bi bi-airplane-fill"></i></div>
+                <h4 class="fw-bold mb-3">Transportation</h4>
+                <p class="text-muted mb-4 small">Easy booking for flights, buses, and ferries to reach your destination safely.</p>
+                <a asp-controller="Transportation" asp-action="Index" class="text-decoration-none fw-bold mt-auto" style="color: #00b894;">Find Tickets <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="card service-card h-100 p-4">
+                <div class="icon-wrapper bg-light-purple"><i class="bi bi-cup-hot-fill"></i></div>
+                <h4 class="fw-bold mb-3">Restaurants</h4>
+                <p class="text-muted mb-4 small">Taste the local cuisine. Reserve tables at top-rated dining spots instantly.</p>
+                <a asp-controller="Restaurant" asp-action="Index" class="text-decoration-none fw-bold mt-auto" style="color: #6c5ce7;">Reserve Table <i class="bi bi-arrow-right"></i></a>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .transition-hover { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-    .transition-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
-</style>

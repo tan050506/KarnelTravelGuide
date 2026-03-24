@@ -1,6 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Http
 @{
-    // Lấy thông tin UserName từ Session
     var userName = Context.Session.GetString("UserName");
 }
 
@@ -9,81 +8,79 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Karnel Travel</title>
+    <title>@ViewData["Title"] - KarnelTravel</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     
     <style>
-        /* ----- CHUẨN FORM 04: ARCHITECTURE & GUI STANDARD ----- */
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8f9fa; color: #2d3436; }
         
-        /* 1. Document Theme: White and Blue */
-        .brand-text { color: #0d6efd; font-weight: 800; font-size: 1.5rem; letter-spacing: 1px; }
-        .footer-blue { background-color: #084298; color: #ffffff; }
+        /* Navbar Hiện đại */
+        .navbar-custom { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .brand-logo { color: #0984e3; font-weight: 800; font-size: 1.6rem; letter-spacing: -0.5px; }
+        .brand-logo span { color: #fdcb6e; }
         
-        /* 2. Header Standard */
-        .navbar-travel { 
-            background-color: #FFFFFF; /* Header Background Color */
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
-        }
-        .nav-link.travel-link { 
-            color: #000000; /* Header Normal Color */
-            font-size: 16px; /* Header Font Size */
-            font-weight: 500; 
-            margin: 0 10px; 
-            transition: color 0.3s; 
-        }
-        .nav-link.travel-link:hover { 
-            color: #008B8B; /* Header Hover Color */
-        }
-
-        /* 3. Tiền đề cho các Form nhập liệu sau này */
-        .gui-form { background-color: #696868; color: #FFFFFF; } /* Form Background & Controls Foreground */
-        .gui-title { font-size: 36px; color: #000000; font-style: normal; text-align: left; }
+        /* ĐÃ SỬA: Ép padding nhỏ lại một chút để chứa được nhiều nút hơn */
+        .nav-link.travel-link { color: #636e72; font-weight: 600; padding: 8px 12px !important; border-radius: 8px; transition: all 0.3s ease; margin: 0 2px; }
+        .nav-link.travel-link:hover, .nav-link.travel-link.active { color: #0984e3; background-color: rgba(9, 132, 227, 0.05); }
+        
+        .btn-modern { border-radius: 50px; font-weight: 600; padding: 10px 24px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-modern:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+        .btn-primary-custom { background: linear-gradient(135deg, #0984e3, #00cec9); border: none; color: white; }
+        
+        .footer-modern { background-color: #2d3436; color: #b2bec3; }
+        .footer-modern h5 { color: #ffffff; font-weight: 700; margin-bottom: 1.5rem; }
+        .footer-modern a { color: #b2bec3; text-decoration: none; transition: color 0.3s; }
+        .footer-modern a:hover { color: #00cec9; }
     </style>
 </head>
-<body class="bg-light">
+<body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-travel sticky-top py-3">
-            <div class="container">
-                <a class="navbar-brand brand-text" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-compass"></i> KarnelTravel
+        <nav class="navbar navbar-expand-lg navbar-custom sticky-top py-2">
+            <div class="container-fluid px-lg-5"> <a class="navbar-brand brand-logo" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-geo-alt-fill text-warning"></i> Karnel<span>Travel</span>
                 </a>
-                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <i class="bi bi-list fs-1 text-dark"></i>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav mx-auto">
-                        <li class="nav-item"><a class="nav-link travel-link" asp-area="" asp-controller="TouristSpot" asp-action="Index">Destinations</a></li>
-                        <li class="nav-item"><a class="nav-link travel-link" asp-area="" asp-controller="Stay" asp-action="Index">Stays</a></li>
-                        <li class="nav-item"><a class="nav-link travel-link" asp-area="" asp-controller="Restaurant" asp-action="Index">Dining</a></li>
-                        <li class="nav-item"><a class="nav-link travel-link" asp-area="" asp-controller="Transportation" asp-action="Index">Transportation</a></li>
+                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="Home" asp-action="Index">Home</a></li>
+                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="TouristSpot" asp-action="Index">Destinations</a></li>
+                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="Stay" asp-action="Index">Stays</a></li>
+                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="Restaurant" asp-action="Index">Dining</a></li>
+                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="Transportation" asp-action="Index">Transport</a></li>
+                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="Home" asp-action="About">About Us</a></li>
+                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="Home" asp-action="Contact">Contact</a></li>
                     </ul>
                     
-                    <ul class="navbar-nav align-items-center">
+                    <ul class="navbar-nav align-items-center gap-2 mt-3 mt-lg-0">
                         @if (!string.IsNullOrEmpty(userName))
                         {
-                            <li class="nav-item me-3">
-                                <span class="nav-link fw-bold" style="color: #008B8B;">
-                                    <a asp-controller="Account" asp-action="Profile" class="nav-link fw-bold text-decoration-none" style="color: #008B8B;">
-                                        <i class="bi bi-person-circle me-1"></i> Chào @userName
-                                    </a>
-                                </span>
-                            </li>
-                            <li class="nav-item me-3">
-                                <a class="btn btn-outline-primary rounded-pill px-3" asp-area="" asp-controller="Invoice" asp-action="MyInvoices">
-                                    <i class="bi bi-receipt me-1"></i> My Invoices
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle fw-bold text-dark d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                        @userName.Substring(0, 1).ToUpper()
+                                    </div>
+                                    @userName
                                 </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="btn btn-danger rounded-pill px-4 fw-semibold" asp-controller="Account" asp-action="Logout">Đăng xuất</a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
+                                    <li><a class="dropdown-item py-2" asp-controller="Account" asp-action="Profile"><i class="bi bi-person me-2 text-muted"></i> My Profile</a></li>
+                                    <li><a class="dropdown-item py-2" asp-controller="Invoice" asp-action="MyInvoices"><i class="bi bi-receipt me-2 text-muted"></i> My Bookings</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item py-2 text-danger" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+                                </ul>
                             </li>
                         }
                         else
                         {
-                            <li class="nav-item">
-                                <a class="btn btn-primary rounded-pill px-4 fw-semibold" asp-controller="Account" asp-action="Login">Đăng nhập</a>
-                            </li>
+                            <li class="nav-item"><a class="btn btn-light fw-bold px-4 rounded-pill" asp-controller="Account" asp-action="Register">Sign Up</a></li>
+                            <li class="nav-item"><a class="btn btn-primary-custom btn-modern" asp-controller="Account" asp-action="Login">Log In</a></li>
                         }
                     </ul>
                 </div>
@@ -95,27 +92,47 @@
         @RenderBody()
     </main>
 
-    <footer class="footer-blue pt-5 pb-3 mt-5">
+    <footer class="footer-modern pt-5 pb-4 mt-5">
         <div class="container">
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <h5 class="text-white fw-bold"><i class="bi bi-compass"></i> KarnelTravel</h5>
-                    <p class="small text-light opacity-75">Providing the best travel experiences with a convenient booking system for stays, dining, and transportation.</p>
+            <div class="row gy-4">
+                <div class="col-lg-4 col-md-6 pe-lg-5">
+                    <h4 class="brand-logo text-white mb-3"><i class="bi bi-geo-alt-fill text-warning"></i> Karnel<span>Travel</span></h4>
+                    <p class="small lh-lg">Experience the world with Karnel Travel. We provide the best booking services for stays, transportation, and unforgettable dining experiences.</p>
+                    <div class="d-flex gap-3 mt-4">
+                        <a href="#" class="fs-4"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="fs-4"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="fs-4"><i class="bi bi-twitter-x"></i></a>
+                    </div>
                 </div>
-                <div class="col-md-4 mb-3">
-                    <h5 class="text-white">Customer Support</h5>
-                    <ul class="list-unstyled text-light opacity-75 small">
-                        <li class="mb-2"><i class="bi bi-telephone me-2"></i> Hotline: 1900 xxxx</li>
-                        <li><i class="bi bi-envelope me-2"></i> Email: support@karneltravel.com</li>
+                <div class="col-lg-2 col-md-6">
+                    <h5>Explore</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-2 small">
+                        <li><a asp-controller="TouristSpot" asp-action="Index">Top Destinations</a></li>
+                        <li><a asp-controller="Stay" asp-action="Index">Luxury Stays</a></li>
+                        <li><a asp-controller="Restaurant" asp-action="Index">Local Cuisine</a></li>
+                        <li><a asp-controller="Transportation" asp-action="Index">Transport Tickets</a></li>
                     </ul>
                 </div>
-                <div class="col-md-4 mb-3">
-                    <h5 class="text-white">Secure Payment</h5>
-                    <p class="small text-light opacity-75">Book online and pay securely with cash at our branch counters.</p>
+                <div class="col-lg-3 col-md-6">
+                    <h5>Support</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-2 small">
+                        <li><a asp-controller="Home" asp-action="About">About Us</a></li>
+                        <li><a href="#">Cancellation Policy</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a asp-controller="Home" asp-action="Contact">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h5>Contact</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-3 small">
+                        <li class="d-flex align-items-center gap-3"><i class="bi bi-geo-alt fs-5 text-primary"></i> Can Tho University, VN</li>
+                        <li class="d-flex align-items-center gap-3"><i class="bi bi-telephone fs-5 text-primary"></i> +84 1900 xxxx</li>
+                        <li class="d-flex align-items-center gap-3"><i class="bi bi-envelope fs-5 text-primary"></i> support@karneltravel.com</li>
+                    </ul>
                 </div>
             </div>
-            <div class="text-center small text-light opacity-50 mt-4 border-top border-light pt-3">
-                &copy; 2026 - Karnel Travel Guide System
+            <div class="text-center small mt-5 pt-4 border-top border-secondary opacity-75">
+                &copy; 2026 Karnel Travel Guide. Designed for exceptional journeys.
             </div>
         </div>
     </footer>
