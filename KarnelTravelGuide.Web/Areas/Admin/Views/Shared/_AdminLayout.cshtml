@@ -55,16 +55,16 @@
                         <i class="bi bi-cpu me-3"></i> System Monitor
                     </a>
 
-                    <small class="text-muted px-3 mt-4 mb-2 text-uppercase fw-bold" style="font-size: 0.75rem;">
-                        System & Infrastructure
-                    </small>
-
                     <a asp-area="Admin" asp-controller="Branch" asp-action="Index">
                         <i class="bi bi-diagram-3 me-3"></i> Manage Branches
                     </a>
 
                     <a asp-area="Admin" asp-controller="Account" asp-action="Index">
                         <i class="bi bi-people-fill me-3"></i> Manage Accounts
+                    </a>
+
+                    <a asp-area="Admin" asp-controller="Feedback" asp-action="Index">
+                        <i class="bi bi-chat-left-text-fill me-3"></i> Manage Feedbacks
                     </a>
 
                     <div class="mt-auto pt-5">
@@ -93,7 +93,7 @@
 
         </div>
     </div>
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

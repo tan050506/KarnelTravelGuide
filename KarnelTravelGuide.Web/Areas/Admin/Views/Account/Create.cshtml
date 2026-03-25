@@ -72,4 +72,25 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function () {
+            function toggleBranch() {
+                var selectedRoleId = $("#RoleId").val();
+                if (selectedRoleId != "2") {
+                    $("#BranchId").closest(".col-md-6").hide();
+                    $("#BranchId").val("");
+                    $("#BranchId").prop("disabled", true);
+                } else {
+                    $("#BranchId").closest(".col-md-6").show();
+                    $("#BranchId").prop("disabled", false);
+                }
+            }
+
+            $("#RoleId").change(function () {
+                toggleBranch();
+            });
+
+            toggleBranch();
+        });
+    </script>
 }
