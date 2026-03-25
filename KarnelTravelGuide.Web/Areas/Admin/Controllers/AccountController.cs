@@ -3,8 +3,7 @@ using KarnelTravelGuide.Web.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
 {
@@ -18,41 +17,56 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             _context = context;
         }
 
-        // GET: /Admin/Account/Index
-        public async Task<IActionResult> Index()
+        // ===================== INDEX =====================
+        public async Task<IActionResult> Index(string searchString)
         {
-            var accounts = await _context.Accounts
+            var query = _context.Accounts
                 .Include(a => a.Branch)
-                .Include(a => a.Role) // Thêm dòng này để lấy tên Quyền
-                .ToListAsync();
-            return View(accounts);
+                .Include(a => a.Role)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(a =>
+                    (a.FullName != null && a.FullName.Contains(searchString)) ||
+                    (a.Email != null && a.Email.Contains(searchString)) ||
+                    (a.PhoneNumber != null && a.PhoneNumber.Contains(searchString)));
+            }
+
+            ViewBag.FirstAdminId = await GetFirstAdminId();
+            ViewBag.CurrentFilter = searchString;
+
+            return View(await query.ToListAsync());
         }
 
-        // GET: /Admin/Account/Create
+        // ===================== CREATE =====================
         public IActionResult Create()
         {
-            ViewBag.BranchId = new SelectList(_context.Branches, "BranchId", "BranchName");
-            ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName"); // Lấy danh sách Role
+            LoadDropdowns();
             return View();
         }
 
-        // POST: /Admin/Account/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Account account)
         {
+            ValidateAccount(account, isEdit: false);
+
             if (ModelState.IsValid)
             {
+                if (account.RoleId != 2)
+                    account.BranchId = null;
+
                 _context.Add(account);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewBag.BranchId = new SelectList(_context.Branches, "BranchId", "BranchName", account.BranchId);
-            ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName", account.RoleId);
+
+            LoadDropdowns(account);
             return View(account);
         }
 
-        // GET: /Admin/Account/Edit/5
+        // ===================== EDIT =====================
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -60,54 +74,113 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             var account = await _context.Accounts.FindAsync(id);
             if (account == null) return NotFound();
 
-            ViewBag.BranchId = new SelectList(_context.Branches, "BranchId", "BranchName", account.BranchId);
-            ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName", account.RoleId); // Lấy danh sách Role
+            if (id == await GetFirstAdminId())
+            {
+                TempData["Error"] = "Không thể sửa Admin đầu tiên.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            LoadDropdowns(account);
             return View(account);
         }
 
-        // POST: /Admin/Account/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Account account)
         {
             if (id != account.AccountId) return NotFound();
 
-            if (ModelState.IsValid)
+            if (id == await GetFirstAdminId())
             {
-                try
-                {
-                    _context.Update(account);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!AccountExists(account.AccountId)) return NotFound();
-                    else throw;
-                }
+                TempData["Error"] = "Không thể sửa Admin đầu tiên.";
                 return RedirectToAction(nameof(Index));
             }
-            ViewBag.BranchId = new SelectList(_context.Branches, "BranchId", "BranchName", account.BranchId);
-            ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName", account.RoleId);
+
+            ValidateAccount(account, isEdit: true);
+
+            if (ModelState.IsValid)
+            {
+                var existing = await _context.Accounts.FindAsync(id);
+                if (existing == null) return NotFound();
+
+                existing.FullName = account.FullName;
+                existing.Email = account.Email;
+                existing.PhoneNumber = account.PhoneNumber;
+                existing.Address = account.Address;
+                existing.RoleId = account.RoleId;
+                existing.BranchId = account.RoleId == 2 ? account.BranchId : null;
+
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+
+            LoadDropdowns(account);
             return View(account);
         }
 
-        // POST: /Admin/Account/Delete/5
+        // ===================== DELETE =====================
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (id == await GetFirstAdminId())
+            {
+                TempData["Error"] = "Không thể xoá Admin đầu tiên.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var account = await _context.Accounts.FindAsync(id);
             if (account != null)
             {
-                _context.Accounts.Remove(account);
+                _context.Remove(account);
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Xoá thành công.";
             }
+
             return RedirectToAction(nameof(Index));
         }
 
-        private bool AccountExists(int id)
+        // ===================== HELPERS =====================
+
+        private void ValidateAccount(Account account, bool isEdit)
         {
-            return _context.Accounts.Any(e => e.AccountId == id);
+            if (_context.Accounts.Any(a => a.Email == account.Email &&
+                (!isEdit || a.AccountId != account.AccountId)))
+            {
+                ModelState.AddModelError("Email", "Email đã tồn tại.");
+            }
+
+            if (_context.Accounts.Any(a => a.PhoneNumber == account.PhoneNumber &&
+                (!isEdit || a.AccountId != account.AccountId)))
+            {
+                ModelState.AddModelError("PhoneNumber", "SĐT đã tồn tại.");
+            }
+
+            // Regex phone VN
+            if (!Regex.IsMatch(account.PhoneNumber ?? "", @"^(0[3|5|7|8|9])[0-9]{8}$"))
+            {
+                ModelState.AddModelError("PhoneNumber", "SĐT không hợp lệ.");
+            }
+
+            if (account.RoleId == 2 && account.BranchId == null)
+            {
+                ModelState.AddModelError("BranchId", "Manager phải có chi nhánh.");
+            }
+        }
+
+        private void LoadDropdowns(Account account = null)
+        {
+            ViewBag.BranchId = new SelectList(_context.Branches, "BranchId", "BranchName", account?.BranchId);
+            ViewBag.RoleId = new SelectList(_context.Roles, "RoleId", "RoleName", account?.RoleId);
+        }
+
+        private async Task<int> GetFirstAdminId()
+        {
+            return await _context.Accounts
+                .Where(a => a.Role.RoleName == "Admin")
+                .OrderBy(a => a.AccountId)
+                .Select(a => a.AccountId)
+                .FirstOrDefaultAsync();
         }
     }
 }

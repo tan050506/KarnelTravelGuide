@@ -74,4 +74,23 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function () {
+            function toggleBranch() {
+                var selectedRole = $("#RoleId option:selected").text().trim();
+                if (selectedRole.toLowerCase() === "customer") {
+                    $("#BranchId").closest(".col-md-6").hide();
+                    $("#BranchId").val("");
+                } else {
+                    $("#BranchId").closest(".col-md-6").show();
+                }
+            }
+
+            $("#RoleId").change(function () {
+                toggleBranch();
+            });
+
+            toggleBranch();
+        });
+    </script>
 }
