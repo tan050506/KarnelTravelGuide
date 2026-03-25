@@ -1,0 +1,223 @@
+@{
+    ViewData["Title"] = "Tạo Đơn Hàng Mới";
+}
+
+<style>
+    body { background-color: #f5f5f5; }
+    .booking-container { max-width: 800px; margin: 30px auto; display: flex; flex-direction: column; gap: 20px; }
+    .search-widget { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #f0f0f0; }
+    .form-control-custom { border-radius: 8px; padding: 14px 16px; border: 1px solid #e0e0e0; background-color: #f9f9f9; font-weight: 500; width: 100%; transition: all 0.3s; color: #333; }
+    .form-control-custom:focus { border-color: #0061e6; background-color: #fff; box-shadow: 0 0 0 3px rgba(0, 97, 230, 0.1); outline: none; }
+    .btn-futa { background-color: #0061e6; color: white; border-radius: 10px; font-weight: 700; padding: 14px; width: 100%; border: none; font-size: 1.1rem; transition: 0.2s; }
+    .btn-futa:hover { background-color: #004bb5; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 97, 230, 0.3); }
+    
+    .trip-card { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #ebebeb; transition: transform 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 15px;}
+    .trip-card:hover { border-color: #0061e6; box-shadow: 0 6px 16px rgba(0, 97, 230, 0.1); }
+    .time-large { font-size: 1.5rem; font-weight: bold; color: #333; }
+    .price-text { color: #0061e6; font-size: 1.3rem; font-weight: bold; }
+</style>
+
+<div class="container pb-5">
+    <div class="booking-container">
+        
+        <div class="d-flex align-items-center mb-2 px-2">
+            <a asp-action="Index" class="text-dark me-3"><i class="bi bi-arrow-left fs-4"></i></a>
+            <h3 class="fw-bold mb-0 text-dark">Tạo Đơn Hàng Mới</h3>
+        </div>
+
+        @if (TempData["ErrorMessage"] != null) { 
+            <div class="alert alert-danger rounded-3 fw-bold"><i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]</div> 
+        }
+
+        <form asp-action="SelectSeat" method="get" id="managerBookingForm">
+            
+            <div class="search-widget">
+                <div class="d-flex gap-4 mb-3 justify-content-start border-bottom pb-3">
+                    <div class="form-check">
+                        <input class="form-check-input fs-5" type="radio" name="CustomerType" id="typeWalkIn" value="WalkIn" checked onchange="toggleCustomerSelect()">
+                        <label class="form-check-label fw-bold mt-1 text-primary" for="typeWalkIn" id="lblWalkIn">Khách mua tại quầy</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input fs-5" type="radio" name="CustomerType" id="typeMember" value="Member" onchange="toggleCustomerSelect()">
+                        <label class="form-check-label fw-bold mt-1 text-muted" for="typeMember" id="lblMember">Khách có tài khoản</label>
+                    </div>
+                </div>
+
+                <div id="walkInDiv" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold">Họ và Tên khách hàng <span class="text-danger">*</span></label>
+                        <input type="text" name="WalkInName" id="inputWalkInName" class="form-control form-control-custom" placeholder="Nhập tên khách..." />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold">Số điện thoại <span class="text-danger">*</span></label>
+                        <input type="text" name="WalkInPhone" id="inputWalkInPhone" class="form-control form-control-custom" placeholder="Nhập SĐT..." />
+                    </div>
+                </div>
+
+                <div id="memberSelectDiv" class="d-none">
+                    <label class="text-muted small fw-bold">Tìm kiếm tài khoản <span class="text-danger">*</span></label>
+                    <input list="customerOptions" id="customerSearchInput" class="form-control form-control-custom" placeholder="Gõ tên hoặc SĐT để tìm..." oninput="syncCustomerData()">
+                    <datalist id="customerOptions">
+                        @foreach(var acc in ViewBag.Customers) { <option data-id="@acc.AccountId" value="@acc.PhoneNumber - @acc.FullName"></option> }
+                    </datalist>
+                    <input type="hidden" name="AccountId" id="hiddenAccountId" />
+                </div>
+            </div>
+
+            <div class="search-widget">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold">Điểm đi <i class="bi bi-arrow-up-right-circle text-primary ms-1"></i></label>
+                        <select id="searchFrom" class="form-select form-control-custom border-0 bg-light fs-5">
+                            <option value="">Tất cả</option>
+                            @foreach (var branch in ViewBag.Branches) { <option value="@branch.BranchId">@branch.BranchName</option> }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold">Điểm đến <i class="bi bi-geo-alt text-danger ms-1"></i></label>
+                        <select id="searchTo" class="form-select form-control-custom border-0 bg-light fs-5">
+                            <option value="">Tất cả</option>
+                            @foreach (var spot in ViewBag.Spots) { <option value="@spot.SpotId">@spot.SpotName</option> }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold">Loại phương tiện</label>
+                        <select id="searchType" class="form-select form-control-custom border-0 bg-light fs-5">
+                            <option value="">Tất cả</option>
+                            <option value="Land">🚌 Đường bộ</option>
+                            <option value="Water">🛳️ Đường thủy</option>
+                            <option value="Air">✈️ Hàng không</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold">Ngày đi <span class="text-danger">*</span></label>
+                        <input type="date" name="TravelDate" id="travelDate" class="form-control form-control-custom border-0 bg-light fs-5" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <div class="col-12 mt-3">
+                        <button type="button" class="btn-futa py-3" onclick="filterRoutes()"><i class="bi bi-search me-2"></i>Tìm kiếm</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="routeResultsContainer"></div>
+            <input type="hidden" name="TransportationId" id="hiddenTransportId" />
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const allRoutes = [
+            @foreach(var r in ViewBag.Routes)
+            {
+                <text>
+                {
+                    id: @r.TransportationId,
+                    name: "@Html.Raw(r.TransportName)",
+                    type: "@Html.Raw(r.TransportType)",
+                    fromId: "@r.FromBranchId",
+                    fromName: "@Html.Raw(r.FromBranch?.BranchName)",
+                    toId: "@r.ToSpotId",
+                    toName: "@Html.Raw(r.ToSpot?.SpotName)",
+                    time: "@(r.DepartureTime?.ToString("HH:mm"))",
+                    price: @(r.PriceTransport ?? 0)
+                },
+                </text>
+            }
+        ];
+
+        function toggleCustomerSelect() {
+            var isMember = document.getElementById("typeMember").checked;
+            document.getElementById("walkInDiv").className = isMember ? "d-none" : "row g-3";
+            document.getElementById("memberSelectDiv").className = isMember ? "d-block" : "d-none";
+
+            document.getElementById("lblWalkIn").classList.toggle("text-muted", isMember);
+            document.getElementById("lblWalkIn").classList.toggle("text-primary", !isMember);
+            document.getElementById("lblMember").classList.toggle("text-muted", !isMember);
+            document.getElementById("lblMember").classList.toggle("text-primary", isMember);
+        }
+
+        function syncCustomerData() {
+            const input = document.getElementById('customerSearchInput');
+            const hidden = document.getElementById('hiddenAccountId');
+            const options = document.getElementById('customerOptions').options;
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value === input.value) { hidden.value = options[i].getAttribute('data-id'); break; }
+            }
+        }
+
+        function filterRoutes() {
+            const fromId = document.getElementById('searchFrom').value;
+            const toId = document.getElementById('searchTo').value;
+            const type = document.getElementById('searchType').value;
+            const date = document.getElementById('travelDate').value;
+
+            if (!date) { alert("Vui lòng chọn ngày đi!"); return; }
+
+            const results = allRoutes.filter(r => {
+                return (!fromId || r.fromId == fromId) && (!toId || r.toId == toId) && (!type || r.type == type);
+            });
+
+            const container = document.getElementById('routeResultsContainer');
+            container.innerHTML = '<h5 class="fw-bold mb-3 mt-4 text-dark">Chuyến đi gợi ý</h5>';
+
+            if (results.length === 0) {
+                container.innerHTML += '<div class="text-center py-5 bg-white rounded-4 border text-muted"><i class="bi bi-journal-x fs-1"></i><p class="mt-2 fw-bold">Không tìm thấy chuyến xe phù hợp.</p></div>';
+                return;
+            }
+
+            results.forEach(r => {
+                container.innerHTML += `
+                <div class="trip-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-bus-front-fill fs-2 text-primary me-3"></i>
+                            <div>
+                                <h5 class="mb-1 fw-bold text-dark">${r.name}</h5>
+                                <span class="badge bg-light text-dark border border-secondary">${r.type}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row align-items-center text-center mb-3">
+                        <div class="col-4">
+                            <div class="time-large">${r.time}</div>
+                            <small class="text-muted fw-bold">${r.fromName}</small>
+                        </div>
+                        <div class="col-4"><i class="bi bi-arrow-right fs-4 text-muted"></i></div>
+                        <div class="col-4">
+                            <div class="time-large text-primary">Tới bến</div>
+                            <small class="text-muted fw-bold">${r.toName}</small>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2">
+                        <div>
+                            <small class="text-muted d-block">Giá vé</small>
+                            <div class="price-text">${r.price.toLocaleString('vi-VN')} đ</div>
+                        </div>
+                        <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" onclick="selectRoute(${r.id})">Chọn ghế</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        // KIỂM TRA DỮ LIỆU VÀ CHUYỂN TRANG
+        function selectRoute(id) {
+            var isMember = document.getElementById("typeMember").checked;
+            
+            if (!isMember) {
+                if (!document.getElementById("inputWalkInName").value || !document.getElementById("inputWalkInPhone").value) {
+                    alert("Vui lòng điền đủ Tên và SĐT khách hàng trước khi chọn chuyến!");
+                    return;
+                }
+            } else {
+                if (!document.getElementById("hiddenAccountId").value) {
+                    alert("Vui lòng chọn tài khoản khách hàng trước khi chọn chuyến!");
+                    return;
+                }
+            }
+
+            document.getElementById('hiddenTransportId').value = id;
+            document.getElementById('managerBookingForm').submit();
+        }
+    </script>
+}

@@ -2,7 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KarnelTravelGuide.Web.Data;
 using KarnelTravelGuide.Web.Models.Entities;
-using Microsoft.AspNetCore.Http; // Bắt buộc phải có thư viện này để dùng Session
+using Microsoft.AspNetCore.Http; 
+using System.IO;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
@@ -18,28 +23,28 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // LẤY CHI NHÁNH CỦA MANAGER ĐANG ĐĂNG NHẬP (Lấy từ Session)
+        // GET THE BRANCH OF THE CURRENTLY LOGGED-IN MANAGER (From Session)
         private async Task<Branch> GetCurrentManagerBranchAsync()
         {
-            // 1. Lấy ID của người dùng đang đăng nhập từ Session
-            int? userId = HttpContext.Session.GetInt32("UserId");
+            // 1. Get the logged-in user's AccountId from the Session
+            int? accountId = HttpContext.Session.GetInt32("AccountId");
 
-            if (userId.HasValue)
+            if (accountId.HasValue)
             {
-                // 2. Tìm đúng tài khoản đó trong Database và kéo theo thông tin Chi nhánh (Branch)
+                // 2. Find the account in the Database and include the Branch info
                 var currentManager = await _context.Accounts
                     .Include(a => a.Branch)
-                    .FirstOrDefaultAsync(a => a.AccountId == userId.Value);
+                    .FirstOrDefaultAsync(a => a.AccountId == accountId.Value);
 
-                // 3. Nếu tìm thấy Manager và họ đã được Admin gán Chi nhánh, trả về Chi nhánh đó
+                // 3. If found and assigned to a branch, return that branch
                 if (currentManager != null && currentManager.Branch != null)
                 {
                     return currentManager.Branch;
                 }
             }
 
-            // Fallback: Đề phòng trường hợp bạn code bị rớt Session hoặc quên đăng nhập lúc test, 
-            // hàm sẽ tạm lấy Branch đầu tiên để trang web không bị sập (lỗi màn hình vàng)
+            // Fallback: In case the session drops during testing or manager has no branch,
+            // grab the first branch or create a dummy one to prevent crash pages.
             var fallbackBranch = await _context.Branches.FirstOrDefaultAsync();
             if (fallbackBranch == null)
             {
@@ -50,21 +55,24 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return fallbackBranch;
         }
 
-        // 1. GET: Danh sách & Tìm kiếm
+        // 1. GET: Index & Search
         public async Task<IActionResult> Index(string searchString)
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
             ViewData["CurrentFilter"] = searchString;
 
-            // Chỉ lấy điểm du lịch thuộc Branch của Manager này
+            // Only fetch tourist spots belonging to this Manager's Branch
             var spots = _context.TouristSpots
-                .Include(t => t.Branch) // Include thêm Branch để hiển thị tên ngoài danh sách
+                .Include(t => t.Branch) 
                 .Where(t => t.BranchId == currentBranch.BranchId)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                spots = spots.Where(s => s.SpotName.Contains(searchString) || s.Address.Contains(searchString));
+                // Added null checks to prevent CS8602 warnings
+                spots = spots.Where(s => 
+                    (s.SpotName != null && s.SpotName.Contains(searchString)) || 
+                    (s.Address != null && s.Address.Contains(searchString)));
             }
 
             return View(await spots.ToListAsync());
@@ -74,7 +82,8 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         public async Task<IActionResult> Create()
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
-            // Truyền thông tin Branch ra View để hiển thị Read-only
+            
+            // Pass Branch info to View for read-only display
             ViewBag.BranchName = currentBranch.BranchName;
             ViewBag.BranchId = currentBranch.BranchId;
             
@@ -89,14 +98,15 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             if (string.IsNullOrWhiteSpace(touristSpot.SpotName)) ModelState.AddModelError("SpotName", "Spot Name is required.");
             if (imageFile == null || imageFile.Length == 0) ModelState.AddModelError(string.Empty, "Image is required.");
 
-            ModelState.Remove("Branch"); // Bỏ qua validate khóa ngoại
+            // Remove navigation properties from validation
+            ModelState.Remove("Branch"); 
             ModelState.Remove("Restaurants");
             ModelState.Remove("Stays");
             ModelState.Remove("Transportations");
 
             if (ModelState.IsValid)
             {
-                // Upload ảnh
+                // Upload Image
                 string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "touristspots");
                 if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
@@ -111,11 +121,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 touristSpot.ImageUrl = "/images/touristspots/" + uniqueFileName;
                 _context.Add(touristSpot);
                 await _context.SaveChangesAsync();
+                
                 TempData["SuccessMessage"] = "Tourist spot added successfully!";
                 return RedirectToAction(nameof(Index));
             }
 
-            // Nếu lỗi, load lại BranchName
+            // Reload BranchName if validation fails
             var currentBranch = await GetCurrentManagerBranchAsync();
             ViewBag.BranchName = currentBranch.BranchName;
             return View(touristSpot);
@@ -131,6 +142,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var currentBranch = await GetCurrentManagerBranchAsync();
             ViewBag.BranchName = currentBranch.BranchName;
+            
             return View(touristSpot);
         }
 
@@ -152,14 +164,14 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 {
                     if (imageFile != null && imageFile.Length > 0)
                     {
-                        // Xóa ảnh cũ
+                        // Delete old image
                         if (!string.IsNullOrEmpty(touristSpot.ImageUrl))
                         {
                             string oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, touristSpot.ImageUrl.TrimStart('/'));
                             if (System.IO.File.Exists(oldImagePath)) System.IO.File.Delete(oldImagePath);
                         }
 
-                        // Lưu ảnh mới
+                        // Save new image
                         string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "touristspots");
                         if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
@@ -190,13 +202,13 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(touristSpot);
         }
 
-        // 6. GET: Details (Trang Xem chi tiết)
+        // 6. GET: Details
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
 
             var touristSpot = await _context.TouristSpots
-                .Include(t => t.Branch) // Load thêm tên Branch để hiển thị
+                .Include(t => t.Branch) 
                 .FirstOrDefaultAsync(m => m.SpotId == id);
 
             if (touristSpot == null) return NotFound();
@@ -204,7 +216,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(touristSpot);
         }
 
-        // 7. GET: Delete (Trang Hỏi xác nhận Xóa)
+        // 7. GET: Delete (Confirmation Page)
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -218,7 +230,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(touristSpot);
         }
 
-        // 8. POST: Delete (Xử lý Xóa thật trong Database)
+        // 8. POST: Delete (Process deletion in DB)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -226,12 +238,13 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var touristSpot = await _context.TouristSpots.FindAsync(id);
             if (touristSpot != null)
             {
-                // Xóa file ảnh trong thư mục
+                // Delete image file from server
                 if (!string.IsNullOrEmpty(touristSpot.ImageUrl))
                 {
                     string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, touristSpot.ImageUrl.TrimStart('/'));
                     if (System.IO.File.Exists(imagePath)) System.IO.File.Delete(imagePath);
                 }
+                
                 _context.TouristSpots.Remove(touristSpot);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Tourist spot deleted successfully!";

@@ -60,6 +60,12 @@
                     <label class="form-label fw-semibold">Ticket Price (USD)</label>
                     <input asp-for="PriceTransport" class="form-control" type="number" min="0" step="1" value="@Model.PriceTransport?.ToString("0")" required />
                 </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-semibold">Tổng số ghế <span class="text-danger">*</span></label>
+                    <input asp-for="SeatCapacity" class="form-control" type="number" min="5" max="100" value="@Model.SeatCapacity" required />
+                </div>
+                
             </div>
 
             <div class="mb-3">

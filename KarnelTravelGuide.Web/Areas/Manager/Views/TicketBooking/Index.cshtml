@@ -1,0 +1,101 @@
+@model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Order>
+@{
+    ViewData["Title"] = "Ticket Booking Management";
+    int index = 1;
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800"><i class="bi bi-ticket-perforated text-primary me-2"></i>Ticket Bookings</h1>
+    <a asp-action="Create" class="btn btn-primary shadow-sm"><i class="bi bi-plus-circle fa-sm text-white-50"></i> Walk-in Booking</a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm">
+        <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+    <div class="card-body p-4">
+        <form asp-action="Index" method="get" class="row g-3">
+            <div class="col-md-5">
+                <input type="text" name="searchString" value="@ViewBag.CurrentSearch" class="form-control bg-light border-0" placeholder="Search customer name or phone...">
+            </div>
+            <div class="col-md-4">
+                <input type="date" name="travelDate" value="@ViewBag.CurrentDate" class="form-control bg-light border-0" />
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100 fw-bold">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">#</th>
+                        <th>Customer</th>
+                        <th>Seats / Route</th>
+                        <th>Total Amount</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model)
+                    {
+                        var firstTicket = order.OrderDetails?.FirstOrDefault(od => od.TicketBooking != null)?.TicketBooking;
+                        if (firstTicket == null) continue;
+
+                        var seats = string.Join(", ", order.OrderDetails!.Where(od => od.TicketBooking != null).Select(od => od.TicketBooking!.Seat));
+
+                        <tr>
+                            <td class="ps-4 text-muted fw-bold">@(index++)</td>
+                            <td>
+                                <strong class="text-dark d-block">@(order.Account?.FullName ?? "Unknown")</strong>
+                                <small class="text-muted"><i class="bi bi-telephone text-primary"></i> @(order.Account?.PhoneNumber ?? "N/A")</small>
+                            </td>
+                            <td>
+                                <span class="badge border border-primary text-primary px-2 py-1 fs-6 mb-1">Ghế: @seats</span><br>
+                                <small class="text-muted fw-bold">@firstTicket.Transportation?.TransportName</small>
+                                <small class="d-block text-muted">@(firstTicket.TravelDate.HasValue ? firstTicket.TravelDate.Value.ToString("dd/MM/yyyy") : "N/A")</small>
+                            </td>
+                            <td class="fw-bold text-success">$@order.TotalAmount?.ToString("N0")</td>
+                            
+                            <td class="text-center">
+                                @if (order.Status == "Confirmed") { <span class="badge bg-success">Confirmed</span> }
+                                else if (order.Status == "Canceled") { <span class="badge bg-danger">Canceled</span> }
+                                else { <span class="badge bg-warning text-dark">Pending</span> }
+                            </td>
+
+                            <td class="text-center">
+                                <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-info" title="View Details"><i class="bi bi-eye"></i></a>
+                                
+                                @if (order.Status == "Pending")
+                                {
+                                    <form asp-action="ConfirmBooking" method="post" class="d-inline">
+                                        <input type="hidden" name="orderId" value="@order.OrderId" />
+                                        <button type="submit" class="btn btn-sm btn-success" title="Confirm Booking"><i class="bi bi-check-lg"></i></button>
+                                    </form>
+                                }
+                                @if (order.Status != "Canceled")
+                                {
+                                    <form asp-action="CancelOrder" method="post" class="d-inline" onsubmit="return confirm('Hủy đơn hàng này sẽ trả lại ghế trống cho hệ thống. Bạn có chắc chắn?');">
+                                        <input type="hidden" name="orderId" value="@order.OrderId" />
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Cancel & Free Seats"><i class="bi bi-x-circle"></i></button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

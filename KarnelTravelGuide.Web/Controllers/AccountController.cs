@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
 using System;
-using Microsoft.EntityFrameworkCore; // Bắt buộc phải có để dùng .Include()
+using Microsoft.EntityFrameworkCore;
 
 namespace KarnelTravelGuide.Web.Controllers
 {
@@ -34,7 +34,6 @@ namespace KarnelTravelGuide.Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                // SỬA: Thêm .Include(a => a.Role) để lấy tên Quyền
                 var user = _context.Accounts
                     .Include(a => a.Role) 
                     .FirstOrDefault(a => a.Email == model.Email && a.Password == model.Password);
@@ -43,12 +42,12 @@ namespace KarnelTravelGuide.Web.Controllers
                 {
                     HttpContext.Session.SetString("UserName", user.FullName ?? "");
                     
-                    // SỬA: Lấy RoleName thay vì Role
                     string userRoleName = user.Role?.RoleName ?? "Customer";
                     HttpContext.Session.SetString("UserRole", userRoleName);
-                    HttpContext.Session.SetInt32("UserId", user.AccountId);
+                    
+                    // SỬA: Đổi tên Session thành AccountId
+                    HttpContext.Session.SetInt32("AccountId", user.AccountId);
 
-                    // SỬA: So sánh RoleName
                     if (userRoleName == "Admin")
                     {
                         return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
@@ -83,7 +82,6 @@ namespace KarnelTravelGuide.Web.Controllers
                     return View(model);
                 }
 
-                // SỬA: Tìm RoleId của Customer
                 var customerRole = _context.Roles.FirstOrDefault(r => r.RoleName == "Customer");
 
                 var newAccount = new Account
@@ -93,7 +91,6 @@ namespace KarnelTravelGuide.Web.Controllers
                     Password = model.Password,
                     PhoneNumber = model.PhoneNumber,
                     Address = model.Address,
-                    // SỬA: Gán RoleId thay vì gán chuỗi Role = "Customer"
                     RoleId = customerRole != null ? customerRole.RoleId : 3 
                 };
 
@@ -109,10 +106,12 @@ namespace KarnelTravelGuide.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null) return RedirectToAction("Login");
+            // SỬA: Lấy AccountId từ Session
+            var accountId = HttpContext.Session.GetInt32("AccountId");
+            if (accountId == null) return RedirectToAction("Login");
 
-            var user = await _context.Accounts.FindAsync(userId);
+            // SỬA: Tìm kiếm bằng accountId
+            var user = await _context.Accounts.FindAsync(accountId);
             if (user == null) return RedirectToAction("Login");
 
             return View(user);
@@ -122,10 +121,12 @@ namespace KarnelTravelGuide.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Profile(Account model, IFormFile? avatarFile, string? newPassword)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null) return RedirectToAction("Login");
+            // SỬA: Lấy AccountId từ Session
+            var accountId = HttpContext.Session.GetInt32("AccountId");
+            if (accountId == null) return RedirectToAction("Login");
 
-            var user = await _context.Accounts.FindAsync(userId);
+            // SỬA: Tìm kiếm bằng accountId
+            var user = await _context.Accounts.FindAsync(accountId);
             if (user == null) return RedirectToAction("Login");
 
             user.FullName = model.FullName;

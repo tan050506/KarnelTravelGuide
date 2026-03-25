@@ -4,6 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using KarnelTravelGuide.Web.Data;
 using KarnelTravelGuide.Web.Models.Entities;
 using Microsoft.AspNetCore.Http;
+using System.IO;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
@@ -19,22 +24,24 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // LẤY CHI NHÁNH CỦA MANAGER ĐANG ĐĂNG NHẬP
+        // GET THE BRANCH OF THE CURRENTLY LOGGED-IN MANAGER
         private async Task<Branch> GetCurrentManagerBranchAsync()
         {
-            int? userId = HttpContext.Session.GetInt32("UserId");
-            if (userId.HasValue)
+            // FIXED: Using "AccountId" instead of "UserId"
+            int? accountId = HttpContext.Session.GetInt32("AccountId");
+            if (accountId.HasValue)
             {
                 var currentManager = await _context.Accounts
                     .Include(a => a.Branch)
-                    .FirstOrDefaultAsync(a => a.AccountId == userId.Value);
+                    .FirstOrDefaultAsync(a => a.AccountId == accountId.Value);
 
                 if (currentManager != null && currentManager.Branch != null)
                 {
                     return currentManager.Branch;
                 }
             }
-            // Fallback an toàn
+            
+            // Safe Fallback in case the manager doesn't have a branch assigned yet
             var fallbackBranch = await _context.Branches.FirstOrDefaultAsync();
             if (fallbackBranch == null)
             {
@@ -60,9 +67,9 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             if (!string.IsNullOrEmpty(searchString))
             {
                 transportations = transportations.Where(s => 
-                    s.TransportType!.Contains(searchString) || 
-                    s.TransportName!.Contains(searchString) ||
-                    s.ToSpot!.SpotName.Contains(searchString));
+                    (s.TransportType != null && s.TransportType.Contains(searchString)) || 
+                    (s.TransportName != null && s.TransportName.Contains(searchString)) ||
+                    (s.ToSpot != null && s.ToSpot.SpotName!.Contains(searchString)));
             }
 
             return View(await transportations.ToListAsync());
@@ -77,7 +84,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             ViewBag.BranchAddress = currentBranch.Address;
             ViewBag.FromBranchId = currentBranch.BranchId;
             
-            // Truyền nguyên List để lấy được Address xử lý bằng JavaScript
+            // Pass the entire list so JavaScript can access the Address property if needed
             ViewBag.TouristSpots = await _context.TouristSpots.ToListAsync();
 
             return View();
@@ -86,7 +93,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         // 3. POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("TransportName,TransportType,FromBranchId,ToSpotId,DepartureTime,PriceTransport,Description")] Transportation transportation, IFormFile? imageFile)
+        public async Task<IActionResult> Create([Bind("TransportName,TransportType,FromBranchId,ToSpotId,DepartureTime,PriceTransport,SeatCapacity,Description")] Transportation transportation, IFormFile? imageFile)
         {
             if (imageFile == null || imageFile.Length == 0) ModelState.AddModelError(string.Empty, "Transport image is required.");
             if (transportation.ToSpotId == null) ModelState.AddModelError("ToSpotId", "Please select a destination.");
@@ -142,7 +149,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         // 5. POST: Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("TransportationId,TransportName,TransportType,FromBranchId,ToSpotId,DepartureTime,PriceTransport,Description,ImageUrl")] Transportation transportation, IFormFile? imageFile)
+        public async Task<IActionResult> Edit(int id, [Bind("TransportationId,TransportName,TransportType,FromBranchId,ToSpotId,DepartureTime,PriceTransport,SeatCapacity,Description,ImageUrl")] Transportation transportation, IFormFile? imageFile)
         {
             if (id != transportation.TransportationId) return NotFound();
 

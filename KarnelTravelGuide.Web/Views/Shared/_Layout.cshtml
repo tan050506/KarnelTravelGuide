@@ -25,7 +25,6 @@
         .brand-logo { color: #0984e3; font-weight: 800; font-size: 1.6rem; letter-spacing: -0.5px; }
         .brand-logo span { color: #fdcb6e; }
         
-        /* ĐÃ SỬA: Ép padding nhỏ lại một chút để chứa được nhiều nút hơn */
         .nav-link.travel-link { color: #636e72; font-weight: 600; padding: 8px 12px !important; border-radius: 8px; transition: all 0.3s ease; margin: 0 2px; }
         .nav-link.travel-link:hover, .nav-link.travel-link.active { color: #0984e3; background-color: rgba(9, 132, 227, 0.05); }
         
@@ -42,7 +41,8 @@
 <body>
     <header>
         <nav class="navbar navbar-expand-lg navbar-custom sticky-top py-2">
-            <div class="container-fluid px-lg-5"> <a class="navbar-brand brand-logo" asp-controller="Home" asp-action="Index">
+            <div class="container-fluid px-lg-5"> 
+                <a class="navbar-brand brand-logo" asp-controller="Home" asp-action="Index">
                     <i class="bi bi-geo-alt-fill text-warning"></i> Karnel<span>Travel</span>
                 </a>
                 <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -54,7 +54,7 @@
                         <li class="nav-item"><a class="nav-link travel-link" asp-controller="TouristSpot" asp-action="Index">Destinations</a></li>
                         <li class="nav-item"><a class="nav-link travel-link" asp-controller="Stay" asp-action="Index">Stays</a></li>
                         <li class="nav-item"><a class="nav-link travel-link" asp-controller="Restaurant" asp-action="Index">Dining</a></li>
-                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="Transportation" asp-action="Index">Transport</a></li>
+                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="BookTicket" asp-action="Index">Book Ticket</a></li>
                         <li class="nav-item"><a class="nav-link travel-link" asp-controller="Home" asp-action="About">About Us</a></li>
                         <li class="nav-item"><a class="nav-link travel-link" asp-controller="Home" asp-action="Contact">Contact</a></li>
                     </ul>
@@ -110,7 +110,7 @@
                         <li><a asp-controller="TouristSpot" asp-action="Index">Top Destinations</a></li>
                         <li><a asp-controller="Stay" asp-action="Index">Luxury Stays</a></li>
                         <li><a asp-controller="Restaurant" asp-action="Index">Local Cuisine</a></li>
-                        <li><a asp-controller="Transportation" asp-action="Index">Transport Tickets</a></li>
+                        <li><a asp-controller="BookTicket" asp-action="Index">Book Tickets</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-3 col-md-6">
