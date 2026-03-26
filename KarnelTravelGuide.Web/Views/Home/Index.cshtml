@@ -1,123 +1,233 @@
-﻿@{
-    ViewData["Title"] = "Discover the World";
+﻿@model IEnumerable<KarnelTravelGuide.Web.Models.Entities.TouristSpot>
+@{
+    ViewData["Title"] = "Home - KarnelTravelGuide";
 }
 
 <style>
-    /* Hero Section hiện đại */
+    :root {
+        --kt-primary: #0d6efd;
+        --kt-primary-hover: #0b5ed7;
+    }
+
+    body {
+        background-color: #f8fafc;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    /* 1. Khu vực ảnh bìa */
     .hero-banner {
-        position: relative;
-        height: 85vh;
-        min-height: 600px;
-        /* ĐÃ SỬA: Đổi no-resolution thành no-repeat để ảnh nền hiện lên */
-        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), 
-                    url('https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
+        background: linear-gradient(rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.7)), 
+                    url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop') no-repeat center center;
+        background-size: cover;
+        height: 75vh;
+        min-height: 550px;
         display: flex;
         align-items: center;
-        justify-content: center;
-        border-radius: 0 0 40px 40px;
-        margin-top: -80px; 
-        padding-top: 80px;
+        border-radius: 0 0 2.5rem 2.5rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
-    
-    .search-box {
+
+    /* 2. Khung tìm kiếm */
+    .search-glass {
         background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 50px;
-        padding: 8px 8px 8px 15px;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-        width: 100%;
-        max-width: 650px; /* Giới hạn độ dài để thanh search không quá to */
-        margin: 0 auto; /* ĐÃ SỬA: Ép thanh search vào giữa màn hình */
+        backdrop-filter: blur(12px);
+        border-radius: 1.25rem;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        transform: translateY(50%);
+        z-index: 10;
+        border: 1px solid rgba(255,255,255,0.5);
     }
-    
-    .search-input { border: none; font-size: 1.1rem; box-shadow: none !important; background: transparent; }
-    .search-input:focus { outline: none; }
-    
-    /* Service Cards */
+
+    .form-control-custom {
+        background-color: #f1f5f9;
+        border: 1px solid transparent;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s;
+    }
+    .form-control-custom:focus {
+        background-color: #fff;
+        border-color: var(--kt-primary);
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+    }
+
+    /* 3. Thẻ Dịch vụ */
     .service-card {
         border: none;
-        border-radius: 24px;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        background: white;
-        overflow: hidden;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        border-radius: 1.25rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #fff;
+        height: 100%;
     }
     .service-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.06);
     }
-    .icon-wrapper {
-        width: 80px; height: 80px;
-        border-radius: 20px;
+    .icon-box {
+        width: 64px; height: 64px;
+        border-radius: 1rem;
         display: flex; align-items: center; justify-content: center;
-        font-size: 2.5rem;
-        margin-bottom: 20px;
+        font-size: 1.75rem;
+        margin-bottom: 1.25rem;
     }
-    .bg-light-blue { background-color: #e3f2fd; color: #0984e3; }
-    .bg-light-orange { background-color: #fff3e0; color: #fdcb6e; }
-    .bg-light-green { background-color: #e8f5e9; color: #00b894; }
-    .bg-light-purple { background-color: #f3e5f5; color: #6c5ce7; }
+
+    /* 4. Thẻ Địa điểm */
+    .dest-card {
+        border-radius: 1.25rem;
+        overflow: hidden;
+        border: none;
+        position: relative;
+        cursor: pointer;
+    }
+    .dest-card img {
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 350px;
+        object-fit: cover;
+    }
+    .dest-card:hover img {
+        transform: scale(1.08);
+    }
+    .dest-overlay {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+        padding: 2rem 1.5rem 1.5rem;
+        color: white;
+    }
+    
+    .section-title {
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 1rem;
+    }
 </style>
 
-<div class="hero-banner mb-5">
-    <div class="container">
-        <div class="row justify-content-center text-center">
-            <div class="col-lg-9 text-white">
-                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill mb-3 fw-bold text-uppercase shadow-sm">Let's Travel The World</span>
-                <h1 class="display-3 fw-bold mb-4" style="line-height: 1.2;">Find Your Next <br/> <span style="color: #00cec9;">Perfect</span> Destination</h1>
-                <p class="lead mb-5 opacity-75 fw-light mx-auto" style="max-width: 600px;">Discover amazing places at exclusive deals. We provide the best stays, flights, and dining experiences tailored just for you.</p>
-                
-                <form class="search-box d-flex align-items-center" asp-controller="TouristSpot" asp-action="Index" method="get">
-                    <i class="bi bi-search fs-5 text-muted me-2"></i>
-                    <input type="text" name="searchString" class="form-control search-input" placeholder="Where do you want to go?">
-                    <button class="btn btn-primary-custom btn-modern px-5 py-2 ms-2" type="submit">Search</button>
+<section class="hero-banner position-relative mb-5">
+    <div class="container h-100 pb-5">
+        <div class="row h-100 align-items-center">
+            <div class="col-lg-8 mx-auto text-center text-white">
+                <span class="badge bg-white text-dark px-3 py-2 rounded-pill mb-3 shadow-sm fw-bold">🚀 The Leading Travel Platform</span>
+                <h1 class="display-3 fw-bold mb-4" style="letter-spacing: -1px;">Explore the World with KarnelTravel</h1>
+                <p class="lead mb-0 opacity-75 fs-5">Experience the perfect journey with our premium booking system for transportation, unforgettable stays, and local dining.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-absolute start-0 w-100" style="bottom: 0;">
+        <div class="container">
+            <div class="search-glass p-4 mx-auto" style="max-width: 1000px;">
+                <form class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-secondary small mb-1"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Where to?</label>
+                        <input type="text" class="form-control form-control-custom" placeholder="City, destination...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold text-secondary small mb-1"><i class="bi bi-calendar-event-fill text-primary me-1"></i> Date</label>
+                        <input type="date" class="form-control form-control-custom">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold text-secondary small mb-1"><i class="bi bi-grid-fill text-success me-1"></i> Service</label>
+                        <select class="form-select form-control-custom">
+                            <option>Transport Ticket</option>
+                            <option>Hotel & Stay</option>
+                            <option>Dining / Restaurant</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm" style="padding: 0.75rem 1rem; border-radius: 0.75rem;">
+                            Search
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<div class="container py-5 my-5">
+<div style="height: 80px;"></div>
+
+<section class="container py-5 my-4">
     <div class="text-center mb-5">
-        <h6 class="text-primary fw-bold text-uppercase tracking-wide">Category</h6>
-        <h2 class="display-6 fw-bold text-dark">We Offer Best Services</h2>
+        <h2 class="section-title">Our Premium Services</h2>
+        <p class="text-muted fs-6">Everything you need for a perfect, seamless trip.</p>
     </div>
 
     <div class="row g-4">
-        <div class="col-lg-3 col-md-6">
-            <div class="card service-card h-100 p-4">
-                <div class="icon-wrapper bg-light-blue"><i class="bi bi-map-fill"></i></div>
-                <h4 class="fw-bold mb-3">Destinations</h4>
-                <p class="text-muted mb-4 small">Explore beautiful landscapes and famous tourist spots handpicked for you.</p>
-                <a asp-controller="TouristSpot" asp-action="Index" class="text-decoration-none fw-bold mt-auto" style="color: #0984e3;">Explore <i class="bi bi-arrow-right"></i></a>
+        <div class="col-md-6 col-lg-3">
+            <div class="card service-card p-4 text-center shadow-sm">
+                <div class="icon-box bg-danger bg-opacity-10 text-danger mx-auto">
+                    <i class="bi bi-geo-alt-fill"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Destinations</h5>
+                <p class="text-muted small mb-0 mt-2">Discover popular tourist attractions and breathtaking views.</p>
             </div>
         </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card service-card h-100 p-4">
-                <div class="icon-wrapper bg-light-orange"><i class="bi bi-buildings-fill"></i></div>
-                <h4 class="fw-bold mb-3">Hotels & Stays</h4>
-                <p class="text-muted mb-4 small">Enjoy luxury resorts or cozy homestays with the best price guarantee.</p>
-                <a asp-controller="Stay" asp-action="Index" class="text-decoration-none fw-bold mt-auto" style="color: #fdcb6e;">Book Room <i class="bi bi-arrow-right"></i></a>
+        <div class="col-md-6 col-lg-3">
+            <div class="card service-card p-4 text-center shadow-sm">
+                <div class="icon-box bg-primary bg-opacity-10 text-primary mx-auto">
+                    <i class="bi bi-bus-front-fill"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Transport Tickets</h5>
+                <p class="text-muted small mb-0 mt-2">Book buses, flights, and ferries quickly and securely.</p>
             </div>
         </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card service-card h-100 p-4">
-                <div class="icon-wrapper bg-light-green"><i class="bi bi-airplane-fill"></i></div>
-                <h4 class="fw-bold mb-3">Transportation</h4>
-                <p class="text-muted mb-4 small">Easy booking for flights, buses, and ferries to reach your destination safely.</p>
-                <a asp-controller="Transportation" asp-action="Index" class="text-decoration-none fw-bold mt-auto" style="color: #00b894;">Find Tickets <i class="bi bi-arrow-right"></i></a>
+        <div class="col-md-6 col-lg-3">
+            <div class="card service-card p-4 text-center shadow-sm">
+                <div class="icon-box bg-success bg-opacity-10 text-success mx-auto">
+                    <i class="bi bi-building-fill"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Luxury Stays</h5>
+                <p class="text-muted small mb-0 mt-2">Diverse accommodation system tailored to your comfort.</p>
             </div>
         </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card service-card h-100 p-4">
-                <div class="icon-wrapper bg-light-purple"><i class="bi bi-cup-hot-fill"></i></div>
-                <h4 class="fw-bold mb-3">Restaurants</h4>
-                <p class="text-muted mb-4 small">Taste the local cuisine. Reserve tables at top-rated dining spots instantly.</p>
-                <a asp-controller="Restaurant" asp-action="Index" class="text-decoration-none fw-bold mt-auto" style="color: #6c5ce7;">Reserve Table <i class="bi bi-arrow-right"></i></a>
+        <div class="col-md-6 col-lg-3">
+            <div class="card service-card p-4 text-center shadow-sm">
+                <div class="icon-box bg-warning bg-opacity-10 text-warning mx-auto">
+                    <i class="bi bi-shop"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Local Dining</h5>
+                <p class="text-muted small mb-0 mt-2">Taste the essence of local cuisine at top-rated restaurants.</p>
             </div>
         </div>
     </div>
-</div>
+</section>
+
+<section class="container py-5 mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="section-title mb-1">Top Destinations</h2>
+            <p class="text-muted mb-0">Discover places travelers love the most.</p>
+        </div>
+        <a href="#" class="btn btn-outline-primary rounded-pill fw-bold px-4">View All <i class="bi bi-arrow-right ms-1"></i></a>
+    </div>
+
+    <div class="row g-4">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var spot in Model)
+            {
+                <div class="col-md-4">
+                    <div class="card dest-card shadow-sm">
+                        <img src="@(string.IsNullOrEmpty(spot.ImageUrl) ? "/img/no-image.jpg" : spot.ImageUrl)" class="w-100" alt="@spot.SpotName">
+                        <div class="dest-overlay">
+                            <span class="badge bg-primary mb-2 px-2 py-1">Trending</span>
+                            <h4 class="fw-bold mb-1 text-truncate">@spot.SpotName</h4>
+                            <p class="small mb-0 opacity-75 text-truncate">
+                                <i class="bi bi-camera me-1"></i> @spot.TouristSpotImages.Count Photos • 
+                                <i class="bi bi-geo-alt ms-1"></i> @spot.Address
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5 bg-light rounded-4 border text-muted">
+                <i class="bi bi-image fs-1 d-block mb-3"></i>
+                <h5>No destinations available</h5>
+                <p>New tourist spots added by managers will appear here.</p>
+            </div>
+        }
+    </div>
+</section>

@@ -1,72 +1,128 @@
 @model KarnelTravelGuide.Web.Models.Entities.TouristSpot
 @{
-    ViewData["Title"] = "Edit Tourist Spot";
+    ViewData["Title"] = "Edit: " + Model.SpotName;
 }
 
-<div class="card shadow-sm border-0 rounded-4" style="max-width: 800px; margin: 0 auto;">
-    <div class="card-body p-4">
-        <form asp-action="Edit" enctype="multipart/form-data">
-            <input type="hidden" asp-for="SpotId" />
-            <input type="hidden" asp-for="ImageUrl" />
-            <input type="hidden" asp-for="BranchId" />
+<div class="k-card mx-auto" style="max-width: 900px;">
+    <div class="d-flex align-items-center border-bottom pb-3 mb-4">
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="fw-bold m-0 text-dark">Update: <span class="text-primary">@Model.SpotName</span></h4>
+    </div>
 
-            <div class="mb-4 bg-light p-3 rounded-3 border border-info border-start border-4">
-                <label class="form-label fw-bold text-info small text-uppercase">Managing Branch</label>
-                <input type="text" class="form-control bg-white text-muted fw-bold" value="@ViewBag.BranchName" readonly disabled />
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="SpotId" />
+        <input type="hidden" asp-for="BranchId" />
+        <input type="hidden" asp-for="ImageUrl" />
+        
+        <div class="row g-4">
+            <div class="col-12">
+                <label class="label-karnel">Managing Branch</label>
+                <input type="text" class="k-input bg-light" value="@ViewBag.BranchName" readonly disabled />
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Spot Name</label>
-                <input asp-for="SpotName" class="form-control" required />
+            <div class="col-md-6">
+                <label class="label-karnel">Spot Name <span class="text-danger">*</span></label>
+                <input asp-for="SpotName" class="k-input" required />
+            </div>
+            
+            <div class="col-md-6">
+                <label class="label-karnel">Address <span class="text-danger">*</span></label>
+                <input asp-for="Address" class="k-input" required />
+            </div>
+            
+            <div class="col-12">
+                <label class="label-karnel">Overview Description</label>
+                <textarea asp-for="Description" class="k-input" rows="5"></textarea>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Address</label>
-                <input asp-for="Address" class="form-control" />
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Update Image (Leave blank to keep current)</label>
-                <input type="file" name="imageFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
-                
-                <div class="mt-3 text-center bg-light rounded-3 p-3 border">
-                    <span class="d-block text-muted small mb-2">Current / Preview Image</span>
-                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
-                    {
-                        <img id="imagePreview" src="@Model.ImageUrl" style="max-height: 200px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" />
+            <div class="col-md-6">
+                <div class="p-4 border rounded-4 bg-light h-100">
+                    <label class="label-karnel text-primary"><i class="bi bi-card-image me-1"></i>Update Cover Image</label>
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl)) {
+                        <img src="@Model.ImageUrl" class="img-fluid rounded-3 mb-3 shadow-sm d-block" style="height: 150px; object-fit: cover; width: 100%;" />
                     }
-                    else
+                    <input type="file" name="CoverFile" class="form-control" accept="image/*" />
+                    <small class="text-muted d-block mt-2">Leave blank to keep current cover.</small>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="p-4 border rounded-4 bg-light h-100">
+                    <label class="label-karnel text-success"><i class="bi bi-images me-1"></i>Add to Gallery</label>
+                    <input type="file" name="GalleryFiles" class="form-control mt-3" accept="image/*" multiple />
+                    <small class="text-muted d-block mt-2">Select multiple images to add them to the gallery.</small>
+                </div>
+            </div>
+
+            <div class="col-12 mt-4">
+                <label class="label-karnel mb-3"><i class="bi bi-collection me-1"></i>Current Gallery Photos & Captions (@Model.TouristSpotImages.Count)</label>
+                <div class="row g-3">
+                    @foreach (var img in Model.TouristSpotImages)
                     {
-                        <img id="imagePreview" style="max-height: 200px; object-fit: cover; border-radius: 8px; display: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" />
+                        <div class="col-md-4 col-sm-6" id="imgBox-@img.ImageId">
+                            <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
+                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 rounded-circle shadow" 
+                                        style="width: 28px; height: 28px; padding: 0; z-index: 10;"
+                                        onclick="deleteGalleryImage(@img.ImageId)">
+                                    <i class="bi bi-x fs-5"></i>
+                                </button>
+                                
+                                <img src="@img.ImageUrl" class="card-img-top" style="height: 140px; object-fit: cover;" />
+                                
+                                <div class="card-body p-2 bg-light">
+                                    <input type="text" class="form-control form-control-sm border-0 shadow-none text-center bg-transparent fw-bold text-muted"
+                                           placeholder="Enter caption..."
+                                           value="@img.Caption"
+                                           onblur="updateCaption(@img.ImageId, this.value)" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @if(Model.TouristSpotImages.Count == 0) {
+                        <div class="col-12 text-muted fst-italic">No gallery photos uploaded yet.</div>
                     }
                 </div>
             </div>
 
-            <div class="mb-4">
-                <label class="form-label fw-semibold">Description</label>
-                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+            <div class="col-12 mt-5 text-end border-top pt-4">
+                <button type="submit" class="k-btn-primary px-5 py-3"><i class="bi bi-check2-circle me-2"></i> Save Changes</button>
             </div>
-
-            <div class="d-flex justify-content-between">
-                <a asp-action="Index" class="btn btn-light border">Cancel</a>
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i> Update Changes</button>
-            </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
     <script>
-        function previewImage(event) {
-            var reader = new FileReader();
-            reader.onload = function(){
-                var output = document.getElementById('imagePreview');
-                output.src = reader.result;
-                output.style.display = 'inline-block';
-            };
-            if(event.target.files[0]){
-                reader.readAsDataURL(event.target.files[0]);
+        function deleteGalleryImage(imageId) {
+            if (confirm("Are you sure you want to remove this image from the gallery?")) {
+                fetch('/Manager/TouristSpot/DeleteGalleryImage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `imageId=${imageId}`
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('imgBox-' + imageId).remove();
+                    } else {
+                        alert("Error! Could not delete the image.");
+                    }
+                });
             }
+        }
+
+        function updateCaption(imageId, captionText) {
+            fetch('/Manager/TouristSpot/UpdateGalleryImageCaption', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `imageId=${imageId}&caption=${encodeURIComponent(captionText)}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) {
+                    alert("Error! Could not save the caption.");
+                }
+            });
         }
     </script>
 }

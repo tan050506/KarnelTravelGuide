@@ -1,98 +1,99 @@
 @model KarnelTravelGuide.Web.Models.Entities.Transportation
 @{
-    ViewData["Title"] = "Chọn ghế";
+    ViewData["Title"] = "Select Seats";
 }
 
 <style>
-    body { background-color: #f5f5f5; padding-bottom: 120px; }
+    body { background-color: #f8fafc; }
     
-    .booking-container { max-width: 800px; margin: 30px auto; display: flex; flex-direction: column; gap: 20px; }
-    .search-widget { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #f0f0f0; }
+    .card-custom { background: #fff; border-radius: 1.25rem; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: none; }
     
-    .route-title { font-size: 1.3rem; font-weight: 700; margin: 0; color: #333; }
-
     .legend-container { display: flex; justify-content: center; gap: 24px; margin-bottom: 30px; }
     .legend-item { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.95rem; color: #555; }
     .legend-box { width: 24px; height: 24px; border-radius: 6px; }
 
     .seat-grid { display: grid; gap: 15px; justify-content: center; }
-    
     .seat { height: 45px; width: 50px; border-radius: 8px 8px 15px 15px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s ease; user-select: none; }
     .seat.available { background-color: #fff; border: 2px solid #28a745; color: #28a745; }
     .seat.available:hover { background-color: #e6f9ed; transform: translateY(-2px); }
     .seat.booked { background-color: #e4e6eb; color: #a0a0a0; border: 2px solid #d0d0d0; cursor: not-allowed; }
-    .seat.selected { background-color: #0061e6; color: white; border: 2px solid #0061e6; box-shadow: 0 4px 10px rgba(0, 97, 230, 0.3); transform: scale(1.05); }
+    .seat.selected { background-color: #0d6efd; color: white; border: 2px solid #0d6efd; box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3); transform: scale(1.05); }
     
-    /* Footer dính đáy màn hình cực chuẩn */
-    .bottom-checkout-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 20px 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); z-index: 1000; border-top: 1px solid #eaeaea; }
-    .btn-futa { background-color: #0061e6; color: white; border-radius: 12px; font-weight: 700; padding: 14px 20px; width: 100%; border: none; font-size: 1.1rem; transition: 0.2s; }
-    .btn-futa:hover:not(:disabled) { background-color: #004bb5; box-shadow: 0 4px 12px rgba(0, 97, 230, 0.4); }
-    .btn-futa:disabled { background-color: #a0c2f5; color: #fff; cursor: not-allowed; }
+    /* Fixed Checkout Bar - Using Grid to prevent CSS break */
+    .bottom-checkout-bar { position: sticky; bottom: 20px; background: #fff; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 1000; border-radius: 1.25rem; margin-top: 30px; border: 1px solid rgba(0,0,0,0.05); }
+    .seat-scroll-box::-webkit-scrollbar { width: 6px; }
+    .seat-scroll-box::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+    
+    .btn-custom { background-color: #0d6efd; color: white; border-radius: 0.75rem; font-weight: 700; transition: 0.3s; }
+    .btn-custom:hover:not(:disabled) { background-color: #0b5ed7; box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3); transform: translateY(-2px); }
 </style>
 
-<div class="container">
-    <div class="booking-container">
-        
-        <div class="d-flex align-items-center mb-2 px-2">
-            <a asp-action="Index" class="text-dark me-3"><i class="bi bi-chevron-left fs-3"></i></a>
-            <h1 class="route-title">@Model.FromBranch?.BranchName <i class="bi bi-arrow-right text-primary mx-2"></i> @Model.ToSpot?.SpotName</h1>
+<div class="container py-5" style="max-width: 900px;">
+    
+    <div class="d-flex align-items-center mb-4">
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <h3 class="fw-bold mb-0 text-dark">@Model.TransportName</h3>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null) { 
+        <div class="alert alert-danger rounded-4 fw-bold shadow-sm mb-4"><i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]</div> 
+    }
+
+    <form asp-action="Booking" method="post" id="checkoutForm">
+        <input type="hidden" name="transportationId" value="@Model.TransportationId" />
+        <input type="hidden" name="travelDate" value="@ViewBag.SelectedDate" />
+        <input type="hidden" name="seat" id="selectedSeatInput" required />
+
+        <div class="card-custom mb-0">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-2">
+                        <i class="bi bi-calendar-event text-primary"></i>
+                    </div>
+                    <span class="fw-bold text-dark fs-5">@ViewBag.SelectedDate</span>
+                </div>
+                <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 fs-6">$@Model.PriceTransport?.ToString("N0") / seat</span>
+            </div>
+
+            <div class="legend-container">
+                <div class="legend-item"><div class="legend-box" style="background: #fff; border: 2px solid #28a745;"></div> Available</div>
+                <div class="legend-item"><div class="legend-box" style="background: #e4e6eb; border: 2px solid #d0d0d0;"></div> Booked</div>
+                <div class="legend-item"><div class="legend-box" style="background: #0d6efd;"></div> Selected</div>
+            </div>
+
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-3 text-muted fw-bold">Loading seat map...</p>
+            </div>
+
+            <div id="seatMapGrid" class="row d-none g-4 justify-content-center pb-3">
+                <div class="col-md-6">
+                    <div class="text-center fw-bold text-muted mb-3 text-uppercase">Lower Deck</div>
+                    <div class="seat-grid" id="floor1"></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-center fw-bold text-muted mb-3 text-uppercase">Upper Deck</div>
+                    <div class="seat-grid" id="floor2"></div>
+                </div>
+            </div>
         </div>
 
-        @if (TempData["ErrorMessage"] != null) { 
-            <div class="alert alert-danger rounded-3 fw-bold"><i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]</div> 
-        }
-
-        <form asp-action="Booking" method="post" id="checkoutForm">
-            <input type="hidden" name="transportationId" value="@Model.TransportationId" />
-            <input type="hidden" name="travelDate" value="@ViewBag.SelectedDate" />
-            <input type="hidden" name="seat" id="selectedSeatInput" required />
-
-            <div class="search-widget">
-                <div class="d-flex justify-content-between align-items-center mb-4 bg-white border p-3 rounded-4 shadow-sm">
-                    <span class="badge bg-secondary rounded-pill px-3 py-2 fs-6"><i class="bi bi-calendar-event me-2"></i>@ViewBag.SelectedDate</span>
-                    <span class="text-success fw-bold fs-6"><i class="bi bi-tags-fill me-1"></i> Giá: @Model.PriceTransport?.ToString("N0") $ / ghế</span>
+        <div class="bottom-checkout-bar">
+            <div class="row align-items-center m-0">
+                <div class="col-md-5 text-start ps-0 pe-4">
+                    <span class="text-muted fw-bold d-block mb-1">Selected Seats:</span>
+                    <div class="fw-bold text-dark fs-5 lh-base seat-scroll-box" id="seatLabel" style="max-height: 60px; overflow-y: auto;">None</div>
                 </div>
-
-                <div class="legend-container">
-                    <div class="legend-item"><div class="legend-box" style="background: #fff; border: 2px solid #28a745;"></div> Trống</div>
-                    <div class="legend-item"><div class="legend-box" style="background: #e4e6eb; border: 2px solid #d0d0d0;"></div> Đã bán</div>
-                    <div class="legend-item"><div class="legend-box" style="background: #0061e6;"></div> Đang chọn</div>
+                <div class="col-md-4 text-center border-start border-end">
+                    <span class="text-muted fw-bold d-block mb-1">Total Amount:</span>
+                    <span class="fs-3 fw-bold text-primary lh-1" id="priceLabel">$0</span>
                 </div>
-
-                <div id="loading" class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-3 text-muted fw-bold">Đang tải sơ đồ ghế...</p>
-                </div>
-
-                <div id="seatMapGrid" class="row d-none g-4 justify-content-center">
-                    <div class="col-md-6">
-                        <div class="text-center fw-bold text-muted mb-3">TẦNG 1</div>
-                        <div class="seat-grid" id="floor1"></div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="text-center fw-bold text-muted mb-3">TẦNG 2</div>
-                        <div class="seat-grid" id="floor2"></div>
-                    </div>
+                <div class="col-md-3 text-end pe-0 ps-4">
+                    <button type="submit" class="btn btn-custom py-3 w-100" id="submitBtn" disabled>Confirm Booking</button>
                 </div>
             </div>
-
-            <div class="bottom-checkout-bar">
-                <div class="container d-flex justify-content-between align-items-center" style="max-width: 800px;">
-                    <div class="text-start">
-                        <span class="text-muted fw-bold d-block mb-1">Ghế đã chọn:</span>
-                        <span class="fw-bold text-dark fs-5" id="seatLabel">Chưa chọn</span>
-                    </div>
-                    <div class="text-center">
-                        <span class="text-muted fw-bold d-block mb-1">Tổng tiền tạm tính:</span>
-                        <span class="fs-3 fw-bold text-primary" id="priceLabel">0$</span>
-                    </div>
-                    <div class="text-end" style="width: 250px;">
-                        <button type="submit" class="btn-futa py-3" id="submitBtn" disabled>Xác nhận Đặt Vé</button>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
@@ -110,12 +111,12 @@
                     selectedSeatsArray.sort();
                     document.getElementById("seatLabel").innerText = selectedSeatsArray.join(", ");
                     const total = selectedSeatsArray.length * unitPrice;
-                    document.getElementById("priceLabel").innerText = total.toLocaleString('vi-VN') + "$";
+                    document.getElementById("priceLabel").innerText = "$" + total.toLocaleString('en-US');
                     document.getElementById("selectedSeatInput").value = selectedSeatsArray.join(",");
                     document.getElementById("submitBtn").disabled = false;
                 } else {
-                    document.getElementById("seatLabel").innerText = "Chưa chọn";
-                    document.getElementById("priceLabel").innerText = "0$";
+                    document.getElementById("seatLabel").innerText = "None";
+                    document.getElementById("priceLabel").innerText = "$0";
                     document.getElementById("selectedSeatInput").value = "";
                     document.getElementById("submitBtn").disabled = true;
                 }
@@ -125,7 +126,7 @@
                 const div = document.createElement("div");
                 div.innerText = seatId; 
                 if (isBooked) { 
-                    div.className = "seat booked"; 
+                    div.className = "seat booked";
                 } else {
                     div.className = "seat available";
                     div.addEventListener("click", () => {
@@ -159,7 +160,7 @@
                     while (currentSeatCount < capacity) {
                         for (let c = 0; c < colsPerRow; c++) {
                             if (currentSeatCount >= capacity) break;
-                            let seatCode = cols[c] + row; 
+                            let seatCode = cols[c] + row;
                             if (capacity >= 30 && currentSeatCount >= Math.ceil(capacity / 2)) floor2Seats.push(seatCode);
                             else floor1Seats.push(seatCode);
                             currentSeatCount++;
@@ -182,7 +183,7 @@
 
             document.getElementById("checkoutForm").addEventListener("submit", function() {
                 const btn = document.getElementById("submitBtn");
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Đang xử lý...';
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Processing...';
                 btn.classList.add('disabled');
             });
         });

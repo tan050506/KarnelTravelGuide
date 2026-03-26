@@ -1,0 +1,77 @@
+@{
+    ViewData["Title"] = "Contact Us";
+}
+
+<div class="container py-5" style="max-width: 1000px;">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold text-dark mb-3">Get in Touch</h1>
+        <p class="text-muted">The KarnelTravel team is always ready to answer any of your questions.</p>
+    </div>
+
+    <div class="k-card p-0 overflow-hidden border-0 shadow-sm">
+        <div class="row g-0">
+            <div class="col-md-5 text-white p-5" style="background: linear-gradient(135deg, var(--k-primary), #1d4ed8);">
+                <h3 class="fw-bold mb-4">Contact Information</h3>
+                <p class="mb-5 opacity-75">Fill out the form or contact us directly via the channels below.</p>
+                
+                <div class="d-flex align-items-center mb-4">
+                    <i class="bi bi-geo-alt-fill fs-3 me-3 text-warning"></i>
+                    <div>
+                        <h6 class="fw-bold mb-1">Headquarters</h6>
+                        <span class="opacity-75">Can Tho University, Ninh Kieu, Can Tho, VN</span>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center mb-4">
+                    <i class="bi bi-telephone-fill fs-3 me-3 text-warning"></i>
+                    <div>
+                        <h6 class="fw-bold mb-1">Hotline (24/7)</h6>
+                        <span class="opacity-75">+84 1900 xxxx</span>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-envelope-fill fs-3 me-3 text-warning"></i>
+                    <div>
+                        <h6 class="fw-bold mb-1">Email Support</h6>
+                        <span class="opacity-75">support@karneltravel.com</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-7 p-5">
+                <h4 class="fw-bold text-dark mb-4">Send a Message</h4>
+                
+                @if (TempData["SuccessMessage"] != null) {
+                    <div class="alert alert-success rounded-3 fw-bold"><i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]</div>
+                }
+
+                <form asp-controller="Home" asp-action="SubmitContact" method="post">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="label-karnel">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="FullName" class="k-input" placeholder="Enter your name" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="label-karnel">Phone Number <span class="text-danger">*</span></label>
+                            <input type="text" name="Phone" class="k-input" placeholder="Enter phone number" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="label-karnel">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" name="Email" class="k-input" placeholder="example@gmail.com" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="label-karnel">Message <span class="text-danger">*</span></label>
+                            <textarea name="Message" class="k-input" rows="4" placeholder="How can we help you?" required></textarea>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <button type="submit" class="k-btn-primary w-100 py-3 fs-6">
+                                <i class="bi bi-send-fill me-2"></i> Send Message Now
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

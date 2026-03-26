@@ -19,8 +19,8 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context = context;
         }
 
-        // 1. INDEX
-        public async Task<IActionResult> Index(string searchString, string travelDate)
+        // 1. INDEX (Đã thêm sortOrder)
+        public async Task<IActionResult> Index(string searchString, string travelDate, string sortOrder)
         {
             var query = _context.Orders
                 .Include(o => o.Account)
@@ -28,28 +28,39 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 .Where(o => o.OrderDetails!.Any(od => od.TicketBookingId != null))
                 .AsQueryable();
 
-#pragma warning disable CS8602
             if (!string.IsNullOrEmpty(searchString))
             {
                 query = query.Where(o => 
-                    (o.Account.PhoneNumber != null && o.Account.PhoneNumber.Contains(searchString)) ||
-                    (o.Account.FullName != null && o.Account.FullName.Contains(searchString)));
+                    (o.Account!.PhoneNumber != null && o.Account!.PhoneNumber.Contains(searchString)) ||
+                    (o.Account!.FullName != null && o.Account!.FullName.Contains(searchString)));
             }
 
             if (!string.IsNullOrEmpty(travelDate) && DateTime.TryParse(travelDate, out DateTime parsedDate))
             {
                 DateOnly date = DateOnly.FromDateTime(parsedDate);
-                query = query.Where(o => o.OrderDetails!.Any(od => od.TicketBooking.TravelDate == date));
+                query = query.Where(o => o.OrderDetails!.Any(od => od.TicketBooking!.TravelDate == date));
             }
-#pragma warning restore CS8602
 
-            ViewBag.CurrentSearch = searchString;
-            ViewBag.CurrentDate = travelDate;
+            // TRUYỀN DỮ LIỆU ĐỂ GIỮ STATE KHI SẮP XẾP
+            ViewData["CurrentSearch"] = searchString;
+            ViewData["CurrentDate"] = travelDate;
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_desc" : "";
 
-            return View(await query.OrderByDescending(o => o.OrderId).ToListAsync());
+            switch (sortOrder)
+            {
+                case "id_desc":
+                    query = query.OrderByDescending(o => o.OrderId);
+                    break;
+                default:
+                    query = query.OrderBy(o => o.OrderId);
+                    break;
+            }
+
+            return View(await query.ToListAsync());
         }
 
-        // 2. XÁC NHẬN ĐƠN HÀNG (Nhấn dấu tích xanh ngoài Index)
+        // 2. CONFIRM BOOKING
         [HttpPost]
         public async Task<IActionResult> ConfirmBooking(int orderId)
         {
@@ -61,30 +72,29 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 if (invoice != null) invoice.PaymentStatus = "Paid"; 
 
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Đã xác nhận đơn hàng thành công!";
+                TempData["SuccessMessage"] = "Order confirmed successfully!";
             }
             return RedirectToAction(nameof(Index));
         }
 
-        // 3. HỦY ĐƠN HÀNG (Chỉ đổi trạng thái, KHÔNG XÓA DATA để giữ lịch sử và tránh lỗi SQL)
+        // 3. CANCEL ORDER
         [HttpPost]
         public async Task<IActionResult> CancelOrder(int orderId)
         {
             var order = await _context.Orders.Include(o => o.OrderDetails).FirstOrDefaultAsync(o => o.OrderId == orderId);
             if (order != null)
             {
-                order.Status = "Canceled"; // Đánh dấu hủy đơn
+                order.Status = "Canceled"; 
                 var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.OrderId == orderId);
-                if (invoice != null) invoice.PaymentStatus = "Canceled"; // Đánh dấu hủy hóa đơn
+                if (invoice != null) invoice.PaymentStatus = "Canceled"; 
 
-                // Bỏ đoạn code xóa vé đi. SQL sẽ không báo lỗi nữa.
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Đã hủy đơn hàng thành công! Ghế đã được tự động giải phóng.";
+                TempData["SuccessMessage"] = "Order canceled successfully! Seats have been automatically released.";
             }
             return RedirectToAction(nameof(Index));
         }
 
-        // 4. XEM CHI TIẾT
+        // 4. DETAILS
         public async Task<IActionResult> Details(int id)
         {
             var order = await _context.Orders
@@ -97,7 +107,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(order);
         }
 
-        // 5. GET: Create (TRANG TÌM KIẾM VÀ NHẬP THÔNG TIN)
+        // 5. GET: Create
         public async Task<IActionResult> Create()
         {
             ViewBag.Customers = await _context.Accounts.Where(a => a.RoleId == 3).ToListAsync();
@@ -107,7 +117,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View();
         }
 
-        // 6. GET: SelectSeat (TRANG CHỌN GHẾ - CHUYỂN HƯỚNG TỪ CREATE)
+        // 6. GET: SelectSeat
         public async Task<IActionResult> SelectSeat(int transportationId, string travelDate, string customerType, int? accountId, string walkInName, string walkInPhone)
         {
             var transport = await _context.Transportations
@@ -117,7 +127,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (transport == null) return NotFound();
 
-            // Lưu trữ thông tin khách hàng để đẩy tiếp sang trang chọn ghế
             ViewBag.CustomerType = customerType;
             ViewBag.AccountId = accountId;
             ViewBag.WalkInName = walkInName;
@@ -127,7 +136,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(transport);
         }
 
-        // 7. POST: Create (XỬ LÝ ĐẶT VÉ VÀ LƯU VÀO DATABASE VỚI TRẠNG THÁI PENDING)
+        // 7. POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int? AccountId, string CustomerType, string WalkInName, string WalkInPhone, int TransportationId, DateTime TravelDate, string Seat)
@@ -138,14 +147,14 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             {
                 if (string.IsNullOrEmpty(WalkInName) || string.IsNullOrEmpty(WalkInPhone))
                 {
-                    TempData["ErrorMessage"] = "Vui lòng nhập đầy đủ Tên và Số điện thoại khách vãng lai.";
+                    TempData["ErrorMessage"] = "Please enter full name and phone number for walk-in customer.";
                     return RedirectToAction(nameof(Create));
                 }
 
                 var existingAccount = await _context.Accounts.FirstOrDefaultAsync(a => a.PhoneNumber == WalkInPhone);
                 if (existingAccount != null)
                 {
-                    TempData["ErrorMessage"] = $"Số điện thoại {WalkInPhone} đã được đăng ký cho khách hàng '{existingAccount.FullName}'. Vui lòng chọn 'Khách có tài khoản' hoặc nhập SĐT khác.";
+                    TempData["ErrorMessage"] = $"Phone number {WalkInPhone} is already registered to '{existingAccount.FullName}'. Please choose 'Existing Member' or use another phone number.";
                     return RedirectToAction(nameof(Create));
                 }
                 else
@@ -158,7 +167,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             }
             else
             {
-                if (AccountId == null) { TempData["ErrorMessage"] = "Vui lòng chọn khách hàng."; return RedirectToAction(nameof(Create)); }
+                if (AccountId == null) { TempData["ErrorMessage"] = "Please select a customer."; return RedirectToAction(nameof(Create)); }
                 finalAccountId = AccountId.Value;
             }
 
@@ -169,7 +178,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             decimal unitPrice = transport.PriceTransport ?? 0;
             decimal totalAmount = unitPrice * selectedSeats.Length;
             
-            // TRẠNG THÁI ĐƠN HÀNG LÀ PENDING
             var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Pending" };
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
@@ -186,11 +194,11 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context.Invoices.Add(new Invoice { AccountId = finalAccountId, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, FinalTotal = totalAmount, PaymentStatus = "Unpaid" });
             await _context.SaveChangesAsync();
             
-            TempData["SuccessMessage"] = $"Đã tạo đơn hàng {selectedSeats.Length} vé! Vui lòng xác nhận trên danh sách.";
+            TempData["SuccessMessage"] = $"Successfully created an order for {selectedSeats.Length} tickets! Please review it on the list.";
             return RedirectToAction(nameof(Index));
         }
 
-        // 8. API LẤY DANH SÁCH GHẾ (Thông minh: Bỏ qua các ghế thuộc đơn hàng Canceled)
+        // 8. API GET BOOKED SEATS
         [HttpGet]
         public async Task<IActionResult> GetBookedSeats(int transportationId, string date)
         {
@@ -198,13 +206,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             DateOnly travelDate = DateOnly.FromDateTime(parsedDate);
             
-            // Tìm qua OrderDetail để check được trạng thái của Order
             var bookedSeats = await _context.OrderDetails
                 .Where(od => od.TicketBooking != null 
                           && od.TicketBooking.TransportationId == transportationId 
                           && od.TicketBooking.TravelDate == travelDate
                           && od.Order != null 
-                          && od.Order.Status != "Canceled") // QUAN TRỌNG: Loại bỏ ghế của đơn đã hủy
+                          && od.Order.Status != "Canceled") 
                 .Select(od => od.TicketBooking!.Seat)
                 .ToListAsync();
 

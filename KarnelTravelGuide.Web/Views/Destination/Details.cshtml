@@ -1,0 +1,96 @@
+@model KarnelTravelGuide.Web.Models.Entities.TouristSpot
+@{
+    ViewData["Title"] = Model.SpotName;
+}
+
+<style>
+    body { background-color: #f8fafc; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    
+    .detail-hero {
+        height: 60vh; min-height: 450px;
+        background-size: cover; background-position: center;
+        position: relative;
+    }
+    .detail-overlay {
+        position: absolute; inset: 0;
+        background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.2) 100%);
+        display: flex; align-items: flex-end; padding-bottom: 3rem;
+    }
+    
+    .content-card {
+        background: #fff; border-radius: 1.5rem; padding: 2.5rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.04); border: none; margin-top: -50px; position: relative; z-index: 10;
+    }
+
+    .gallery-img {
+        width: 100%; height: 250px; object-fit: cover; border-radius: 1rem;
+        transition: 0.3s; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .gallery-img:hover { transform: scale(1.03); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+    
+    .booking-widget {
+        background: #fff; border-radius: 1.5rem; padding: 2rem; border: 1px solid #e2e8f0;
+        position: sticky; top: 100px; box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    }
+</style>
+
+<div class="detail-hero" style="background-image: url('@(string.IsNullOrEmpty(Model.ImageUrl) ? "/img/no-image.jpg" : Model.ImageUrl)');">
+    <div class="detail-overlay">
+        <div class="container text-white">
+            <span class="badge bg-primary px-3 py-2 rounded-pill mb-3 text-uppercase fw-bold"><i class="bi bi-star-fill text-warning me-1"></i> Popular Spot</span>
+            <h1 class="display-3 fw-bold mb-2">@Model.SpotName</h1>
+            <p class="fs-5 opacity-75"><i class="bi bi-geo-alt-fill text-danger me-2"></i>@Model.Address</p>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row g-5">
+        <div class="col-lg-8">
+            <div class="content-card mb-5">
+                <h4 class="fw-bold text-dark mb-4">About this place</h4>
+                
+                <p class="text-secondary lh-lg fs-6 mb-0" style="white-space: pre-line;">
+                    @(string.IsNullOrEmpty(Model.Description) ? "Description is currently being updated by the manager." : Model.Description)
+                </p>
+            </div>
+
+            @if (Model.TouristSpotImages != null && Model.TouristSpotImages.Any())
+            {
+                <h4 class="fw-bold text-dark mb-4"><i class="bi bi-images text-primary me-2"></i>Photo Gallery</h4>
+                <div class="row g-3">
+                    @foreach (var img in Model.TouristSpotImages)
+                    {
+                        <div class="col-md-6">
+                            <img src="@img.ImageUrl" class="gallery-img" alt="Gallery Image" title="@img.Caption">
+                            @if (!string.IsNullOrEmpty(img.Caption))
+                            {
+                                <p class="text-center text-muted small mt-2 fst-italic">@img.Caption</p>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-4 mt-lg-0" style="margin-top: -50px; z-index: 10;">
+            <div class="booking-widget text-center">
+                <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-circle d-inline-block mb-3">
+                    <i class="bi bi-ticket-perforated-fill fs-2"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">Plan Your Trip</h4>
+                <p class="text-muted small mb-4">Book a transport ticket directly to <strong>@Model.SpotName</strong> and enjoy your seamless journey.</p>
+                
+                <ul class="list-unstyled text-start mb-4 text-secondary small">
+                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Easy online booking</li>
+                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Choose your favorite seat</li>
+                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> 24/7 Support</li>
+                </ul>
+
+                <a href="/BookTicket/Index?toSpotId=@Model.SpotId" class="btn btn-primary w-100 py-3 rounded-3 fw-bold shadow-sm">
+                    Find Tickets Here <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

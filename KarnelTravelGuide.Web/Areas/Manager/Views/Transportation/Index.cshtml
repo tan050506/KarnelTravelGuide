@@ -1,96 +1,90 @@
 @model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Transportation>
 @{
     ViewData["Title"] = "Transportation Management";
-    int index = 1;
+
+    // LOGIC TÍNH SỐ THỨ TỰ TỰ ĐỘNG
+    int totalCount = Model?.Count() ?? 0;
+    bool isDescending = ViewData["CurrentSort"]?.ToString() == "id_desc";
+    int displayIndex = isDescending ? totalCount : 1;
 }
 
-<div class="card shadow-sm border-0 rounded-4 mb-4">
-    <div class="card-body p-4 d-flex justify-content-between align-items-center">
+<div class="k-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <form asp-action="Index" method="get" class="d-flex w-50">
             <div class="input-group">
-                <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control bg-light border-0" placeholder="Search by transport, type or destination...">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
-                <a asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+                <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control" style="border-radius: 8px 0 0 8px; border: 1px solid #ced4da; padding: 0.75rem 1rem;" placeholder="Search by transport, type or destination...">
+                <button type="submit" class="btn btn-primary px-4" style="border-radius: 0 8px 8px 0;"><i class="bi bi-search"></i></button>
             </div>
         </form>
-        <a asp-action="Create" class="btn btn-success fw-semibold"><i class="bi bi-plus-lg me-1"></i> Add New Route</a>
+        <a asp-action="Create" class="k-btn-primary"><i class="bi bi-plus-lg me-2"></i> Add New Route</a>
     </div>
-</div>
 
-<div class="card shadow-sm border-0 rounded-4">
-    <div class="card-body p-0">
-        <div class="table-responsive overflow-hidden">
-            <table class="table table-hover align-middle mb-0 w-100" style="table-layout: fixed;">
-                <thead class="table-light">
-                    <tr>
-                        <th class="text-center" style="width: 5%;">#</th>
-                        <th class="text-center" style="width: 10%;">Image</th>
-                        <th style="width: 16%;">Transport Name</th>
-                        <th style="width: 10%;">Type</th>
-                        <th style="width: 22%;">Route</th>
-                        <th style="width: 12%;">Departure</th>
-                        <th style="width: 12%;">Price / Pax</th>
-                        <th class="text-center" style="width: 13%;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null && Model.Any())
-                    {
-                        foreach (var item in Model)
-                        {
-                            <tr>
-                                <td class="fw-bold text-muted text-center">@(index++)</td>
-                                
-                                <td class="text-center">
-                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
-                                    {
-                                        <img src="@item.ImageUrl" style="width: 70px; height: 45px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" />
-                                    }
-                                    else
-                                    {
-                                        <div class="bg-light rounded text-muted d-flex align-items-center justify-content-center" style="width: 70px; height: 45px; margin: 0 auto; font-size: 0.8rem;">No Img</div>
-                                    }
-                                </td>
-                                
-                                <td class="fw-bold text-dark text-truncate" title="@item.TransportName">
-                                    @item.TransportName
-                                </td>
+    @if (TempData["SuccessMessage"] != null) {
+        <div class="alert alert-success rounded-3 fw-bold"><i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null) {
+        <div class="alert alert-danger rounded-3 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]</div>
+    }
 
-                                <td>
-                                    @if (item.TransportType == "Air") { <span class="badge bg-primary"><i class="bi bi-airplane-fill me-1"></i> Air</span> }
-                                    else if (item.TransportType == "Land") { <span class="badge bg-success"><i class="bi bi-car-front-fill me-1"></i> Land</span> }
-                                    else { <span class="badge bg-info text-dark"><i class="bi bi-water me-1"></i> Water</span> }
-                                </td>
-                                
-                                <td class="text-truncate">
-                                    <div class="mb-1 text-truncate" title="@item.FromBranch?.BranchName (@item.FromBranch?.Address)">
-                                        <small class="text-muted fw-bold">From:</small> <span class="text-dark">@item.FromBranch?.BranchName</span>
-                                    </div>
-                                    <div class="text-truncate" title="@item.ToSpot?.SpotName (@item.ToSpot?.Address)">
-                                        <small class="text-muted fw-bold">To:</small> <strong class="text-primary">@item.ToSpot?.SpotName</strong>
-                                    </div>
-                                </td>
-                                
-                                <td>
-                                    <strong class="text-danger fs-5"><i class="bi bi-clock"></i> @item.DepartureTime?.ToString("HH:mm")</strong>
-                                </td>
-                                
-                                <td class="fw-bold text-success fs-6">$@item.PriceTransport?.ToString("N0")</td>
-                                
-                                <td class="text-center">
-                                    <a asp-action="Details" asp-route-id="@item.TransportationId" class="btn btn-sm btn-outline-info" title="View Details"><i class="bi bi-eye"></i></a>
-                                    <a asp-action="Edit" asp-route-id="@item.TransportationId" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                    <a asp-action="Delete" asp-route-id="@item.TransportationId" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></a>
-                                </td>
-                            </tr>
-                        }
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light text-muted small text-uppercase">
+                <tr>
+                    <th style="width: 5%; text-align: center;">
+                        <a asp-action="Index" 
+                           asp-route-sortOrder="@ViewData["IdSortParm"]" 
+                           asp-route-searchString="@ViewData["CurrentFilter"]" 
+                           class="text-decoration-none text-dark d-flex justify-content-center align-items-center"
+                           title="Click to sort">
+                            <i class="bi bi-arrow-down-up fs-5 fw-bold text-dark"></i>
+                        </a>
+                    </th>
+                    <th style="width: 10%;">Image</th>
+                    <th style="width: 18%;">Transport</th>
+                    <th style="width: 10%;">Type</th>
+                    <th style="width: 25%;">Route</th>
+                    <th style="width: 10%;">Time</th>
+                    <th style="width: 10%;">Price</th>
+                    <th class="text-end" style="width: 12%;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any()) {
+                    foreach (var item in Model) {
+                        <tr>
+                            <td class="fw-bold text-secondary fs-6 text-center">@displayIndex</td>
+                            <td>
+                                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/img/no-image.jpg" : item.ImageUrl)" class="rounded-3 shadow-sm border" style="width: 70px; height: 45px; object-fit: cover;" />
+                            </td>
+                            <td class="fw-bold text-dark text-truncate" title="@item.TransportName">@item.TransportName</td>
+                            <td>
+                                @if (item.TransportType == "Air") { <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1"><i class="bi bi-airplane-fill me-1"></i> Air</span> }
+                                else if (item.TransportType == "Land") { <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1"><i class="bi bi-car-front-fill me-1"></i> Land</span> }
+                                else { <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1"><i class="bi bi-water me-1"></i> Water</span> }
+                            </td>
+                            <td>
+                                <div class="small text-truncate" title="@item.FromBranch?.BranchName">
+                                    <span class="text-muted fw-bold">From:</span> <span class="text-dark">@item.FromBranch?.BranchName</span>
+                                </div>
+                                <div class="small text-truncate" title="@item.ToSpot?.SpotName">
+                                    <span class="text-muted fw-bold">To:</span> <strong class="text-primary">@item.ToSpot?.SpotName</strong>
+                                </div>
+                            </td>
+                            <td><strong class="text-danger"><i class="bi bi-clock"></i> @item.DepartureTime?.ToString("HH:mm")</strong></td>
+                            <td class="fw-bold text-success">$@item.PriceTransport?.ToString("N0")</td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@item.TransportationId" class="btn btn-sm btn-light text-info fw-bold"><i class="bi bi-eye"></i></a>
+                                <a asp-action="Edit" asp-route-id="@item.TransportationId" class="btn btn-sm btn-light text-primary fw-bold mx-1"><i class="bi bi-pencil-square"></i></a>
+                                <a asp-action="Delete" asp-route-id="@item.TransportationId" class="btn btn-sm btn-light text-danger fw-bold"><i class="bi bi-trash"></i></a>
+                            </td>
+                        </tr>
+                        
+                        if (isDescending) { displayIndex--; } else { displayIndex++; }
                     }
-                    else
-                    {
-                        <tr><td colspan="8" class="text-center py-4 text-muted">No transportation routes found.</td></tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                } else {
+                    <tr><td colspan="8" class="text-center py-5 text-muted fw-bold">No transportation routes found.</td></tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>

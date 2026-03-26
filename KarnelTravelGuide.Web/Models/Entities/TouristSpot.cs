@@ -24,4 +24,6 @@ public partial class TouristSpot
     public virtual ICollection<Stay> Stays { get; set; } = new List<Stay>();
 
     public virtual ICollection<Transportation> Transportations { get; set; } = new List<Transportation>();
+
+    public virtual ICollection<TouristSpotImage> TouristSpotImages { get; set; } = new List<TouristSpotImage>();
 }

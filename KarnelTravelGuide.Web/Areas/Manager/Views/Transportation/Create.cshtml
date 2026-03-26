@@ -3,28 +3,36 @@
     ViewData["Title"] = "Add Transportation Route";
 }
 
-<div class="card shadow-sm border-0 rounded-4" style="max-width: 800px; margin: 0 auto;">
-    <div class="card-header bg-white pt-4 px-4 border-0">
-        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-bus-front me-2 text-primary"></i>Add New Route</h5>
+<style>
+    .preview-box { position: relative; display: inline-block; }
+    .btn-remove-preview { position: absolute; top: -10px; right: -10px; width: 25px; height: 25px; padding: 0; background: #fff; color: #dc3545; border-radius: 50%; border: 1px solid #dc3545; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; transition: 0.3s; z-index: 5; }
+    .btn-remove-preview:hover { background: #dc3545; color: #fff; transform: scale(1.1); }
+</style>
+
+<div class="k-card mx-auto" style="max-width: 900px;">
+    <div class="d-flex align-items-center border-bottom pb-3 mb-4">
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="fw-bold m-0 text-dark">Add New Route</h4>
     </div>
-    <div class="card-body p-4">
-        <form asp-action="Create" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <div class="row g-4">
             
-            <div class="row">
-                <div class="col-md-6 mb-4">
-                    <label class="form-label fw-bold text-secondary small text-uppercase">Departure (From)</label>
-                    <input type="text" class="form-control bg-light text-muted fw-bold border-0 mb-1" value="@ViewBag.BranchName" readonly />
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 bg-light border h-100">
+                    <label class="label-karnel text-muted">Departure (From)</label>
+                    <div class="fw-bold text-dark fs-5 mb-1">@ViewBag.BranchName</div>
                     <small class="text-danger"><i class="bi bi-geo-alt"></i> @ViewBag.BranchAddress</small>
                     <input type="hidden" asp-for="FromBranchId" value="@ViewBag.FromBranchId" />
                 </div>
+            </div>
 
-                <div class="col-md-6 mb-4">
-                    <label class="form-label fw-bold text-primary small text-uppercase">Destination (To) <span class="text-danger">*</span></label>
-                    <select asp-for="ToSpotId" class="form-select border-primary mb-1" id="spotSelect" onchange="updateAddress()" required>
-                        <option value="" data-address="Please select a destination to see the address">-- Select Tourist Spot --</option>
-                        @foreach (var spot in ViewBag.TouristSpots)
-                        {
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 bg-light border h-100">
+                    <label class="label-karnel text-muted">Destination (To) <span class="text-danger">*</span></label>
+                    <select asp-for="ToSpotId" class="k-input mb-2" id="spotSelect" onchange="updateAddress()" required>
+                        <option value="" data-address="Please select a destination">-- Select Tourist Spot --</option>
+                        @foreach (var spot in ViewBag.TouristSpots) {
                             <option value="@spot.SpotId" data-address="@spot.Address">@spot.SpotName</option>
                         }
                     </select>
@@ -32,70 +40,80 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-semibold">Transport Type <span class="text-danger">*</span></label>
-                    <select asp-for="TransportType" class="form-select" required>
-                        <option value="">-- Select Type --</option>
-                        <option value="Land">🚌 Land</option>
-                        <option value="Air">✈️ Air</option>
-                        <option value="Water">🛳️ Water</option>
-                    </select>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-semibold">Fixed Time <span class="text-danger">*</span></label>
-                    <input asp-for="DepartureTime" class="form-control" type="time" required />
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-semibold">Ticket Price (USD) <span class="text-danger">*</span></label>
-                    <input asp-for="PriceTransport" class="form-control" type="number" min="0" step="1" required />
-                </div>
-
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-semibold">Tổng số ghế <span class="text-danger">*</span></label>
-                    <input asp-for="SeatCapacity" class="form-control" type="number" min="5" max="100" placeholder="VD: 34" required />
-                </div>
-
+            <div class="col-md-3">
+                <label class="label-karnel">Transport Type <span class="text-danger">*</span></label>
+                <select asp-for="TransportType" class="k-input" required>
+                    <option value="">-- Select --</option>
+                    <option value="Land">🚌 Land</option>
+                    <option value="Air">✈️ Air</option>
+                    <option value="Water">🛳️ Water</option>
+                </select>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Transport Name <span class="text-danger">*</span></label>
-                <input asp-for="TransportName" class="form-control" placeholder="e.g., Boeing 747, Limousine, Phương Trang..." required />
+            <div class="col-md-3">
+                <label class="label-karnel">Fixed Time <span class="text-danger">*</span></label>
+                <input asp-for="DepartureTime" class="k-input" type="time" required />
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Additional Details / Description</label>
-                <textarea asp-for="Description" class="form-control" rows="3" placeholder="e.g., Free Wi-Fi, Air Conditioning..."></textarea>
+            <div class="col-md-3">
+                <label class="label-karnel">Price (USD) <span class="text-danger">*</span></label>
+                <input asp-for="PriceTransport" class="k-input" type="number" min="0" step="1" required />
             </div>
 
-            <div class="mb-4">
-                <label class="form-label fw-semibold">Transport Image <span class="text-danger">*</span></label>
-                <input type="file" name="imageFile" class="form-control" accept="image/*" required onchange="previewImage(event)" />
-                <div class="mt-3 text-center bg-light rounded-3 p-2" id="previewContainer" style="display: none;">
-                    <img id="imagePreview" style="max-height: 200px; object-fit: cover; border-radius: 8px; border: 1px solid #dee2e6;" />
+            <div class="col-md-3">
+                <label class="label-karnel">Total Seats <span class="text-danger">*</span></label>
+                <input asp-for="SeatCapacity" class="k-input" type="number" min="5" max="100" placeholder="e.g. 34" required />
+            </div>
+
+            <div class="col-md-6">
+                <label class="label-karnel">Transport Name <span class="text-danger">*</span></label>
+                <input asp-for="TransportName" class="k-input" placeholder="e.g. Boeing 747, Limousine..." required />
+            </div>
+
+            <div class="col-md-6">
+                <label class="label-karnel">Additional Details</label>
+                <textarea asp-for="Description" class="k-input" rows="1" placeholder="e.g. Free Wi-Fi, AC..."></textarea>
+            </div>
+
+            <div class="col-12">
+                <div class="p-4 border rounded-4 bg-light text-center">
+                    <label class="label-karnel d-block text-start mb-3"><i class="bi bi-image me-1"></i>Transport Image <span class="text-danger">*</span></label>
+                    <input type="file" name="imageFile" id="imageInput" class="form-control w-50 mx-auto" accept="image/*" required onchange="previewImage(event)" />
+                    
+                    <div id="previewContainer" class="mt-4 d-none">
+                        <div class="preview-box">
+                            <button type="button" class="btn-remove-preview" onclick="removeImage()"><i class="bi bi-x"></i></button>
+                            <img id="imagePreview" class="img-fluid rounded-3 shadow border" style="max-height: 250px; object-fit: cover;" />
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-between">
-                <a asp-action="Index" class="btn btn-light border fw-semibold">Cancel</a>
-                <button type="submit" class="btn btn-primary fw-semibold"><i class="bi bi-save me-1"></i> Create Route</button>
+            <div class="col-12 mt-5 text-end border-top pt-4">
+                <button type="submit" class="k-btn-primary px-5 py-3"><i class="bi bi-save me-2"></i> Save Route</button>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
     <script>
         function previewImage(event) {
-            var reader = new FileReader();
-            reader.onload = function(){
-                var output = document.getElementById('imagePreview');
-                document.getElementById('previewContainer').style.display = 'block';
-                output.src = reader.result;
-            };
-            if(event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('previewContainer').classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeImage() {
+            document.getElementById('imageInput').value = '';
+            document.getElementById('previewContainer').classList.add('d-none');
+            document.getElementById('imagePreview').src = '';
         }
 
         function updateAddress() {

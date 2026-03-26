@@ -1,31 +1,78 @@
-html {
-  font-size: 14px;
-}
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+:root {
+    --k-primary: #0061e6;
+    --k-primary-hover: #004bb5;
+    --k-bg-light: #f8fafc;
+    --k-sidebar-bg: #0f172a;
+    --k-sidebar-hover: #1e293b;
+    --k-text-main: #334155;
+    --k-text-muted: #64748b;
+    --k-border: #e2e8f0;
 }
 
 body {
-  margin-bottom: 60px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--k-bg-light);
+    color: var(--k-text-main);
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+/* ================= GLOBAL COMPONENTS ================= */
+
+/* 1. Unified Cards */
+.k-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--k-border);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    margin-bottom: 24px;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+/* 2. Unified Inputs */
+.k-input {
+    border-radius: 10px;
+    padding: 12px 16px;
+    border: 1px solid var(--k-border);
+    background-color: #f8fafc;
+    font-weight: 500;
+    width: 100%;
+    transition: all 0.2s ease;
+    color: var(--k-text-main);
 }
+.k-input:focus {
+    border-color: var(--k-primary);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(0, 97, 230, 0.15);
+    outline: none;
+}
+
+/* 3. Unified Buttons */
+.k-btn-primary {
+    background-color: var(--k-primary);
+    color: #ffffff;
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 12px 24px;
+    border: none;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+}
+.k-btn-primary:hover:not(:disabled) {
+    background-color: var(--k-primary-hover);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 97, 230, 0.3);
+}
+.k-btn-primary:disabled {
+    background-color: #93c5fd;
+    cursor: not-allowed;
+}
+
+/* Override Bootstrap Defaults */
+.btn:focus, .form-control:focus, .form-select:focus { box-shadow: none; }
+a { text-decoration: none; }

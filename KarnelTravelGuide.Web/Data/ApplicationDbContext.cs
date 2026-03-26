@@ -17,33 +17,23 @@ public partial class ApplicationDbContext : DbContext
     }
 
     public virtual DbSet<Account> Accounts { get; set; }
-
     public virtual DbSet<Branch> Branches { get; set; }
-
     public virtual DbSet<Feedback> Feedbacks { get; set; }
-
     public virtual DbSet<Invoice> Invoices { get; set; }
-
     public virtual DbSet<Order> Orders { get; set; }
-
     public virtual DbSet<OrderDetail> OrderDetails { get; set; }
-
     public virtual DbSet<Restaurant> Restaurants { get; set; }
-
     public virtual DbSet<RestaurantBooking> RestaurantBookings { get; set; }
-
     public virtual DbSet<Role> Roles { get; set; }
-
     public virtual DbSet<Room> Rooms { get; set; }
-
     public virtual DbSet<RoomBooking> RoomBookings { get; set; }
-
     public virtual DbSet<Stay> Stays { get; set; }
-
     public virtual DbSet<TicketBooking> TicketBookings { get; set; }
-
     public virtual DbSet<TouristSpot> TouristSpots { get; set; }
-
+    
+    // BỔ SUNG: Bảng thư viện ảnh
+    public virtual DbSet<TouristSpotImage> TouristSpotImages { get; set; }
+    
     public virtual DbSet<Transportation> Transportations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -337,6 +327,25 @@ public partial class ApplicationDbContext : DbContext
             entity.HasOne(d => d.Branch).WithMany(p => p.TouristSpots)
                 .HasForeignKey(d => d.BranchId)
                 .HasConstraintName("FK__TouristSp__Branc__412EB0B6");
+        });
+
+        // BỔ SUNG: Cấu hình cho bảng TouristSpotImage (Thư viện ảnh)
+        modelBuilder.Entity<TouristSpotImage>(entity =>
+        {
+            entity.HasKey(e => e.ImageId).HasName("PK__TouristSpotImage");
+            entity.ToTable("TouristSpotImage");
+
+            entity.Property(e => e.ImageId).HasColumnName("ImageID");
+            entity.Property(e => e.SpotId).HasColumnName("SpotID");
+            entity.Property(e => e.ImageUrl).IsRequired().IsUnicode(false);
+            
+            // BỔ SUNG DÒNG NÀY: Khai báo cột Caption (Không giới hạn độ dài)
+            entity.Property(e => e.Caption).IsUnicode(true);
+
+            entity.HasOne(d => d.TouristSpot).WithMany(p => p.TouristSpotImages)
+                .HasForeignKey(d => d.SpotId)
+                .HasConstraintName("FK__TouristSpotImage__SpotID")
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Transportation>(entity =>

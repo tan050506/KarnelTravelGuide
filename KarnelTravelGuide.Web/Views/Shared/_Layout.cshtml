@@ -10,77 +10,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - KarnelTravel</title>
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8f9fa; color: #2d3436; }
+        .k-navbar { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--k-border); }
+        .k-brand { color: var(--k-primary); font-weight: 800; font-size: 1.5rem; letter-spacing: -0.5px; }
+        .k-brand span { color: #f59e0b; }
         
-        /* Navbar Hiện đại */
-        .navbar-custom { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        .brand-logo { color: #0984e3; font-weight: 800; font-size: 1.6rem; letter-spacing: -0.5px; }
-        .brand-logo span { color: #fdcb6e; }
+        .k-nav-link { color: var(--k-text-muted); font-weight: 600; padding: 8px 16px !important; border-radius: 8px; transition: 0.2s; margin: 0 4px; }
+        .k-nav-link:hover, .k-nav-link.active { color: var(--k-primary); background-color: #eff6ff; }
         
-        .nav-link.travel-link { color: #636e72; font-weight: 600; padding: 8px 12px !important; border-radius: 8px; transition: all 0.3s ease; margin: 0 2px; }
-        .nav-link.travel-link:hover, .nav-link.travel-link.active { color: #0984e3; background-color: rgba(9, 132, 227, 0.05); }
-        
-        .btn-modern { border-radius: 50px; font-weight: 600; padding: 10px 24px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .btn-modern:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
-        .btn-primary-custom { background: linear-gradient(135deg, #0984e3, #00cec9); border: none; color: white; }
-        
-        .footer-modern { background-color: #2d3436; color: #b2bec3; }
-        .footer-modern h5 { color: #ffffff; font-weight: 700; margin-bottom: 1.5rem; }
-        .footer-modern a { color: #b2bec3; text-decoration: none; transition: color 0.3s; }
-        .footer-modern a:hover { color: #00cec9; }
+        .k-footer { background-color: var(--k-sidebar-bg); color: #94a3b8; }
+        .k-footer h5 { color: #ffffff; font-weight: 700; margin-bottom: 1.5rem; }
+        .k-footer a { color: #94a3b8; transition: 0.2s; }
+        .k-footer a:hover { color: var(--k-primary); }
     </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-custom sticky-top py-2">
+        <nav class="navbar navbar-expand-lg k-navbar sticky-top py-3">
             <div class="container-fluid px-lg-5"> 
-                <a class="navbar-brand brand-logo" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-geo-alt-fill text-warning"></i> Karnel<span>Travel</span>
+                <a class="navbar-brand k-brand" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-geo-alt-fill text-warning me-1"></i>Karnel<span>Travel</span>
                 </a>
                 <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <i class="bi bi-list fs-1 text-dark"></i>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav mx-auto">
-                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="Home" asp-action="Index">Home</a></li>
-                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="TouristSpot" asp-action="Index">Destinations</a></li>
-                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="Stay" asp-action="Index">Stays</a></li>
-                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="Restaurant" asp-action="Index">Dining</a></li>
-                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="BookTicket" asp-action="Index">Book Ticket</a></li>
-                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="Home" asp-action="About">About Us</a></li>
-                        <li class="nav-item"><a class="nav-link travel-link" asp-controller="Home" asp-action="Contact">Contact</a></li>
+                        <li class="nav-item"><a class="nav-link k-nav-link" asp-controller="Home" asp-action="Index">Home</a></li>
+                        <li class="nav-item"><a class="nav-link k-nav-link" asp-controller="Destination" asp-action="Index">Destinations</a></li>
+                        <li class="nav-item"><a class="nav-link k-nav-link" asp-controller="Stay" asp-action="Index">Stays</a></li>
+                        <li class="nav-item"><a class="nav-link k-nav-link" asp-controller="Restaurant" asp-action="Index">Dining</a></li>
+                        <li class="nav-item"><a class="nav-link k-nav-link" asp-controller="BookTicket" asp-action="Index">Book Ticket</a></li>
+                        <li class="nav-item"><a class="nav-link k-nav-link" asp-controller="Home" asp-action="About">About Us</a></li>
+                        <li class="nav-item"><a class="nav-link k-nav-link" asp-controller="Home" asp-action="Contact">Contact</a></li>
                     </ul>
                     
-                    <ul class="navbar-nav align-items-center gap-2 mt-3 mt-lg-0">
+                    <ul class="navbar-nav align-items-center gap-3 mt-3 mt-lg-0">
                         @if (!string.IsNullOrEmpty(userName))
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle fw-bold text-dark d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                <a class="nav-link dropdown-toggle fw-bold text-dark d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                                         @userName.Substring(0, 1).ToUpper()
                                     </div>
                                     @userName
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
-                                    <li><a class="dropdown-item py-2" asp-controller="Account" asp-action="Profile"><i class="bi bi-person me-2 text-muted"></i> My Profile</a></li>
-                                    <li><a class="dropdown-item py-2" asp-controller="Invoice" asp-action="MyInvoices"><i class="bi bi-receipt me-2 text-muted"></i> My Bookings</a></li>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-3 p-2">
+                                    <li><a class="dropdown-item py-2 fw-bold rounded-2" asp-controller="Account" asp-action="Profile"><i class="bi bi-person me-2 text-primary"></i> My Profile</a></li>
+                                    <li><a class="dropdown-item py-2 fw-bold rounded-2" asp-controller="Invoice" asp-action="MyInvoices"><i class="bi bi-receipt me-2 text-primary"></i> My Bookings</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item py-2 text-danger" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+                                    <li><a class="dropdown-item py-2 fw-bold text-danger rounded-2" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
                                 </ul>
                             </li>
                         }
                         else
                         {
-                            <li class="nav-item"><a class="btn btn-light fw-bold px-4 rounded-pill" asp-controller="Account" asp-action="Register">Sign Up</a></li>
-                            <li class="nav-item"><a class="btn btn-primary-custom btn-modern" asp-controller="Account" asp-action="Login">Log In</a></li>
+                            <li class="nav-item"><a class="nav-link fw-bold text-dark" asp-controller="Account" asp-action="Register">Sign Up</a></li>
+                            <li class="nav-item"><a class="k-btn-primary" asp-controller="Account" asp-action="Login">Log In</a></li>
                         }
                     </ul>
                 </div>
@@ -92,22 +82,17 @@
         @RenderBody()
     </main>
 
-    <footer class="footer-modern pt-5 pb-4 mt-5">
+    <footer class="k-footer pt-5 pb-4 mt-5">
         <div class="container">
             <div class="row gy-4">
                 <div class="col-lg-4 col-md-6 pe-lg-5">
-                    <h4 class="brand-logo text-white mb-3"><i class="bi bi-geo-alt-fill text-warning"></i> Karnel<span>Travel</span></h4>
+                    <h4 class="k-brand text-white mb-3"><i class="bi bi-geo-alt-fill text-warning me-1"></i>Karnel<span class="text-warning">Travel</span></h4>
                     <p class="small lh-lg">Experience the world with Karnel Travel. We provide the best booking services for stays, transportation, and unforgettable dining experiences.</p>
-                    <div class="d-flex gap-3 mt-4">
-                        <a href="#" class="fs-4"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="fs-4"><i class="bi bi-instagram"></i></a>
-                        <a href="#" class="fs-4"><i class="bi bi-twitter-x"></i></a>
-                    </div>
                 </div>
                 <div class="col-lg-2 col-md-6">
                     <h5>Explore</h5>
                     <ul class="list-unstyled d-flex flex-column gap-2 small">
-                        <li><a asp-controller="TouristSpot" asp-action="Index">Top Destinations</a></li>
+                        <li><a asp-controller="Destination" asp-action="Index">Top Destinations</a></li>
                         <li><a asp-controller="Stay" asp-action="Index">Luxury Stays</a></li>
                         <li><a asp-controller="Restaurant" asp-action="Index">Local Cuisine</a></li>
                         <li><a asp-controller="BookTicket" asp-action="Index">Book Tickets</a></li>
@@ -119,7 +104,6 @@
                         <li><a asp-controller="Home" asp-action="About">About Us</a></li>
                         <li><a href="#">Cancellation Policy</a></li>
                         <li><a href="#">Privacy Policy</a></li>
-                        <li><a asp-controller="Home" asp-action="Contact">Contact Us</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-3 col-md-6">
@@ -127,7 +111,6 @@
                     <ul class="list-unstyled d-flex flex-column gap-3 small">
                         <li class="d-flex align-items-center gap-3"><i class="bi bi-geo-alt fs-5 text-primary"></i> Can Tho University, VN</li>
                         <li class="d-flex align-items-center gap-3"><i class="bi bi-telephone fs-5 text-primary"></i> +84 1900 xxxx</li>
-                        <li class="d-flex align-items-center gap-3"><i class="bi bi-envelope fs-5 text-primary"></i> support@karneltravel.com</li>
                     </ul>
                 </div>
             </div>

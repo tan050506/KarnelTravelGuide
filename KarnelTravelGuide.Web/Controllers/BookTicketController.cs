@@ -25,7 +25,6 @@ namespace KarnelTravelGuide.Web.Controllers
             ViewBag.Branches = await _context.Branches.ToListAsync();
             ViewBag.Spots = await _context.TouristSpots.ToListAsync();
 
-            // Lưu lại giá trị tìm kiếm để hiển thị lại trên UI
             ViewBag.CurrentFrom = fromBranchId;
             ViewBag.CurrentTo = toSpotId;
             ViewBag.CurrentType = transportType;
@@ -36,7 +35,6 @@ namespace KarnelTravelGuide.Web.Controllers
                 .Include(t => t.ToSpot)
                 .AsQueryable();
 
-            // Bộ lọc 3 tiêu chí
             if (fromBranchId.HasValue) routes = routes.Where(r => r.FromBranchId == fromBranchId);
             if (toSpotId.HasValue) routes = routes.Where(r => r.ToSpotId == toSpotId);
             if (!string.IsNullOrEmpty(transportType)) routes = routes.Where(r => r.TransportType == transportType);
@@ -51,7 +49,7 @@ namespace KarnelTravelGuide.Web.Controllers
             var accountId = HttpContext.Session.GetInt32("AccountId"); 
             if (accountId == null) 
             {
-                TempData["ErrorMessage"] = "Vui lòng đăng nhập để đặt vé.";
+                TempData["ErrorMessage"] = "Please login to book tickets.";
                 return RedirectToAction("Login", "Account");
             }
 
@@ -81,7 +79,7 @@ namespace KarnelTravelGuide.Web.Controllers
 
             if (string.IsNullOrEmpty(seat) || string.IsNullOrEmpty(travelDate))
             {
-                TempData["ErrorMessage"] = "Vui lòng chọn ít nhất 1 ghế.";
+                TempData["ErrorMessage"] = "Please select at least 1 seat.";
                 return RedirectToAction("Booking", new { id = transportationId, date = travelDate });
             }
 
@@ -139,17 +137,17 @@ namespace KarnelTravelGuide.Web.Controllers
                 _context.Invoices.Add(invoice);
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = $"Đặt thành công {seatCount} vé! Vui lòng kiểm tra hóa đơn.";
+                TempData["SuccessMessage"] = $"Successfully booked {seatCount} tickets! Please check your invoice.";
                 return RedirectToAction("Index"); 
             }
             catch (Exception)
             {
-                TempData["ErrorMessage"] = "Có lỗi xảy ra, vui lòng thử lại.";
+                TempData["ErrorMessage"] = "An error occurred, please try again.";
                 return RedirectToAction("Booking", new { id = transportationId, date = travelDate });
             }
         }
 
-        // API LẤY GHẾ (Thông minh: Không lấy ghế của đơn đã hủy)
+        // API LẤY GHẾ
         [HttpGet]
         public async Task<IActionResult> GetBookedSeats(int transportationId, string date)
         {
@@ -165,7 +163,7 @@ namespace KarnelTravelGuide.Web.Controllers
                           && od.TicketBooking.TransportationId == transportationId 
                           && od.TicketBooking.TravelDate == travelDate
                           && od.Order != null 
-                          && od.Order.Status != "Canceled") // Lọc bỏ ghế của đơn bị hủy
+                          && od.Order.Status != "Canceled")
                 .Select(od => od.TicketBooking!.Seat)
                 .ToListAsync();
 

@@ -24,10 +24,8 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // GET THE BRANCH OF THE CURRENTLY LOGGED-IN MANAGER
         private async Task<Branch> GetCurrentManagerBranchAsync()
         {
-            // FIXED: Using "AccountId" instead of "UserId"
             int? accountId = HttpContext.Session.GetInt32("AccountId");
             if (accountId.HasValue)
             {
@@ -35,17 +33,13 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     .Include(a => a.Branch)
                     .FirstOrDefaultAsync(a => a.AccountId == accountId.Value);
 
-                if (currentManager != null && currentManager.Branch != null)
-                {
-                    return currentManager.Branch;
-                }
+                if (currentManager?.Branch != null) return currentManager.Branch;
             }
             
-            // Safe Fallback in case the manager doesn't have a branch assigned yet
             var fallbackBranch = await _context.Branches.FirstOrDefaultAsync();
             if (fallbackBranch == null)
             {
-                fallbackBranch = new Branch { BranchName = "Central Branch (Auto-generated)" };
+                fallbackBranch = new Branch { BranchName = "Central Branch" };
                 _context.Branches.Add(fallbackBranch);
                 await _context.SaveChangesAsync();
             }
@@ -53,10 +47,16 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         // 1. GET: Index
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string searchString, string sortOrder)
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
+            
+            // 1. Lưu lại trạng thái tìm kiếm và sắp xếp hiện tại
             ViewData["CurrentFilter"] = searchString;
+            ViewData["CurrentSort"] = sortOrder;
+            
+            // 2. Nút công tắc (Toggle): Nếu hiện tại đang rỗng (mặc định tăng dần), click vào sẽ thành "id_desc" (giảm dần)
+            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_desc" : "";
 
             var transportations = _context.Transportations
                 .Include(t => t.FromBranch)
@@ -72,10 +72,22 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     (s.ToSpot != null && s.ToSpot.SpotName!.Contains(searchString)));
             }
 
+            // 3. THỰC THI SẮP XẾP
+            switch (sortOrder)
+            {
+                case "id_desc":
+                    // Sắp xếp Lớn đến Nhỏ (Mới nhất nằm trên cùng)
+                    transportations = transportations.OrderByDescending(t => t.TransportationId);
+                    break;
+                default:
+                    // Mặc định: Nhỏ đến Lớn (Thêm trước nằm trên, thêm sau số to nằm dưới)
+                    transportations = transportations.OrderBy(t => t.TransportationId);
+                    break;
+            }
+
             return View(await transportations.ToListAsync());
         }
 
-        // 2. GET: Create
         public async Task<IActionResult> Create()
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
@@ -83,14 +95,11 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             ViewBag.BranchName = currentBranch.BranchName;
             ViewBag.BranchAddress = currentBranch.Address;
             ViewBag.FromBranchId = currentBranch.BranchId;
-            
-            // Pass the entire list so JavaScript can access the Address property if needed
             ViewBag.TouristSpots = await _context.TouristSpots.ToListAsync();
 
             return View();
         }
 
-        // 3. POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("TransportName,TransportType,FromBranchId,ToSpotId,DepartureTime,PriceTransport,SeatCapacity,Description")] Transportation transportation, IFormFile? imageFile)
@@ -98,24 +107,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             if (imageFile == null || imageFile.Length == 0) ModelState.AddModelError(string.Empty, "Transport image is required.");
             if (transportation.ToSpotId == null) ModelState.AddModelError("ToSpotId", "Please select a destination.");
             
-            ModelState.Remove("FromBranch");
-            ModelState.Remove("ToSpot");
-            ModelState.Remove("TicketBookings");
+            ModelState.Remove("FromBranch"); ModelState.Remove("ToSpot"); ModelState.Remove("TicketBookings");
 
             if (ModelState.IsValid)
             {
-                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "transportations");
-                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile!.FileName;
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await imageFile.CopyToAsync(fileStream);
-                }
-
-                transportation.ImageUrl = "/images/transportations/" + uniqueFileName;
+                transportation.ImageUrl = await UploadFileAsync(imageFile!);
+                
                 _context.Add(transportation);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Transportation route created successfully!";
@@ -129,7 +126,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(transportation);
         }
 
-        // 4. GET: Edit
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -140,22 +136,18 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var currentBranch = await GetCurrentManagerBranchAsync();
             ViewBag.BranchName = currentBranch.BranchName;
             ViewBag.BranchAddress = currentBranch.Address;
-            
             ViewBag.TouristSpots = await _context.TouristSpots.ToListAsync();
             
             return View(transportation);
         }
 
-        // 5. POST: Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("TransportationId,TransportName,TransportType,FromBranchId,ToSpotId,DepartureTime,PriceTransport,SeatCapacity,Description,ImageUrl")] Transportation transportation, IFormFile? imageFile)
         {
             if (id != transportation.TransportationId) return NotFound();
 
-            ModelState.Remove("FromBranch");
-            ModelState.Remove("ToSpot");
-            ModelState.Remove("TicketBookings");
+            ModelState.Remove("FromBranch"); ModelState.Remove("ToSpot"); ModelState.Remove("TicketBookings");
 
             if (ModelState.IsValid)
             {
@@ -163,22 +155,8 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 {
                     if (imageFile != null && imageFile.Length > 0)
                     {
-                        if (!string.IsNullOrEmpty(transportation.ImageUrl))
-                        {
-                            string oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, transportation.ImageUrl.TrimStart('/'));
-                            if (System.IO.File.Exists(oldImagePath)) System.IO.File.Delete(oldImagePath);
-                        }
-
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "transportations");
-                        if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
-                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await imageFile.CopyToAsync(fileStream);
-                        }
-                        transportation.ImageUrl = "/images/transportations/" + uniqueFileName;
+                        DeletePhysicalFile(transportation.ImageUrl);
+                        transportation.ImageUrl = await UploadFileAsync(imageFile);
                     }
 
                     _context.Update(transportation);
@@ -200,7 +178,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(transportation);
         }
 
-        // 6. GET: Details
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -211,11 +188,9 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 .FirstOrDefaultAsync(m => m.TransportationId == id);
 
             if (transportation == null) return NotFound();
-
             return View(transportation);
         }
 
-        // 7. GET: Delete
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -226,26 +201,32 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 .FirstOrDefaultAsync(m => m.TransportationId == id);
 
             if (transportation == null) return NotFound();
-
             return View(transportation);
         }
 
-        // 8. POST: Delete
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var transportation = await _context.Transportations.FindAsync(id);
+            // Bao gồm TicketBookings để kiểm tra ràng buộc
+            var transportation = await _context.Transportations
+                .Include(t => t.TicketBookings)
+                .FirstOrDefaultAsync(t => t.TransportationId == id);
+
             if (transportation != null)
             {
-                if (!string.IsNullOrEmpty(transportation.ImageUrl))
+                // KIỂM TRA RÀNG BUỘC
+                if (transportation.TicketBookings != null && transportation.TicketBookings.Any())
                 {
-                    string imagePath = Path.Combine(_webHostEnvironment.WebRootPath, transportation.ImageUrl.TrimStart('/'));
-                    if (System.IO.File.Exists(imagePath)) System.IO.File.Delete(imagePath);
+                    TempData["ErrorMessage"] = "Cannot delete! This route has active ticket bookings.";
+                    return RedirectToAction(nameof(Index));
                 }
+
+                DeletePhysicalFile(transportation.ImageUrl);
+                
                 _context.Transportations.Remove(transportation);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Transportation route deleted successfully!";
+                TempData["SuccessMessage"] = "Transportation route and its image deleted successfully!";
             }
             return RedirectToAction(nameof(Index));
         }
@@ -253,6 +234,33 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         private bool TransportationExists(int id)
         {
             return _context.Transportations.Any(e => e.TransportationId == id);
+        }
+
+        // --- HELPER METHODS ---
+        private async Task<string> UploadFileAsync(IFormFile file)
+        {
+            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "transportations");
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+            string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fileStream);
+            }
+            return "/images/transportations/" + uniqueFileName;
+        }
+
+        private void DeletePhysicalFile(string? relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath)) return;
+            try
+            {
+                string filePath = Path.Combine(_webHostEnvironment.WebRootPath, relativePath.TrimStart('/'));
+                if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+            }
+            catch (Exception) { /* Ignore */ }
         }
     }
 }

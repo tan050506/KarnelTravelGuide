@@ -3,96 +3,72 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Admin Control Panel</title>
+    <title>@ViewData["Title"] - Admin Portal | Karnel Travel</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; }
+        body { background-color: var(--k-bg-light); overflow-x: hidden; }
+        
+        .k-sidebar { width: 260px; height: 100vh; position: fixed; top: 0; left: 0; background-color: var(--k-sidebar-bg); color: #94a3b8; z-index: 1000; overflow-y: auto; }
+        .k-sidebar-brand { padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 16px; }
+        .k-sidebar-brand h5 { color: #ffffff; font-weight: 800; letter-spacing: 1px; }
+        
+        .k-sidebar-nav { padding: 0 16px; display: flex; flex-direction: column; gap: 4px; }
+        .k-sidebar-nav a { color: #94a3b8; text-decoration: none; padding: 12px 16px; border-radius: 10px; display: flex; align-items: center; font-weight: 500; transition: 0.2s; }
+        .k-sidebar-nav a:hover { background-color: var(--k-sidebar-hover); color: #ffffff; }
+        .k-sidebar-nav a.active { background-color: var(--k-primary); color: #ffffff; box-shadow: 0 4px 12px rgba(0, 97, 230, 0.3); }
+        .k-sidebar-nav a i { font-size: 1.2rem; margin-right: 12px; }
+        
+        .k-section-title { font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 8px 16px; }
 
-        .sidebar {
-            min-height: 100vh;
-            background-color: #212529;
-            color: #adb5bd;
-        }
-
-        .sidebar a {
-            color: #adb5bd;
-            text-decoration: none;
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            transition: all 0.3s;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background-color: #343a40;
-            color: #fff;
-            border-left: 4px solid #dc3545;
-        }
-
-        .admin-header {
-            background-color: #fff;
-            border-bottom: 3px solid #dc3545;
-        }
+        .k-main-wrapper { margin-left: 260px; min-height: 100vh; display: flex; flex-direction: column; }
+        .k-topbar { background-color: #ffffff; height: 80px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--k-border); position: sticky; top: 0; z-index: 999; }
+        .k-content { padding: 32px; flex-grow: 1; max-width: 1400px; width: 100%; margin: 0 auto; }
     </style>
 </head>
 <body>
-
-    <div class="container-fluid">
-        <div class="row g-0">
-
-            <!-- SIDEBAR -->
-            <div class="sidebar col-md-2 p-0 shadow d-flex flex-column">
-                <div class="text-center py-4 border-bottom border-dark">
-                    <h5 class="m-0 text-danger fw-bold">
-                        <i class="bi bi-shield-lock-fill me-2"></i>ADMINISTRATOR
-                    </h5>
-                </div>
-
-                <div class="d-flex flex-column mt-3 flex-grow-1">
-                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                        <i class="bi bi-cpu me-3"></i> System Monitor
-                    </a>
-
-                    <a asp-area="Admin" asp-controller="Branch" asp-action="Index">
-                        <i class="bi bi-diagram-3 me-3"></i> Manage Branches
-                    </a>
-
-                    <a asp-area="Admin" asp-controller="Account" asp-action="Index">
-                        <i class="bi bi-people-fill me-3"></i> Manage Accounts
-                    </a>
-
-                    <a asp-area="Admin" asp-controller="Feedback" asp-action="Index">
-                        <i class="bi bi-chat-left-text-fill me-3"></i> Manage Feedbacks
-                    </a>
-
-                    <div class="mt-auto pt-5">
-                        <a href="/Home/Index" class="text-secondary">
-                            <i class="bi bi-power me-3"></i> Exit System
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CONTENT -->
-            <div class="col-md-10 d-flex flex-column" style="min-width: 0;">
-                
-                <div class="admin-header px-4 py-3 d-flex justify-content-between align-items-center mb-4 shadow-sm">
-                    <h5 class="m-0 fw-semibold">Infrastructure & Personnel Control</h5>
-                    <span class="badge bg-danger rounded-0 px-3 py-2">
-                        <i class="bi bi-shield-check me-1"></i> Admin Rights
-                    </span>
-                </div>
-
-                <div class="container-fluid px-4 flex-grow-1">
-                    @RenderBody()
-                </div>
-
-            </div>
-
+    
+    <aside class="k-sidebar">
+        <div class="k-sidebar-brand text-center">
+            <h5 class="m-0"><i class="bi bi-shield-lock-fill text-primary me-2"></i>ADMIN</h5>
+            <small>System Control Panel</small>
         </div>
+        
+        <nav class="k-sidebar-nav pb-4">
+            <div class="k-section-title">Core System</div>
+            <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-cpu-fill"></i> System Monitor</a>
+            <a asp-area="Admin" asp-controller="Branch" asp-action="Index"><i class="bi bi-diagram-3-fill"></i> Manage Branches</a>
+            <a asp-area="Admin" asp-controller="Account" asp-action="Index"><i class="bi bi-people-fill"></i> Manage Accounts</a>
+            
+            <div class="k-section-title">Reports</div>
+            <a asp-area="Admin" asp-controller="Feedback" asp-action="Index"><i class="bi bi-chat-left-text-fill"></i> Manage Feedbacks</a>
+            
+            <div class="mt-4 border-top pt-3" style="border-color: rgba(255,255,255,0.05) !important;">
+                <a href="/Home/Index" class="text-danger"><i class="bi bi-box-arrow-left"></i> Exit System</a>
+            </div>
+        </nav>
+    </aside>
+
+    <div class="k-main-wrapper">
+        <header class="k-topbar">
+            <h4 class="m-0 fw-bold text-dark">@ViewData["Title"]</h4>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2 rounded-pill fw-bold">
+                    <i class="bi bi-shield-check small me-2"></i>Admin Rights
+                </span>
+            </div>
+        </header>
+        
+        <main class="k-content">
+            @RenderBody()
+        </main>
+        
+        <footer class="text-center py-4 text-muted small mt-auto border-top">
+            &copy; 2026 Karnel Travel Administrator Portal
+        </footer>
     </div>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)

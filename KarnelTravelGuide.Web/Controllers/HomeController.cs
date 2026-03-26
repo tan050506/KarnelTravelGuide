@@ -1,24 +1,38 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using KarnelTravelGuide.Web.Models;
+using Microsoft.EntityFrameworkCore;
+using KarnelTravelGuide.Web.Data;
+using KarnelTravelGuide.Web.Models.Entities;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace KarnelTravelGuide.Web.Controllers;
-
-public class HomeController : Controller
+namespace KarnelTravelGuide.Web.Controllers
 {
-    public IActionResult Index()
+    public class HomeController : Controller
     {
-        return View();
-    }
+        private readonly ApplicationDbContext _context;
 
-    public IActionResult Privacy()
-    {
-        return View();
-    }
+        // Bơm DbContext vào để lấy dữ liệu
+        public HomeController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        public async Task<IActionResult> Index()
+        {
+            // Lấy 3 địa điểm du lịch mới nhất kèm theo danh sách ảnh của nó
+            var topSpots = await _context.TouristSpots
+                .Include(t => t.TouristSpotImages)
+                .OrderByDescending(t => t.SpotId)
+                .Take(3)
+                .ToListAsync();
+
+            // Truyền dữ liệu sang View
+            return View(topSpots);
+        }
+
+        public IActionResult Privacy()
+        {
+            return View();
+        }
     }
 }
