@@ -7,7 +7,7 @@ public partial class RestaurantBooking
 {
     public int ResBookingId { get; set; }
 
-    public int? RestaurantId { get; set; }
+    public int? TableId { get; set; } 
 
     public DateTime? ReservationDateTime { get; set; }
 
@@ -17,9 +17,7 @@ public partial class RestaurantBooking
 
     public decimal? TotalAmount { get; set; }
 
-    public string? TableType { get; set; }
-
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
-    public virtual Restaurant? Restaurant { get; set; }
+    public virtual RestaurantTable? RestaurantTable { get; set; } 
 }

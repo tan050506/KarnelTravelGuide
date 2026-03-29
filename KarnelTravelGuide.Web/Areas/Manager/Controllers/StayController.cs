@@ -3,6 +3,13 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using KarnelTravelGuide.Web.Data;
 using KarnelTravelGuide.Web.Models.Entities;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
@@ -18,138 +25,193 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // GET: Manager/Stay
-        // Thay thế hàm Index cũ bằng hàm này
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string searchString, string sortOrder)
         {
             ViewData["CurrentFilter"] = searchString;
-            
-            var stays = _context.Stays.Include(s => s.Spot).AsQueryable();
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_desc" : "";
+
+            var stays = _context.Stays.Include(s => s.Spot).Include(s => s.Rooms).AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                stays = stays.Where(s => s.Name.Contains(searchString) 
-                                    || (s.Spot != null && s.Spot.SpotName.Contains(searchString)));
+                stays = stays.Where(s => 
+                    (s.Name != null && s.Name.Contains(searchString)) || 
+                    (s.Spot != null && s.Spot.SpotName != null && s.Spot.SpotName.Contains(searchString)));
+            }
+
+            switch (sortOrder)
+            {
+                case "id_desc": stays = stays.OrderByDescending(s => s.StayId); break;
+                default: stays = stays.OrderBy(s => s.StayId); break;
             }
 
             return View(await stays.ToListAsync());
         }
 
-        // GET: Manager/Stay/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
-
-            var stay = await _context.Stays
-                .Include(s => s.Spot)
-                .FirstOrDefaultAsync(m => m.StayId == id);
-                
+            var stay = await _context.Stays.Include(s => s.Spot).Include(s => s.Rooms).FirstOrDefaultAsync(m => m.StayId == id);
             if (stay == null) return NotFound();
-
             return View(stay);
         }
 
-        // GET: Manager/Stay/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["SpotId"] = new SelectList(_context.TouristSpots, "SpotId", "SpotName");
-            return View();
+            ViewBag.TouristSpots = await _context.TouristSpots.ToListAsync();
+            return View(new Stay { Rooms = new List<Room>() }); 
         }
 
-        // POST: Manager/Stay/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Stay stay, IFormFile? imageFile)
         {
+            ModelState.Remove("Spot"); 
+            if (stay.Rooms != null) for (int i = 0; i < stay.Rooms.Count; i++) ModelState.Remove($"Rooms[{i}].Stay");
+
             if (ModelState.IsValid)
             {
-                if (imageFile != null)
-                {
-                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "stays");
-                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-                    
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await imageFile.CopyToAsync(fileStream);
-                    }
-                    stay.ImageUrl = "/images/stays/" + uniqueFileName;
-                }
+                if (imageFile != null && imageFile.Length > 0) stay.ImageUrl = await UploadFileAsync(imageFile);
 
-                _context.Add(stay);
+                _context.Add(stay); 
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Stay and room types created successfully!";
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["SpotId"] = new SelectList(_context.TouristSpots, "SpotId", "SpotName", stay.SpotId);
+            ViewBag.TouristSpots = await _context.TouristSpots.ToListAsync();
             return View(stay);
         }
 
-        // GET: Manager/Stay/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
-
-            var stay = await _context.Stays.FindAsync(id);
+            var stay = await _context.Stays.Include(s => s.Rooms).FirstOrDefaultAsync(s => s.StayId == id);
             if (stay == null) return NotFound();
 
-            ViewData["SpotId"] = new SelectList(_context.TouristSpots, "SpotId", "SpotName", stay.SpotId);
+            ViewBag.TouristSpots = await _context.TouristSpots.ToListAsync();
             return View(stay);
         }
 
-        // POST: Manager/Stay/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Stay stay, IFormFile? imageFile)
         {
             if (id != stay.StayId) return NotFound();
+            ModelState.Remove("Spot");
+            if (stay.Rooms != null) for (int i = 0; i < stay.Rooms.Count; i++) ModelState.Remove($"Rooms[{i}].Stay");
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    if (imageFile != null)
-                    {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "stays");
-                        if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                    var existingStay = await _context.Stays.Include(s => s.Rooms).FirstOrDefaultAsync(s => s.StayId == id);
+                    if (existingStay == null) return NotFound();
 
-                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
-                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await imageFile.CopyToAsync(fileStream);
-                        }
-                        stay.ImageUrl = "/images/stays/" + uniqueFileName;
+                    existingStay.Name = stay.Name;
+                    existingStay.SpotId = stay.SpotId;
+                    existingStay.StayType = stay.StayType;
+                    existingStay.Address = stay.Address;
+                    existingStay.Description = stay.Description;
+
+                    if (imageFile != null && imageFile.Length > 0)
+                    {
+                        DeletePhysicalFile(existingStay.ImageUrl);
+                        existingStay.ImageUrl = await UploadFileAsync(imageFile); 
                     }
 
-                    _context.Update(stay);
+                    var submittedRooms = stay.Rooms ?? new List<Room>();
+                    var submittedRoomIds = submittedRooms.Select(r => r.RoomId).ToList();
+                    
+                    var roomsToRemove = existingStay.Rooms.Where(r => !submittedRoomIds.Contains(r.RoomId)).ToList();
+                    _context.Rooms.RemoveRange(roomsToRemove);
+
+                    foreach (var submittedRoom in submittedRooms)
+                    {
+                        if (submittedRoom.RoomId == 0) 
+                            existingStay.Rooms.Add(new Room { RoomType = submittedRoom.RoomType, PriceRoom = submittedRoom.PriceRoom, Quantity = submittedRoom.Quantity });
+                        else 
+                        {
+                            var existingRoom = existingStay.Rooms.FirstOrDefault(r => r.RoomId == submittedRoom.RoomId);
+                            if (existingRoom != null)
+                            {
+                                existingRoom.RoomType = submittedRoom.RoomType;
+                                existingRoom.PriceRoom = submittedRoom.PriceRoom;
+                                existingRoom.Quantity = submittedRoom.Quantity;
+                            }
+                        }
+                    }
+
+                    _context.Update(existingStay);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Stay and room types updated successfully!";
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateException)
                 {
-                    if (!StayExists(stay.StayId)) return NotFound();
-                    else throw;
+                    TempData["ErrorMessage"] = "Unable to save changes. A room you deleted might be linked to an active booking.";
+                    return RedirectToAction(nameof(Edit), new { id = stay.StayId });
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["SpotId"] = new SelectList(_context.TouristSpots, "SpotId", "SpotName", stay.SpotId);
+            ViewBag.TouristSpots = await _context.TouristSpots.ToListAsync();
             return View(stay);
         }
 
-        // POST: Manager/Stay/Delete/5
+        // --- ĐÃ THÊM HÀM NÀY ĐỂ HIỂN THỊ GIAO DIỆN XÓA XỊN XÒ ---
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+            var stay = await _context.Stays
+                .Include(s => s.Spot)
+                .Include(s => s.Rooms)
+                .FirstOrDefaultAsync(m => m.StayId == id);
+            
+            if (stay == null) return NotFound();
+            return View(stay);
+        }
+
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            // KIỂM TRA RÀNG BUỘC: Nếu Stay này đã có người đặt phòng thì TUYỆT ĐỐI KHÔNG ĐƯỢC XÓA
+            bool hasBookings = await _context.RoomBookings.AnyAsync(rb => rb.Room != null && rb.Room.StayId == id);
+            if (hasBookings)
+            {
+                TempData["ErrorMessage"] = "Cannot delete this stay because it has active or past booking records. Deleting it would corrupt invoice data.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var stay = await _context.Stays.FindAsync(id);
             if (stay != null)
             {
+                DeletePhysicalFile(stay.ImageUrl); 
                 _context.Stays.Remove(stay);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Stay deleted successfully!";
             }
             return RedirectToAction(nameof(Index));
         }
 
-        private bool StayExists(int id) => _context.Stays.Any(e => e.StayId == id);
+        private async Task<string> UploadFileAsync(IFormFile file)
+        {
+            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "stays");
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+            string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+            using (var fileStream = new FileStream(filePath, FileMode.Create)) { await file.CopyToAsync(fileStream); }
+            return "/images/stays/" + uniqueFileName;
+        }
+
+        private void DeletePhysicalFile(string? relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath)) return;
+            try
+            {
+                string filePath = Path.Combine(_webHostEnvironment.WebRootPath, relativePath.TrimStart('/'));
+                if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
+            }
+            catch (Exception) { }
+        }
     }
 }

@@ -1,0 +1,176 @@
+@model KarnelTravelGuide.Web.Models.Entities.Restaurant
+@{ ViewData["Title"] = "Select Table & Guests"; }
+
+<style>
+    .room-card { border: 2px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; transition: all 0.2s; cursor: pointer; position: relative; overflow: hidden; }
+    .room-card:hover { border-color: #cbd5e1; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+    .room-card.selected { border-color: #0d6efd; background-color: #f8faff; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1); }
+    .room-card.selected::before { content: '\F26A'; font-family: 'bootstrap-icons'; position: absolute; top: 20px; right: 20px; color: #0d6efd; font-size: 1.8rem; line-height: 1; z-index: 2; }
+    
+    .qty-input { width: 70px; text-align: center; font-weight: bold; border: 1px solid #ced4da; border-radius: 0.5rem; }
+    .qty-btn { background: #e9ecef; border: none; border-radius: 0.5rem; width: 35px; height: 35px; font-weight: bold; transition: 0.2s; }
+    .qty-btn:hover:not(:disabled) { background: #dee2e6; }
+    
+    .bottom-checkout-bar { position: sticky; bottom: 20px; background: #fff; padding: 20px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 1000; border: 1px solid #e0e0e0; border-radius: 16px; margin-top: 30px; }
+</style>
+
+<div class="container py-4" style="max-width: 900px;">
+    
+    <div class="d-flex align-items-center mb-4">
+        <a asp-action="Create" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <h3 class="fw-bold mb-0 text-dark">@Model.RestaurantName</h3>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null) { 
+        <div class="alert alert-danger rounded-3 fw-bold"><i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]</div> 
+    }
+
+    <form asp-action="Create" method="post" id="checkoutForm">
+        <input type="hidden" name="CustomerType" value="@ViewBag.CustomerType" />
+        <input type="hidden" name="AccountId" value="@ViewBag.AccountId" />
+        <input type="hidden" name="WalkInName" value="@ViewBag.WalkInName" />
+        <input type="hidden" name="WalkInPhone" value="@ViewBag.WalkInPhone" />
+        <input type="hidden" name="RestaurantId" value="@Model.RestaurantId" />
+        <input type="hidden" name="ResDate" value="@ViewBag.ResDate" />
+        <input type="hidden" name="ResTime" value="@ViewBag.ResTime" />
+        
+        <input type="hidden" name="TableId" id="selectedTableId" required />
+        <input type="hidden" name="NumberOfTables" id="selectedQty" required />
+
+        <div class="k-card text-center mb-0">
+            <div class="row bg-light p-3 rounded-4 mb-4 g-3 border">
+                <div class="col-6 border-end">
+                    <small class="text-muted fw-bold d-block text-uppercase">Date</small>
+                    <strong class="fs-5 text-dark">@ViewBag.ResDate</strong>
+                </div>
+                <div class="col-6">
+                    <small class="text-muted fw-bold d-block text-uppercase">Time</small>
+                    <strong class="fs-5 text-primary">@ViewBag.ResTime</strong>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-5 pb-4 border-bottom text-start">
+                <div class="col-md-6">
+                    <label class="fw-bold text-dark mb-2">Number of Guests <span class="text-danger">*</span></label>
+                    <input type="number" name="NumberOfGuests" class="form-control form-control-lg bg-light border-0 shadow-none fw-bold" placeholder="e.g. 4" required min="1" />
+                </div>
+                <div class="col-md-6">
+                    <label class="fw-bold text-dark mb-2">Special Request</label>
+                    <input type="text" name="SpecialRequest" class="form-control form-control-lg bg-light border-0 shadow-none" placeholder="Window seat, extra chairs..." />
+                </div>
+            </div>
+
+            <h5 class="fw-bold mb-4 text-start"><i class="bi bi-ui-checks-grid text-primary me-2"></i>Select Table Type</h5>
+
+            <div class="row g-3 text-start">
+                @foreach(var table in Model.RestaurantTables)
+                {
+                    var availableTables = ViewBag.AvailableTables as Dictionary<int, int>;
+                    int avail = availableTables != null && availableTables.ContainsKey(table.TableId) ? availableTables[table.TableId] : 0;
+                    bool isSoldOut = avail <= 0;
+
+                    <div class="col-12">
+                        <div class="room-card @(isSoldOut ? "opacity-50" : "")" onclick="@(!isSoldOut ? $"selectTable({table.TableId}, {table.PriceRes ?? 0}, {avail}, '{table.TableType}')" : "")" id="table-card-@table.TableId">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-1">@table.TableType</h5>
+                                    @if(isSoldOut) {
+                                        <span class="badge bg-danger">Fully Booked</span>
+                                    } else {
+                                        <span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i> @avail tables available</span>
+                                    }
+                                </div>
+                                <div class="text-end pe-5">
+                                    <h4 class="fw-bold text-primary mb-0">$@((table.PriceRes ?? 0).ToString("N0"))</h4>
+                                    <small class="text-muted">/ table</small>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 pt-3 border-top d-none align-items-center justify-content-between" id="qty-box-@table.TableId">
+                                <span class="fw-bold text-dark">Quantity (Tables):</span>
+                                <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation()">
+                                    <button type="button" class="qty-btn" onclick="updateQty(-1)">-</button>
+                                    <input type="number" class="qty-input py-1" id="displayQty-@table.TableId" value="1" min="1" max="@avail" readonly />
+                                    <button type="button" class="qty-btn" onclick="updateQty(1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="bottom-checkout-bar">
+            <div class="row align-items-center m-0">
+                <div class="col-md-5 text-start ps-0 pe-4">
+                    <span class="text-muted fw-bold d-block mb-1">Selected Table:</span>
+                    <div class="fw-bold text-dark fs-5 lh-base" id="tableLabel">None</div>
+                </div>
+                <div class="col-md-4 text-center border-start border-end">
+                    <span class="text-muted fw-bold d-block mb-1">Total Amount:</span>
+                    <span class="fs-3 fw-bold text-primary lh-1" id="priceLabel">$0</span>
+                </div>
+                <div class="col-md-3 text-end pe-0 ps-4">
+                    <button type="submit" class="k-btn-primary py-3 w-100" id="submitBtn" disabled>Create Order</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        let currentTableId = null;
+        let currentPrice = 0;
+        let maxAvail = 0;
+        let currentQty = 1;
+
+        function selectTable(tableId, price, avail, typeName) {
+            document.querySelectorAll('.room-card').forEach(c => c.classList.remove('selected'));
+            document.querySelectorAll('[id^="qty-box-"]').forEach(b => b.classList.add('d-none'));
+            document.querySelectorAll('.qty-input').forEach(i => i.value = 1);
+
+            document.getElementById('table-card-' + tableId).classList.add('selected');
+            document.getElementById('qty-box-' + tableId).classList.remove('d-none');
+            document.getElementById('qty-box-' + tableId).classList.add('d-flex');
+
+            currentTableId = tableId;
+            currentPrice = price;
+            maxAvail = avail;
+            currentQty = 1;
+
+            document.getElementById("selectedTableId").value = tableId;
+            document.getElementById("selectedQty").value = currentQty;
+            
+            document.getElementById("tableLabel").innerText = typeName + " (x" + currentQty + ")";
+            document.getElementById("submitBtn").disabled = false;
+            calcTotal();
+        }
+
+        function updateQty(change) {
+            if(!currentTableId) return;
+            
+            let newQty = currentQty + change;
+            if(newQty >= 1 && newQty <= maxAvail) {
+                currentQty = newQty;
+                document.getElementById('displayQty-' + currentTableId).value = currentQty;
+                document.getElementById("selectedQty").value = currentQty;
+                
+                let typeName = document.querySelector('#table-card-' + currentTableId + ' h5').innerText;
+                document.getElementById("tableLabel").innerText = typeName + " (x" + currentQty + ")";
+                calcTotal();
+            }
+        }
+
+        function calcTotal() {
+            let total = currentPrice * currentQty;
+            document.getElementById("priceLabel").innerText = "$" + total.toLocaleString('en-US');
+        }
+
+        document.getElementById("checkoutForm").addEventListener("submit", function() {
+            const btn = document.getElementById("submitBtn");
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Processing...';
+            btn.classList.add('disabled');
+        });
+    </script>
+}

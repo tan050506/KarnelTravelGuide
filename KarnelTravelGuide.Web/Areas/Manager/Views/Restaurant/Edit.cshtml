@@ -1,47 +1,263 @@
-@model KarnelTravelGuide.Web.Models.Entities.Restaurant
-@{ ViewData["Title"] = "Edit Restaurant"; }
+@using KarnelTravelGuide.Web.Models.Entities
+@model Restaurant
+@{ 
+    ViewData["Title"] = "Edit Restaurant"; 
+    var spotsList = ViewBag.TouristSpots as IEnumerable<TouristSpot> ?? new List<TouristSpot>();
+}
 
-<div class="card shadow-sm border-0">
-    <div class="card-header bg-white py-3">
-        <h5 class="mb-0 fw-bold text-secondary">Edit Restaurant #@Model.RestaurantId</h5>
+<style>
+    .preview-box { position: relative; display: inline-block; }
+    .btn-remove-preview { position: absolute; top: -10px; right: -10px; width: 25px; height: 25px; padding: 0; background: #fff; color: #dc3545; border-radius: 50%; border: 1px solid #dc3545; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; transition: 0.3s; z-index: 5; }
+    .btn-remove-preview:hover { background: #dc3545; color: #fff; transform: scale(1.1); }
+    .custom-dropdown-menu { max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1000; width: 100%; display: none; margin-top: 5px; }
+    .custom-dropdown-menu.show { display: block; }
+    .dropdown-item-custom { transition: background-color 0.2s; cursor: pointer; white-space: normal; }
+    .dropdown-item-custom:hover { background-color: #f8f9fa; }
+</style>
+
+<div class="k-card mx-auto" style="max-width: 900px;">
+    <div class="d-flex align-items-center border-bottom pb-3 mb-4">
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="fw-bold m-0 text-dark">Update: <span class="text-primary">@Model.RestaurantName</span></h4>
     </div>
-    <div class="card-body p-4">
-        <form asp-action="Edit" enctype="multipart/form-data">
-            <input type="hidden" asp-for="RestaurantId" />
-            <input type="hidden" asp-for="ImageUrl" />
-            <input type="hidden" asp-for="StarRating" /> <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label asp-for="RestaurantName" class="form-label fw-bold">Restaurant Name</label>
-                    <input asp-for="RestaurantName" class="form-control" required />
+
+    @if (TempData["ErrorMessage"] != null) {
+        <div class="alert alert-danger rounded-3 fw-bold mb-4"><i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]</div>
+    }
+
+    <form asp-action="Edit" method="post" enctype="multipart/form-data" id="resForm">
+        <input type="hidden" asp-for="RestaurantId" />
+        <input type="hidden" asp-for="ImageUrl" />
+        <input type="hidden" asp-for="StarRating" />
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label class="label-karnel">Restaurant Name <span class="text-danger">*</span></label>
+                <input asp-for="RestaurantName" class="k-input" required />
+            </div>
+            
+            <div class="col-md-6 position-relative">
+                <label class="label-karnel">Tourist Spot (Location) <span class="text-danger">*</span></label>
+                <div class="position-relative">
+                    <input type="text" id="spotSearchInput" class="k-input mb-1" placeholder="Type spot name or address..." autocomplete="off" required>
+                    <input type="hidden" asp-for="SpotId" id="hiddenSpotId" />
+                    <div id="spotDropdown" class="custom-dropdown-menu k-card shadow-lg p-0 border"></div>
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label asp-for="SpotId" class="form-label fw-bold">Tourist Spot</label>
-                    <select asp-for="SpotId" class="form-select" asp-items="ViewBag.SpotId">
-                        <option value="">-- Select Spot --</option>
-                    </select>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label asp-for="PriceRes" class="form-label fw-bold">Average Price</label>
-                    <input asp-for="PriceRes" type="number" step="1000" class="form-control" />
-                </div>
-                <div class="col-12 mb-3">
-                    <label asp-for="Address" class="form-label fw-bold">Address</label>
-                    <input asp-for="Address" class="form-control" />
-                </div>
-                <div class="col-12 mb-3">
-                    <label class="form-label fw-bold">Change Image</label>
-                    <input type="file" name="imageFile" class="form-control" accept="image/*" />
-                    @if(!string.IsNullOrEmpty(Model.ImageUrl)){
-                        <div class="mt-2"><img src="@Model.ImageUrl" height="80" class="rounded shadow-sm" /></div>
-                    }
-                </div>
-                <div class="col-12 mb-4">
-                    <label asp-for="Description" class="form-label fw-bold">Description</label>
-                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                <small id="spotAddressText" class="text-danger mt-1 d-block"><i class="bi bi-geo-alt me-1"></i>Please select a tourist spot...</small>
+            </div>
+
+            <div class="col-12 mt-4">
+                <div class="p-4 border rounded-4 bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-ui-checks-grid text-primary me-2"></i>Manage Table Types</h6>
+                        <button type="button" class="btn btn-primary btn-sm fw-bold px-3" onclick="addTableRow()"><i class="bi bi-plus-lg me-1"></i> Add Table Type</button>
+                    </div>
+                    
+                    <div class="table-responsive bg-white border rounded-3">
+                        <table class="table table-borderless align-middle mb-0" id="tableConfigTable">
+                            <thead class="border-bottom bg-light small text-uppercase text-muted fw-bold">
+                                <tr>
+                                    <th class="ps-3">Table Type Name</th>
+                                    <th style="width: 25%;">Price / Table ($)</th>
+                                    <th style="width: 20%;">Quantity</th>
+                                    <th style="width: 70px;" class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                @if (Model.RestaurantTables != null && Model.RestaurantTables.Any())
+                                {
+                                    foreach (var table in Model.RestaurantTables)
+                                    {
+                                        <tr>
+                                            <td class="d-none"><input type="hidden" name="TableIds" value="@table.TableId" /></td>
+                                            <td class="ps-3 py-3">
+                                                <select name="TableTypes" class="form-select border-secondary bg-light" required>
+                                                    <option value="Standard" selected="@(table.TableType == "Standard")">Standard</option>
+                                                    <option value="VIP" selected="@(table.TableType == "VIP")">VIP</option>
+                                                    <option value="Private" selected="@(table.TableType == "Private")">Private</option>
+                                                    <option value="Outdoor" selected="@(table.TableType == "Outdoor")">Outdoor</option>
+                                                </select>
+                                            </td>
+                                            <td class="py-3"><input type="number" name="Prices" class="form-control border-secondary bg-light" step="any" min="0" value="@(table.PriceRes?.ToString("0.##"))" required /></td>
+                                            <td class="py-3"><input type="number" name="Quantities" class="form-control border-secondary bg-light" min="1" value="@table.Quantity" required /></td>
+                                            <td class="text-center py-3"><button type="button" class="btn btn-danger btn-sm rounded-3" onclick="removeTableRow(this)"><i class="bi bi-trash"></i></button></td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td class="d-none"><input type="hidden" name="TableIds" value="0" /></td>
+                                        <td class="ps-3 py-3">
+                                            <select name="TableTypes" class="form-select border-secondary bg-light" required>
+                                                <option value="Standard">Standard</option>
+                                                <option value="VIP">VIP</option>
+                                                <option value="Private">Private</option>
+                                                <option value="Outdoor">Outdoor</option>
+                                            </select>
+                                        </td>
+                                        <td class="py-3"><input type="number" name="Prices" class="form-control border-secondary bg-light" step="any" min="0" required /></td>
+                                        <td class="py-3"><input type="number" name="Quantities" class="form-control border-secondary bg-light" min="1" required /></td>
+                                        <td class="text-center py-3"><button type="button" class="btn btn-danger btn-sm rounded-3" onclick="removeTableRow(this)"><i class="bi bi-trash"></i></button></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Update Restaurant</button>
-            <a asp-action="Index" class="btn btn-light ms-2">Cancel</a>
-        </form>
-    </div>
+
+            <div class="col-md-12 mt-4">
+                <label class="label-karnel">Exact Address</label>
+                <input asp-for="Address" class="k-input" />
+            </div>
+
+            <div class="col-12">
+                <label class="label-karnel">Overview Description</label>
+                <textarea asp-for="Description" class="k-input" rows="4"></textarea>
+            </div>
+
+            <div class="col-12">
+                <div class="p-4 border rounded-4 bg-light text-center">
+                    <label class="label-karnel d-block text-start mb-3"><i class="bi bi-image me-1"></i>Update Cover Image</label>
+                    <input type="file" name="imageFile" id="imageInput" class="form-control w-50 mx-auto" accept="image/*" onchange="previewImage(event)" />
+                    <small class="text-muted d-block mt-2">Leave blank to keep current image.</small>
+
+                    <div id="previewContainer" class="mt-4 @(string.IsNullOrEmpty(Model.ImageUrl) ? "d-none" : "")">
+                        <div class="preview-box">
+                            <button type="button" class="btn-remove-preview" onclick="removeImage()"><i class="bi bi-x"></i></button>
+                            <img id="imagePreview" src="@Model.ImageUrl" class="img-fluid rounded-3 shadow border" style="max-height: 250px; object-fit: cover;" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 mt-5 text-end border-top pt-4">
+                <button type="submit" class="k-btn-primary px-5 py-3"><i class="bi bi-check2-circle me-2"></i> Save Changes</button>
+            </div>
+        </div>
+    </form>
 </div>
+
+@section Scripts {
+    <script>
+        function addTableRow() {
+            const tbody = document.getElementById('tableBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="d-none"><input type="hidden" name="TableIds" value="0" /></td>
+                <td class="ps-3 py-3">
+                    <select name="TableTypes" class="form-select border-secondary bg-light" required>
+                        <option value="Standard">Standard</option>
+                        <option value="VIP">VIP</option>
+                        <option value="Private">Private</option>
+                        <option value="Outdoor">Outdoor</option>
+                    </select>
+                </td>
+                <td class="py-3"><input type="number" name="Prices" class="form-control border-secondary bg-light" step="any" min="0" required /></td>
+                <td class="py-3"><input type="number" name="Quantities" class="form-control border-secondary bg-light" min="1" required /></td>
+                <td class="text-center py-3"><button type="button" class="btn btn-danger btn-sm rounded-3" onclick="removeTableRow(this)"><i class="bi bi-trash"></i></button></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function removeTableRow(btn) {
+            const tbody = document.getElementById('tableBody');
+            if (tbody.children.length > 1) {
+                btn.closest('tr').remove();
+            } else {
+                alert("You must have at least one table type!");
+            }
+        }
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('previewContainer').classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+        function removeImage() {
+            document.getElementById('imageInput').value = '';
+            document.getElementById('previewContainer').classList.add('d-none');
+            document.getElementById('imagePreview').src = '';
+        }
+
+        // DATA ADDRESS
+        const spotsData = [ 
+            @foreach(var s in spotsList) { 
+                var safeAddr = string.IsNullOrEmpty(s.Address) ? "No address available" : s.Address.Replace("\"", "\\\"").Replace("\n", " ").Replace("\r", "");
+                <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)", address: "@Html.Raw(safeAddr)" },</text> 
+            } 
+        ];
+
+        const spotInput = document.getElementById('spotSearchInput'); 
+        const spotDropdown = document.getElementById('spotDropdown'); 
+        const hiddenSpotId = document.getElementById('hiddenSpotId');
+        const spotAddressText = document.getElementById('spotAddressText');
+
+        // TỰ ĐỘNG LOAD ĐỊA CHỈ KHI VÀO TRANG EDIT
+        window.onload = function() {
+            if (hiddenSpotId.value) {
+                const currentSpot = spotsData.find(s => s.id == hiddenSpotId.value);
+                if (currentSpot) {
+                    spotInput.value = currentSpot.name;
+                    spotAddressText.innerHTML = '<i class="bi bi-geo-alt me-1"></i>' + currentSpot.address;
+                    spotAddressText.classList.replace('text-danger', 'text-muted');
+                }
+            }
+        };
+
+        function renderSpotDropdown(filterText = "") {
+            spotDropdown.innerHTML = '';
+            const lowerFilter = filterText.toLowerCase();
+            const filtered = spotsData.filter(s => s.name.toLowerCase().includes(lowerFilter));
+
+            if (filtered.length === 0) {
+                spotDropdown.innerHTML += '<div class="p-3 text-muted small fst-italic">No spots found.</div>';
+            } else {
+                filtered.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item-custom p-3 border-bottom fw-bold text-dark';
+                    item.innerText = s.name;
+                    item.onclick = function() { 
+                        hiddenSpotId.value = s.id; 
+                        spotInput.value = s.name; 
+
+                        // Update address text
+                        spotAddressText.innerHTML = '<i class="bi bi-geo-alt me-1"></i>' + s.address;
+                        spotAddressText.classList.replace('text-danger', 'text-muted');
+
+                        spotDropdown.classList.remove('show'); 
+                    };
+                    spotDropdown.appendChild(item);
+                });
+            }
+            spotDropdown.classList.add('show');
+        }
+
+        spotInput.addEventListener('input', function() { 
+            hiddenSpotId.value = ''; 
+            
+            spotAddressText.innerHTML = '<i class="bi bi-geo-alt me-1"></i>Please select a tourist spot...';
+            spotAddressText.classList.replace('text-muted', 'text-danger');
+
+            renderSpotDropdown(this.value); 
+        });
+
+        spotInput.addEventListener('focus', function() { renderSpotDropdown(this.value); });
+        document.addEventListener('click', function(e) { if (!spotInput.contains(e.target) && !spotDropdown.contains(e.target)) spotDropdown.classList.remove('show'); });
+
+        document.getElementById('resForm').addEventListener('submit', function(e) {
+            if (!hiddenSpotId.value) {
+                e.preventDefault();
+                alert("Please select a Tourist Spot from the dropdown list!");
+                spotInput.focus();
+            }
+        });
+    </script>
+}

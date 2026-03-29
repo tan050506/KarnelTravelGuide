@@ -1,0 +1,221 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using KarnelTravelGuide.Web.Data;
+using KarnelTravelGuide.Web.Models.Entities;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
+namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
+{
+    [Area("Manager")]
+    public class RoomBookingController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+
+        public RoomBookingController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        // 1. INDEX
+        public async Task<IActionResult> Index(string searchString, string checkInDate, string sortOrder)
+        {
+            var query = _context.Orders
+                .Include(o => o.Account)
+                .Include(o => o.OrderDetails!).ThenInclude(od => od.RoomBooking!).ThenInclude(rb => rb.Room!).ThenInclude(r => r.Stay)
+                .Where(o => o.OrderDetails!.Any(od => od.RoomBookingId != null))
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(o => 
+                    (o.Account!.PhoneNumber != null && o.Account!.PhoneNumber.Contains(searchString)) ||
+                    (o.Account!.FullName != null && o.Account!.FullName.Contains(searchString)));
+            }
+
+            if (!string.IsNullOrEmpty(checkInDate) && DateTime.TryParse(checkInDate, out DateTime parsedDate))
+            {
+                DateOnly date = DateOnly.FromDateTime(parsedDate);
+                query = query.Where(o => o.OrderDetails!.Any(od => od.RoomBooking!.CheckInDate == date));
+            }
+
+            ViewData["CurrentSearch"] = searchString;
+            ViewData["CurrentDate"] = checkInDate;
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_desc" : "";
+
+            switch (sortOrder)
+            {
+                case "id_desc": query = query.OrderByDescending(o => o.OrderId); break;
+                default: query = query.OrderBy(o => o.OrderId); break;
+            }
+
+            return View(await query.ToListAsync());
+        }
+
+        // 2. CONFIRM BOOKING
+        [HttpPost]
+        public async Task<IActionResult> ConfirmBooking(int orderId)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order != null)
+            {
+                order.Status = "Confirmed";
+                var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.OrderId == orderId);
+                if (invoice != null) invoice.PaymentStatus = "Paid"; 
+
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Room order confirmed successfully!";
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        // 3. CANCEL ORDER
+        [HttpPost]
+        public async Task<IActionResult> CancelOrder(int orderId)
+        {
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
+            if (order != null)
+            {
+                order.Status = "Canceled"; 
+                var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.OrderId == orderId);
+                if (invoice != null) invoice.PaymentStatus = "Canceled"; 
+
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Order canceled! The rooms have been automatically released.";
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        // 4. DETAILS
+        public async Task<IActionResult> Details(int id)
+        {
+            var order = await _context.Orders
+                .Include(o => o.Account)
+                .Include(o => o.OrderDetails!).ThenInclude(od => od.RoomBooking!).ThenInclude(rb => rb.Room!).ThenInclude(r => r.Stay!).ThenInclude(s => s.Spot)
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+
+            if (order == null) return NotFound();
+            return View(order);
+        }
+
+        // ---------------- THÊM MỚI CHỨC NĂNG TẠO ĐƠN ----------------
+
+        // 5. GET: Create (Giao diện nhập khách hàng & Tìm khách sạn)
+        public async Task<IActionResult> Create()
+        {
+            ViewBag.Customers = await _context.Accounts.Where(a => a.RoleId == 3).ToListAsync();
+            ViewBag.Spots = await _context.TouristSpots.ToListAsync();
+            ViewBag.Stays = await _context.Stays.Include(s => s.Spot).Include(s => s.Rooms).ToListAsync();
+            return View();
+        }
+
+        // 6. GET: SelectRoom (Chuyển qua giao diện chọn phòng của Manager)
+        public async Task<IActionResult> SelectRoom(int stayId, string checkIn, string checkOut, string customerType, int? accountId, string walkInName, string walkInPhone)
+        {
+            var stay = await _context.Stays
+                .Include(s => s.Spot)
+                .Include(s => s.Rooms)
+                .FirstOrDefaultAsync(s => s.StayId == stayId);
+
+            if (stay == null) return NotFound();
+
+            DateOnly dateIn = DateOnly.FromDateTime(DateTime.Parse(checkIn));
+            DateOnly dateOut = DateOnly.FromDateTime(DateTime.Parse(checkOut));
+
+            // Thuật toán tính phòng trống
+            var availableRoomsDict = new Dictionary<int, int>();
+            foreach (var room in stay.Rooms)
+            {
+                var bookedRooms = await _context.OrderDetails
+                    .Where(od => od.RoomBooking != null
+                              && od.RoomBooking.RoomId == room.RoomId
+                              && od.RoomBooking.CheckInDate < dateOut
+                              && od.RoomBooking.CheckOutDate > dateIn
+                              && od.Order != null && od.Order.Status != "Canceled")
+                    .SumAsync(od => (int?)od.RoomBooking!.NumberOfRooms) ?? 0;
+
+                availableRoomsDict[room.RoomId] = room.Quantity - bookedRooms;
+            }
+
+            ViewBag.CustomerType = customerType;
+            ViewBag.AccountId = accountId;
+            ViewBag.WalkInName = walkInName;
+            ViewBag.WalkInPhone = walkInPhone;
+            ViewBag.CheckIn = checkIn;
+            ViewBag.CheckOut = checkOut;
+            ViewBag.TotalNights = dateOut.DayNumber - dateIn.DayNumber;
+            ViewBag.AvailableRooms = availableRoomsDict;
+
+            return View(stay);
+        }
+
+        // 7. POST: Create (Xử lý lưu vào Database)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(int? AccountId, string CustomerType, string WalkInName, string WalkInPhone, int StayId, int RoomId, string CheckIn, string CheckOut, int NumberOfRooms)
+        {
+            int finalAccountId = 0;
+
+            // Xử lý tạo khách hàng vãng lai nếu cần
+            if (CustomerType == "WalkIn")
+            {
+                if (string.IsNullOrEmpty(WalkInName) || string.IsNullOrEmpty(WalkInPhone))
+                {
+                    TempData["ErrorMessage"] = "Please enter full name and phone number for walk-in customer.";
+                    return RedirectToAction(nameof(Create));
+                }
+
+                var existingAccount = await _context.Accounts.FirstOrDefaultAsync(a => a.PhoneNumber == WalkInPhone);
+                if (existingAccount != null)
+                {
+                    TempData["ErrorMessage"] = $"Phone number {WalkInPhone} is already registered. Please choose 'Existing Member'.";
+                    return RedirectToAction(nameof(Create));
+                }
+                else
+                {
+                    var newGuest = new Account { FullName = WalkInName, PhoneNumber = WalkInPhone, Email = Guid.NewGuid().ToString().Substring(0, 8) + "@walkin.com", RoleId = 3 };
+                    _context.Accounts.Add(newGuest);
+                    await _context.SaveChangesAsync();
+                    finalAccountId = newGuest.AccountId;
+                }
+            }
+            else
+            {
+                if (AccountId == null) { TempData["ErrorMessage"] = "Please select a customer."; return RedirectToAction(nameof(Create)); }
+                finalAccountId = AccountId.Value;
+            }
+
+            // Xử lý đặt phòng
+            var room = await _context.Rooms.FirstOrDefaultAsync(r => r.RoomId == RoomId);
+            if (room == null || NumberOfRooms <= 0) return NotFound();
+
+            DateOnly dateIn = DateOnly.FromDateTime(DateTime.Parse(CheckIn));
+            DateOnly dateOut = DateOnly.FromDateTime(DateTime.Parse(CheckOut));
+            int totalNights = dateOut.DayNumber - dateIn.DayNumber;
+            decimal totalAmount = (room.PriceRoom ?? 0) * NumberOfRooms * totalNights;
+
+            // ĐÃ SỬA: Đặt trạng thái đơn hàng là Pending thay vì Confirmed
+            var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Pending" }; 
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
+            var roomBooking = new RoomBooking { RoomId = RoomId, CheckInDate = dateIn, CheckOutDate = dateOut, NumberOfRooms = NumberOfRooms, TotalAmount = totalAmount };
+            _context.RoomBookings.Add(roomBooking);
+            await _context.SaveChangesAsync();
+
+            _context.OrderDetails.Add(new OrderDetail { OrderId = order.OrderId, RoomBookingId = roomBooking.RoomBookingId, Price = totalAmount, Quantity = 1 });
+            
+            // ĐÃ SỬA: Đặt trạng thái thanh toán là Unpaid thay vì Paid
+            _context.Invoices.Add(new Invoice { AccountId = finalAccountId, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, FinalTotal = totalAmount, PaymentStatus = "Unpaid" }); 
+            
+            await _context.SaveChangesAsync();
+
+            // Cập nhật lại câu thông báo
+            TempData["SuccessMessage"] = $"Successfully created an order for {NumberOfRooms} rooms! Please review and confirm it below.";
+            return RedirectToAction(nameof(Index));
+        }
+    }
+}

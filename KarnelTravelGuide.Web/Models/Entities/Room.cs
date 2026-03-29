@@ -13,6 +13,8 @@ public partial class Room
 
     public decimal? PriceRoom { get; set; }
 
+    public int Quantity { get; set; }
+
     public virtual ICollection<RoomBooking> RoomBookings { get; set; } = new List<RoomBooking>();
 
     public virtual Stay? Stay { get; set; }

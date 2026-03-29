@@ -1,65 +1,85 @@
 @model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Restaurant>
-@{ ViewData["Title"] = "Manage Restaurants"; }
-
-<div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 flex-wrap">
-        <h5 class="mb-0 fw-bold text-secondary flex-shrink-0"><i class="bi bi-shop me-2"></i>Restaurant List</h5>
-        
-        <form asp-action="Index" method="get" class="d-flex mx-auto my-2 my-md-0" style="width: 100%; max-width: 400px;">
-            <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control me-2" placeholder="Search restaurant or spot...">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
-            <a asp-action="Index" class="btn btn-light ms-1" title="Clear"><i class="bi bi-x-circle"></i></a>
-        </form>
-
-        <a asp-action="Create" class="btn btn-primary btn-sm flex-shrink-0"><i class="bi bi-plus-lg"></i> Add New</a>
-    </div>
+@{ 
+    ViewData["Title"] = "Manage Restaurants"; 
     
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Image</th>
-                        <th>Name</th>
-                        <th>Tourist Spot</th>
-                        <th>Average Price</th>
-                        <th>Rating</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model) {
-                    <tr>
-                        <td class="fw-bold text-muted">#@item.RestaurantId</td>
-                        <td>
-                            @if (!string.IsNullOrEmpty(item.ImageUrl)) {
-                                <img src="@item.ImageUrl" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" />
-                            } else {
-                                <div class="bg-secondary text-white d-flex justify-content-center align-items-center rounded" style="width: 60px; height: 60px;">No Img</div>
-                            }
-                        </td>
-                        <td class="fw-semibold">@item.RestaurantName</td>
-                        <td>@(item.Spot?.SpotName ?? "N/A")</td>
-                        <td>@(item.PriceRes?.ToString("N0") ?? "N/A") VNĐ</td>
-                        <td>
-                            @if(item.StarRating != null && item.StarRating > 0) {
-                                @for(int i=0; i < item.StarRating; i++) { <i class="bi bi-star-fill text-warning"></i> }
-                            } else {
-                                <span class="text-muted small">No feedback</span>
-                            }
-                        </td>
-                        <td class="text-center text-nowrap">
-                            <a asp-action="Details" asp-route-id="@item.RestaurantId" class="btn btn-sm btn-outline-info" title="View Details"><i class="bi bi-eye"></i></a>
-                            <a asp-action="Edit" asp-route-id="@item.RestaurantId" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                            <form asp-action="Delete" asp-route-id="@item.RestaurantId" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this restaurant?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
-                            </form>
-                        </td>
-                    </tr>
+    int totalCount = Model?.Count() ?? 0;
+    bool isDescending = ViewData["CurrentSort"]?.ToString() == "id_desc";
+    int displayIndex = isDescending ? totalCount : 1;
+}
+
+<div class="k-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <form asp-action="Index" method="get" class="d-flex w-50">
+            <div class="input-group">
+                <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control" style="border-radius: 8px 0 0 8px; border: 1px solid #ced4da; padding: 0.75rem 1rem;" placeholder="Search restaurant name or spot...">
+                <button type="submit" class="btn btn-primary px-4" style="border-radius: 0 8px 8px 0;"><i class="bi bi-search"></i></button>
+            </div>
+        </form>
+        <a asp-action="Create" class="k-btn-primary"><i class="bi bi-plus-lg me-2"></i> Add New Restaurant</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null) {
+        <div class="alert alert-success rounded-3 fw-bold"><i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null) {
+        <div class="alert alert-danger rounded-3 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light text-muted small text-uppercase">
+                <tr>
+                    <th style="width: 5%; text-align: center;">
+                        <a asp-action="Index" asp-route-sortOrder="@ViewData["IdSortParm"]" asp-route-searchString="@ViewData["CurrentFilter"]" class="text-decoration-none text-dark" title="Click to sort">
+                            <i class="bi bi-arrow-down-up fs-5 fw-bold text-dark"></i>
+                        </a>
+                    </th>
+                    <th style="width: 15%;">Image</th>
+                    <th style="width: 25%;">Restaurant Info</th>
+                    <th style="width: 25%;">Location</th>
+                    <th style="width: 15%;">Rating</th>
+                    <th class="text-end" style="width: 15%;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any()) {
+                    foreach (var item in Model) {
+                        var typeCount = item.RestaurantTables.Select(t => t.TableType).Distinct().Count();
+
+                        <tr>
+                            <td class="fw-bold text-secondary fs-6 text-center">@displayIndex</td>
+                            <td>
+                                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/img/no-image.jpg" : item.ImageUrl)" class="rounded-3 shadow-sm border" style="width: 70px; height: 50px; object-fit: cover;" />
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark text-truncate" style="max-width: 200px;" title="@item.RestaurantName">@item.RestaurantName</div>
+                                <div class="small mt-1">
+                                    <span class="text-primary fw-bold"><i class="bi bi-ui-checks-grid me-1"></i> @typeCount Table Types</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-primary fs-6">@(item.Spot?.SpotName ?? "N/A")</div>
+                                <div class="small text-muted mt-1 text-truncate" style="max-width: 200px;"><i class="bi bi-geo-alt text-danger me-1"></i>@item.Address</div>
+                            </td>
+                            <td>
+                                @if(item.StarRating != null && item.StarRating > 0) {
+                                    <span class="text-warning">@for(int i=0; i < item.StarRating; i++) { <i class="bi bi-star-fill"></i> }</span>
+                                } else { 
+                                    <span class="text-muted small">No rating</span> 
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a asp-action="Details" asp-route-id="@item.RestaurantId" class="btn btn-sm btn-light text-info fw-bold"><i class="bi bi-eye"></i></a>
+                                <a asp-action="Edit" asp-route-id="@item.RestaurantId" class="btn btn-sm btn-light text-primary fw-bold mx-1"><i class="bi bi-pencil-square"></i></a>
+                                <a asp-action="Delete" asp-route-id="@item.RestaurantId" class="btn btn-sm btn-light text-danger fw-bold"><i class="bi bi-trash"></i></a>
+                            </td>
+                        </tr>
+                        if (isDescending) { displayIndex--; } else { displayIndex++; }
                     }
-                </tbody>
-            </table>
-        </div>
+                } else {
+                    <tr><td colspan="6" class="text-center py-5 text-muted fw-bold">No restaurants found.</td></tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>

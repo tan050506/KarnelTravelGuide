@@ -1,42 +1,205 @@
 @model KarnelTravelGuide.Web.Models.Entities.Stay
-@{ ViewData["Title"] = "Create Stay"; }
+@{ ViewData["Title"] = "Add New Stay"; }
 
-<div class="card shadow-sm border-0">
-    <div class="card-body p-4">
-        <form asp-action="Create" enctype="multipart/form-data">
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label asp-for="Name" class="form-label fw-bold">Stay Name</label>
-                    <input asp-for="Name" class="form-control" required />
+<style>
+    .preview-box { position: relative; display: inline-block; }
+    .btn-remove-preview { position: absolute; top: -10px; right: -10px; width: 25px; height: 25px; padding: 0; background: #fff; color: #dc3545; border-radius: 50%; border: 1px solid #dc3545; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; transition: 0.3s; z-index: 5; }
+    .btn-remove-preview:hover { background: #dc3545; color: #fff; transform: scale(1.1); }
+    .custom-dropdown-menu { max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1000; width: 100%; display: none; margin-top: 5px; }
+    .custom-dropdown-menu.show { display: block; }
+    .dropdown-item-custom { transition: background-color 0.2s; cursor: pointer; white-space: normal; }
+    .dropdown-item-custom:hover { background-color: #f8f9fa; }
+</style>
+
+<div class="k-card mx-auto" style="max-width: 1000px;">
+    <div class="d-flex align-items-center border-bottom pb-3 mb-4">
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="fw-bold m-0 text-dark">Add New Stay & Rooms</h4>
+    </div>
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data" id="stayForm">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label class="label-karnel">Stay Name <span class="text-danger">*</span></label>
+                <input asp-for="Name" class="k-input" placeholder="e.g. Vinpearl Resort..." required />
+            </div>
+            
+            <div class="col-md-6 position-relative">
+                <label class="label-karnel">Tourist Spot (Location) <span class="text-danger">*</span></label>
+                <div class="position-relative">
+                    <input type="text" id="spotSearchInput" class="k-input mb-1" placeholder="Type spot name or address..." autocomplete="off" required>
+                    <input type="hidden" asp-for="SpotId" id="hiddenSpotId" />
+                    <div id="spotDropdown" class="custom-dropdown-menu k-card shadow-lg p-0 border"></div>
                 </div>
-                <div class="col-md-4 mb-3">
-                    <label asp-for="SpotId" class="form-label fw-bold">Tourist Spot</label>
-                    <select asp-for="SpotId" class="form-select" asp-items="ViewBag.SpotId">
-                        <option value="">-- Select Spot --</option>
-                    </select>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label asp-for="StayType" class="form-label fw-bold">Stay Type</label>
-                    <select asp-for="StayType" class="form-select">
-                        <option value="Hotel">Hotel</option>
-                        <option value="Resort">Resort</option>
-                    </select>
-                </div>
-                <div class="col-12 mb-3">
-                    <label asp-for="Address" class="form-label fw-bold">Address</label>
-                    <input asp-for="Address" class="form-control" />
-                </div>
-                <div class="col-12 mb-3">
-                    <label class="form-label fw-bold">Upload Image</label>
-                    <input type="file" name="imageFile" class="form-control" accept="image/*" />
-                </div>
-                <div class="col-12 mb-4">
-                    <label asp-for="Description" class="form-label fw-bold">Description</label>
-                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                <small class="text-danger d-block mt-1" id="spotAddressText"><i class="bi bi-geo-alt"></i> Please select a tourist spot...</small>
+            </div>
+
+            <div class="col-md-4">
+                <label class="label-karnel">Stay Type <span class="text-danger">*</span></label>
+                <select asp-for="StayType" class="k-input" required>
+                    <option value="Hotel">🏢 Hotel</option>
+                    <option value="Resort">🏖️ Resort</option>
+                </select>
+            </div>
+
+            <div class="col-md-8">
+                <label class="label-karnel">Exact Address</label>
+                <input asp-for="Address" class="k-input" placeholder="Enter exact address..." />
+            </div>
+
+            <div class="col-12 mt-4">
+                <div class="p-4 border rounded-4 bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                        <h5 class="fw-bold text-dark m-0"><i class="bi bi-door-open-fill text-primary me-2"></i>Manage Room Types</h5>
+                        <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="addRoomRow()"><i class="bi bi-plus-lg me-1"></i> Add Room Type</button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle bg-white">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 40%">Room Type Name</th>
+                                    <th style="width: 25%">Price / Night ($)</th>
+                                    <th style="width: 25%">Quantity</th>
+                                    <th style="width: 10%" class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="roomTableBody">
+                                </tbody>
+                        </table>
+                        <small class="text-muted fst-italic">* You must add at least 1 room type.</small>
+                    </div>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Save</button>
-            <a asp-action="Index" class="btn btn-light ms-2">Cancel</a>
-        </form>
-    </div>
+
+            <div class="col-12">
+                <label class="label-karnel">Overview Description</label>
+                <textarea asp-for="Description" class="k-input" rows="3"></textarea>
+            </div>
+
+            <div class="col-12">
+                <div class="p-4 border rounded-4 bg-light text-center">
+                    <label class="label-karnel d-block text-start mb-3"><i class="bi bi-image me-1"></i>Cover Image</label>
+                    <input type="file" name="imageFile" id="imageInput" class="form-control w-50 mx-auto" accept="image/*" onchange="previewImage(event)" />
+                    
+                    <div id="previewContainer" class="mt-4 d-none">
+                        <div class="preview-box">
+                            <button type="button" class="btn-remove-preview" onclick="removeImage()"><i class="bi bi-x"></i></button>
+                            <img id="imagePreview" class="img-fluid rounded-3 shadow border" style="max-height: 250px; object-fit: cover;" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 mt-5 text-end border-top pt-4">
+                <button type="submit" class="k-btn-primary px-5 py-3"><i class="bi bi-save me-2"></i> Save Stay & Rooms</button>
+            </div>
+        </div>
+    </form>
 </div>
+
+@section Scripts {
+    <script>
+        let roomIndex = 0;
+
+        function addRoomRow() {
+            const tbody = document.getElementById('roomTableBody');
+            const tr = document.createElement('tr');
+            
+            tr.innerHTML = `
+                <td>
+                    <select name="Rooms[${roomIndex}].RoomType" class="form-select" required>
+                        <option value="Standard">Standard</option>
+                        <option value="VIP">VIP</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="Rooms[${roomIndex}].PriceRoom" class="form-control" min="0" step="1" required />
+                </td>
+                <td>
+                    <input type="number" name="Rooms[${roomIndex}].Quantity" class="form-control" min="1" max="100" required />
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-danger fw-bold" onclick="removeRoomRow(this)"><i class="bi bi-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            roomIndex++;
+        }
+
+        function removeRoomRow(btn) {
+            btn.closest('tr').remove();
+            const rows = document.getElementById('roomTableBody').querySelectorAll('tr');
+            roomIndex = 0;
+            rows.forEach(row => {
+                row.querySelector('select[name$=".RoomType"]').name = `Rooms[${roomIndex}].RoomType`;
+                row.querySelector('input[name$=".PriceRoom"]').name = `Rooms[${roomIndex}].PriceRoom`;
+                row.querySelector('input[name$=".Quantity"]').name = `Rooms[${roomIndex}].Quantity`;
+                roomIndex++;
+            });
+        }
+
+        window.onload = function() {
+            addRoomRow(); // Khởi tạo 1 dòng trống mặc định
+        }
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('previewContainer').classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+        function removeImage() {
+            document.getElementById('imageInput').value = '';
+            document.getElementById('previewContainer').classList.add('d-none');
+            document.getElementById('imagePreview').src = '';
+        }
+
+        const spots = [
+            @foreach(var s in ViewBag.TouristSpots) { <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)", address: "@Html.Raw(s.Address)" },</text> }
+        ];
+
+        const searchInput = document.getElementById('spotSearchInput');
+        const dropdown = document.getElementById('spotDropdown');
+        const hiddenId = document.getElementById('hiddenSpotId');
+        const addressText = document.getElementById('spotAddressText');
+
+        function renderDropdown(filterText = "") {
+            dropdown.innerHTML = '';
+            const lowerFilter = filterText.toLowerCase();
+            const filtered = spots.filter(s => (s.name && s.name.toLowerCase().includes(lowerFilter)) || (s.address && s.address.toLowerCase().includes(lowerFilter)));
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="p-3 text-muted small fst-italic">No spots found.</div>';
+            } else {
+                filtered.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item-custom p-3 border-bottom';
+                    item.innerHTML = `<div class="fw-bold text-dark fs-6 mb-1">${s.name}</div><div class="small text-muted"><i class="bi bi-geo-alt text-danger me-1"></i> ${s.address || 'N/A'}</div>`;
+                    item.onclick = function() {
+                        searchInput.value = s.name;
+                        hiddenId.value = s.id;
+                        addressText.innerHTML = `<i class="bi bi-geo-alt"></i> ${s.address || 'Address not available'}`;
+                        dropdown.classList.remove('show');
+                    };
+                    dropdown.appendChild(item);
+                });
+            }
+            dropdown.classList.add('show');
+        }
+
+        searchInput.addEventListener('input', function() { hiddenId.value = ''; addressText.innerHTML = '<i class="bi bi-geo-alt"></i> Please select a tourist spot...'; renderDropdown(this.value); });
+        searchInput.addEventListener('focus', function() { renderDropdown(this.value); });
+        document.addEventListener('click', function(e) { if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.remove('show'); });
+
+        document.getElementById('stayForm').addEventListener('submit', function(e) {
+            if (!hiddenId.value) { e.preventDefault(); alert("Please select a Tourist Spot from the dropdown list!"); searchInput.focus(); return; }
+            if (document.getElementById('roomTableBody').children.length === 0) { e.preventDefault(); alert("You must add at least 1 Room Type!"); }
+        });
+    </script>
+}

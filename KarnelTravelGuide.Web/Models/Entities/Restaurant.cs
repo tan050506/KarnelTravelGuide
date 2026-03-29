@@ -13,8 +13,6 @@ public partial class Restaurant
 
     public string? Address { get; set; }
 
-    public decimal? PriceRes { get; set; }
-
     public int? StarRating { get; set; }
 
     public string? Description { get; set; }
@@ -23,7 +21,7 @@ public partial class Restaurant
 
     public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 
-    public virtual ICollection<RestaurantBooking> RestaurantBookings { get; set; } = new List<RestaurantBooking>();
-
     public virtual TouristSpot? Spot { get; set; }
+
+    public virtual ICollection<RestaurantTable> RestaurantTables { get; set; } = new List<RestaurantTable>();
 }

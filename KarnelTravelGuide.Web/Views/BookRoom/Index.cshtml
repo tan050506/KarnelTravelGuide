@@ -1,0 +1,177 @@
+@using KarnelTravelGuide.Web.Models.Entities
+@model IEnumerable<Stay>
+@{ 
+    ViewData["Title"] = "Find Stays"; 
+    var spotsList = ViewBag.Spots as IEnumerable<TouristSpot> ?? new List<TouristSpot>();
+}
+
+<style>
+    body { background-color: #f8fafc; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    
+    .search-widget { background: #fff; border-radius: 1.25rem; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
+    .form-control-custom { border-radius: 0.75rem; padding: 0.8rem 1rem; border: 1px solid transparent; background-color: #f1f5f9; font-weight: 500; transition: all 0.2s; color: #333; }
+    .form-control-custom:focus { border-color: #0d6efd; background-color: #fff; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1); outline: none; }
+    
+    .btn-custom { background-color: #0d6efd; color: white; border-radius: 0.75rem; font-weight: 700; padding: 0.8rem; transition: 0.3s; }
+    .btn-custom:hover { background-color: #0b5ed7; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3); }
+
+    .stay-card { background: #fff; border-radius: 1.25rem; overflow: hidden; border: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+    .stay-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
+
+    /* CSS Cho Dropdown Autocomplete */
+    .custom-dropdown-menu { max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1000; width: 100%; display: none; margin-top: 5px; background: #fff; border-radius: 0.75rem; }
+    .custom-dropdown-menu.show { display: block; }
+    .dropdown-item-custom { transition: background-color 0.2s; cursor: pointer; white-space: normal; padding: 12px 15px; }
+    .dropdown-item-custom:hover { background-color: #f8f9fa; }
+</style>
+
+<div class="container py-5" style="max-width: 900px;">
+    
+    <div class="text-center mb-4">
+        <h2 class="fw-bold text-dark mb-2">Find Your Perfect Stay</h2>
+        <p class="text-muted">Book hotels and resorts for your next adventure.</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null) { 
+        <div class="alert alert-success rounded-4 fw-bold shadow-sm mb-4"><i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]</div> 
+    }
+
+    <div class="search-widget mb-5">
+        <form asp-action="Index" method="get">
+            <div class="row g-3">
+                <div class="col-md-12 position-relative">
+                    <label class="text-muted small fw-bold mb-1">Destination (Tourist Spot)</label>
+                    <div class="position-relative">
+                        <input type="text" id="spotSearchInput" class="form-control form-control-custom" placeholder="Type destination name..." autocomplete="off">
+                        <input type="hidden" name="spotId" id="hiddenSpotId" value="@ViewBag.CurrentSpot" />
+                        <div id="spotDropdown" class="custom-dropdown-menu shadow-lg border"></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="text-muted small fw-bold mb-1">Check-in Date</label>
+                    <input type="date" name="checkIn" value="@ViewBag.CheckIn" min="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control form-control-custom" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="text-muted small fw-bold mb-1">Check-out Date</label>
+                    <input type="date" name="checkOut" value="@ViewBag.CheckOut" min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" class="form-control form-control-custom" required />
+                </div>
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-custom w-100"><i class="bi bi-search me-2"></i>Search Stays</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-building text-primary me-2"></i>Available Stays</h5>
+    
+    <div class="row g-4">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                <div class="col-12">
+                    <div class="stay-card d-flex flex-column flex-md-row">
+                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/img/no-image.jpg" : item.ImageUrl)" style="width: 100%; max-width: 300px; object-fit: cover;" alt="@item.Name">
+                        
+                        <div class="p-4 d-flex flex-column justify-content-between w-100">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h4 class="fw-bold mb-0 text-dark">@item.Name</h4>
+                                    <span class="badge @(item.StayType == "Hotel" ? "bg-primary" : "bg-success")">@item.StayType</span>
+                                </div>
+                                <p class="text-muted small fw-bold mb-3"><i class="bi bi-geo-alt-fill text-danger me-1"></i>@item.Address</p>
+                                
+                                <div class="d-flex gap-3 mb-2">
+                                    <span class="badge bg-light text-dark border"><i class="bi bi-door-open-fill text-primary me-1"></i> @(item.Rooms?.Count() ?? 0) Room Types</span>
+                                    @if(item.StarRating != null && item.StarRating > 0) {
+                                        <span class="text-warning small fw-bold"><i class="bi bi-star-fill"></i> @item.StarRating Stars</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-end mt-4 pt-3 border-top">
+                                <div>
+                                    <small class="text-muted fw-bold d-block">Starting from</small>
+                                    @if(item.Rooms != null && item.Rooms.Any()) {
+                                        <h4 class="fw-bold text-primary mb-0">$@((item.Rooms.Min(r => r.PriceRoom) ?? 0).ToString("N0")) <small class="text-muted fs-6">/ night</small></h4>
+                                    } else {
+                                        <span class="text-muted fst-italic">Price not set</span>
+                                    }
+                                </div>
+                                <a href="/BookRoom/Booking/@item.StayId?checkIn=@ViewBag.CheckIn&checkOut=@ViewBag.CheckOut" class="btn btn-custom px-4">View Rooms</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5 bg-white rounded-4 shadow-sm text-muted">
+                <i class="bi bi-house-x fs-1 d-block mb-3"></i>
+                <h5 class="fw-bold text-dark">No stays found</h5>
+                <p>Try adjusting your search criteria or dates.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const spotsData = [
+            @foreach(var s in spotsList) { <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)" },</text> }
+        ];
+        
+        const spotInput = document.getElementById('spotSearchInput');
+        const spotDropdown = document.getElementById('spotDropdown');
+        const hiddenSpotId = document.getElementById('hiddenSpotId');
+
+        // Tự động điền giá trị nếu đã có tìm kiếm từ trước
+        document.addEventListener("DOMContentLoaded", function () {
+            if (hiddenSpotId.value) {
+                const currentSpot = spotsData.find(s => s.id == hiddenSpotId.value);
+                if (currentSpot) {
+                    spotInput.value = currentSpot.name;
+                }
+            }
+        });
+
+        function renderSpotDropdown(filterText = "") {
+            spotDropdown.innerHTML = '';
+            const lowerFilter = filterText.toLowerCase();
+            const filtered = spotsData.filter(s => s.name.toLowerCase().includes(lowerFilter));
+
+            // Luôn có lựa chọn Tất cả
+            const anyItem = document.createElement('div');
+            anyItem.className = 'dropdown-item-custom border-bottom text-primary fw-bold';
+            anyItem.innerText = "All Destinations (Anywhere)";
+            anyItem.onclick = function() {
+                hiddenSpotId.value = "";
+                spotInput.value = "";
+                spotDropdown.classList.remove('show');
+            };
+            spotDropdown.appendChild(anyItem);
+
+            if (filtered.length === 0) {
+                spotDropdown.innerHTML += '<div class="p-3 text-muted small fst-italic">No destinations found.</div>';
+            } else {
+                filtered.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item-custom border-bottom fw-bold text-dark';
+                    item.innerText = s.name;
+                    item.onclick = function() {
+                        hiddenSpotId.value = s.id;
+                        spotInput.value = s.name;
+                        spotDropdown.classList.remove('show');
+                    };
+                    spotDropdown.appendChild(item);
+                });
+            }
+            spotDropdown.classList.add('show');
+        }
+
+        spotInput.addEventListener('input', function() { hiddenSpotId.value = ''; renderSpotDropdown(this.value); });
+        spotInput.addEventListener('focus', function() { renderSpotDropdown(this.value); });
+        document.addEventListener('click', function(e) { if (!spotInput.contains(e.target) && !spotDropdown.contains(e.target)) spotDropdown.classList.remove('show'); });
+    </script>
+}

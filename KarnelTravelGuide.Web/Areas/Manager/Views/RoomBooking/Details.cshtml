@@ -1,0 +1,67 @@
+@model KarnelTravelGuide.Web.Models.Entities.Order
+@{ ViewData["Title"] = "Booking Details"; }
+
+<div class="k-card mx-auto" style="max-width: 900px;">
+    <div class="d-flex align-items-center border-bottom pb-3 mb-4">
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="fw-bold m-0 text-dark">Order #@Model.OrderId</h4>
+        <div class="ms-auto">
+            @if(Model.Status == "Confirmed") { <span class="badge bg-success fs-6 px-3 py-2">Confirmed</span> }
+            else if(Model.Status == "Canceled") { <span class="badge bg-danger fs-6 px-3 py-2">Canceled</span> }
+            else { <span class="badge bg-warning text-dark fs-6 px-3 py-2">Pending</span> }
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="bg-light p-4 rounded-4 border h-100">
+                <h6 class="fw-bold text-muted text-uppercase mb-3"><i class="bi bi-person-circle me-2"></i>Customer Information</h6>
+                <div class="mb-2"><span class="text-muted d-inline-block" style="width: 100px;">Full Name:</span> <strong class="text-dark">@Model.Account?.FullName</strong></div>
+                <div class="mb-2"><span class="text-muted d-inline-block" style="width: 100px;">Phone:</span> <strong class="text-dark">@Model.Account?.PhoneNumber</strong></div>
+                <div><span class="text-muted d-inline-block" style="width: 100px;">Email:</span> <span class="text-dark">@Model.Account?.Email</span></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="bg-light p-4 rounded-4 border h-100">
+                <h6 class="fw-bold text-muted text-uppercase mb-3"><i class="bi bi-receipt me-2"></i>Order Summary</h6>
+                <div class="mb-2"><span class="text-muted d-inline-block" style="width: 100px;">Order Date:</span> <span class="text-dark">@Model.CreateDate?.ToString("dd/MM/yyyy HH:mm")</span></div>
+                <div class="mb-2"><span class="text-muted d-inline-block" style="width: 100px;">Total Amount:</span> <strong class="text-primary fs-5">$@((Model.TotalAmount ?? 0).ToString("N0"))</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-door-open-fill text-primary me-2"></i>Booked Rooms</h5>
+    
+    <div class="table-responsive border rounded-4">
+        <table class="table table-borderless align-middle mb-0">
+            <thead class="table-light border-bottom">
+                <tr>
+                    <th class="ps-4 py-3">Stay & Location</th>
+                    <th class="py-3">Room Type</th>
+                    <th class="py-3">Check-in / out</th>
+                    <th class="py-3 text-center">Qty</th>
+                    <th class="pe-4 py-3 text-end">Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.OrderDetails != null) {
+                    foreach (var detail in Model.OrderDetails.Where(od => od.RoomBooking != null)) {
+                        <tr>
+                            <td class="ps-4 py-3">
+                                <div class="fw-bold text-primary">@detail.RoomBooking?.Room?.Stay?.Name</div>
+                                <div class="small text-muted"><i class="bi bi-geo-alt-fill text-danger"></i> @detail.RoomBooking?.Room?.Stay?.Spot?.SpotName</div>
+                            </td>
+                            <td class="py-3 fw-bold text-dark">@detail.RoomBooking?.Room?.RoomType</td>
+                            <td class="py-3">
+                                <div class="small fw-bold">In: @(detail.RoomBooking!.CheckInDate.HasValue ? detail.RoomBooking.CheckInDate.Value.ToString("dd/MM/yyyy") : "N/A")</div>
+                                <div class="small fw-bold">Out: @(detail.RoomBooking!.CheckOutDate.HasValue ? detail.RoomBooking.CheckOutDate.Value.ToString("dd/MM/yyyy") : "N/A")</div>
+                            </td>
+                            <td class="py-3 text-center fw-bold">x @detail.RoomBooking?.NumberOfRooms</td>
+                            <td class="pe-4 py-3 text-end fw-bold text-dark">$@((detail.Price ?? 0).ToString("N0"))</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

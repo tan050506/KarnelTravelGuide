@@ -1,42 +1,31 @@
-@model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Transportation>
+@using KarnelTravelGuide.Web.Models.Entities
+@model IEnumerable<Transportation>
 @{
     ViewData["Title"] = "Find Tickets";
+    var branchesList = ViewBag.Branches as IEnumerable<Branch> ?? new List<Branch>();
+    var spotsList = ViewBag.Spots as IEnumerable<TouristSpot> ?? new List<TouristSpot>();
 }
 
 <style>
     body { background-color: #f8fafc; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
-    
-    .search-widget { 
-        background: #fff; border-radius: 1.25rem; padding: 2rem; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); 
-    }
-    
-    .form-control-custom { 
-        border-radius: 0.75rem; padding: 0.8rem 1rem; border: 1px solid transparent; 
-        background-color: #f1f5f9; font-weight: 500; transition: all 0.2s; color: #333; 
-    }
-    .form-control-custom:focus { 
-        border-color: #0d6efd; background-color: #fff; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1); outline: none; 
-    }
-
-    .btn-custom { 
-        background-color: #0d6efd; color: white; border-radius: 0.75rem; font-weight: 700; 
-        padding: 0.8rem; transition: 0.3s; 
-    }
+    .search-widget { background: #fff; border-radius: 1.25rem; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
+    .form-control-custom { border-radius: 0.75rem; padding: 0.8rem 1rem; border: 1px solid transparent; background-color: #f1f5f9; font-weight: 500; transition: all 0.2s; color: #333; }
+    .form-control-custom:focus { border-color: #0d6efd; background-color: #fff; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1); outline: none; }
+    .btn-custom { background-color: #0d6efd; color: white; border-radius: 0.75rem; font-weight: 700; padding: 0.8rem; transition: 0.3s; }
     .btn-custom:hover { background-color: #0b5ed7; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3); }
-
-    .trip-card { 
-        background: #fff; border-radius: 1.25rem; padding: 1.5rem; border: none; 
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
-    }
+    .trip-card { background: #fff; border-radius: 1.25rem; padding: 1.5rem; border: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
     .trip-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
-    
     .time-large { font-size: 1.5rem; font-weight: 800; color: #1e293b; }
     .price-text { color: #0d6efd; font-size: 1.4rem; font-weight: 800; }
+    
+    /* CSS Cho Dropdown Autocomplete */
+    .custom-dropdown-menu { max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1000; width: 100%; display: none; margin-top: 5px; background: #fff; border-radius: 0.75rem; }
+    .custom-dropdown-menu.show { display: block; }
+    .dropdown-item-custom { transition: background-color 0.2s; cursor: pointer; white-space: normal; padding: 12px 15px; }
+    .dropdown-item-custom:hover { background-color: #f8f9fa; }
 </style>
 
 <div class="container py-5" style="max-width: 900px;">
-    
     <div class="text-center mb-4">
         <h2 class="fw-bold text-dark mb-2">Where to next?</h2>
         <p class="text-muted">Find the best routes and book your tickets instantly.</p>
@@ -49,24 +38,24 @@
     <div class="search-widget mb-5">
         <form asp-action="Index" method="get">
             <div class="row g-3">
-                <div class="col-md-6">
+                <div class="col-md-6 position-relative">
                     <label class="text-muted small fw-bold mb-1">Departure (From)</label>
-                    <select name="fromBranchId" class="form-select form-control-custom">
-                        <option value="">All Locations</option>
-                        @foreach (var branch in ViewBag.Branches) { 
-                            <option value="@branch.BranchId" selected="@(ViewBag.CurrentFrom == branch.BranchId ? "selected" : null)">@branch.BranchName</option> 
-                        }
-                    </select>
+                    <div class="position-relative">
+                        <input type="text" id="fromSearchInput" class="form-control form-control-custom" placeholder="Type departure location..." autocomplete="off">
+                        <input type="hidden" name="fromBranchId" id="hiddenFromId" value="@ViewBag.CurrentFrom" />
+                        <div id="fromDropdown" class="custom-dropdown-menu shadow-lg border"></div>
+                    </div>
                 </div>
-                <div class="col-md-6">
+
+                <div class="col-md-6 position-relative">
                     <label class="text-muted small fw-bold mb-1">Destination (To)</label>
-                    <select name="toSpotId" class="form-select form-control-custom">
-                        <option value="">All Destinations</option>
-                        @foreach (var spot in ViewBag.Spots) { 
-                            <option value="@spot.SpotId" selected="@(ViewBag.CurrentTo == spot.SpotId ? "selected" : null)">@spot.SpotName</option> 
-                        }
-                    </select>
+                    <div class="position-relative">
+                        <input type="text" id="toSearchInput" class="form-control form-control-custom" placeholder="Type destination name..." autocomplete="off">
+                        <input type="hidden" name="toSpotId" id="hiddenToId" value="@ViewBag.CurrentTo" />
+                        <div id="toDropdown" class="custom-dropdown-menu shadow-lg border"></div>
+                    </div>
                 </div>
+
                 <div class="col-md-6">
                     <label class="text-muted small fw-bold mb-1">Transport Type</label>
                     <select name="transportType" class="form-select form-control-custom">
@@ -76,10 +65,12 @@
                         <option value="Air" selected="@(ViewBag.CurrentType == "Air" ? "selected" : null)">✈️ Air</option>
                     </select>
                 </div>
+                
                 <div class="col-md-6">
                     <label class="text-muted small fw-bold mb-1">Travel Date</label>
                     <input type="date" name="travelDate" value="@ViewBag.CurrentDate" min="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control form-control-custom" required />
                 </div>
+                
                 <div class="col-12 mt-4">
                     <button type="submit" class="btn btn-custom w-100"><i class="bi bi-search me-2"></i>Search Routes</button>
                 </div>
@@ -98,9 +89,7 @@
                     <div class="trip-card">
                         <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                             <div class="d-flex align-items-center">
-                                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
-                                    <i class="bi bi-bus-front-fill fs-3 text-primary"></i>
-                                </div>
+                                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/img/no-image.jpg" : item.ImageUrl)" style="width: 80px; height: 60px; object-fit: cover; border-radius: 8px;" class="me-3 border shadow-sm" alt="@item.TransportName" />
                                 <div>
                                     <h5 class="mb-1 fw-bold text-dark">@item.TransportName</h5>
                                     <span class="badge bg-light text-dark border">@item.TransportType</span>
@@ -143,3 +132,62 @@
         }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        const branchesData = [ @foreach(var b in branchesList) { <text>{ id: @b.BranchId, name: "@Html.Raw(b.BranchName)" },</text> } ];
+        const spotsData = [ @foreach(var s in spotsList) { <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)" },</text> } ];
+
+        const fromInput = document.getElementById('fromSearchInput'); 
+        const fromDropdown = document.getElementById('fromDropdown'); 
+        const hiddenFromId = document.getElementById('hiddenFromId');
+        
+        const toInput = document.getElementById('toSearchInput'); 
+        const toDropdown = document.getElementById('toDropdown'); 
+        const hiddenToId = document.getElementById('hiddenToId');
+
+        document.addEventListener("DOMContentLoaded", function () {
+            if (hiddenFromId.value) {
+                const currentFrom = branchesData.find(b => b.id == hiddenFromId.value);
+                if (currentFrom) fromInput.value = currentFrom.name;
+            }
+            if (hiddenToId.value) {
+                const currentTo = spotsData.find(s => s.id == hiddenToId.value);
+                if (currentTo) toInput.value = currentTo.name;
+            }
+        });
+
+        function setupAutocomplete(inputEl, dropdownEl, hiddenEl, dataArray, allText) {
+            function renderDrop(filterText) {
+                dropdownEl.innerHTML = '';
+                const lowerFilter = filterText.toLowerCase();
+                const filtered = dataArray.filter(item => item.name.toLowerCase().includes(lowerFilter));
+
+                const anyItem = document.createElement('div');
+                anyItem.className = 'dropdown-item-custom border-bottom text-primary fw-bold';
+                anyItem.innerText = allText;
+                anyItem.onclick = function() { hiddenEl.value = ""; inputEl.value = ""; dropdownEl.classList.remove('show'); };
+                dropdownEl.appendChild(anyItem);
+
+                if (filtered.length === 0) {
+                    dropdownEl.innerHTML += '<div class="p-3 text-muted small fst-italic">No matches found.</div>';
+                } else {
+                    filtered.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'dropdown-item-custom border-bottom fw-bold text-dark';
+                        div.innerText = item.name;
+                        div.onclick = function() { hiddenEl.value = item.id; inputEl.value = item.name; dropdownEl.classList.remove('show'); };
+                        dropdownEl.appendChild(div);
+                    });
+                }
+                dropdownEl.classList.add('show');
+            }
+            inputEl.addEventListener('input', function() { hiddenEl.value = ''; renderDrop(this.value); });
+            inputEl.addEventListener('focus', function() { renderDrop(this.value); });
+            document.addEventListener('click', function(e) { if (!inputEl.contains(e.target) && !dropdownEl.contains(e.target)) dropdownEl.classList.remove('show'); });
+        }
+
+        setupAutocomplete(fromInput, fromDropdown, hiddenFromId, branchesData, "All Locations");
+        setupAutocomplete(toInput, toDropdown, hiddenToId, spotsData, "All Destinations");
+    </script>
+}

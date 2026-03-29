@@ -1,10 +1,10 @@
 @using KarnelTravelGuide.Web.Models.Entities
-@{
-    ViewData["Title"] = "Find & Book Tickets";
+@{ 
+    ViewData["Title"] = "Find & Book Rooms"; 
+    
+    var staysList = ViewBag.Stays as IEnumerable<Stay> ?? new List<Stay>();
     var customersList = ViewBag.Customers as IEnumerable<Account> ?? new List<Account>();
-    var branchesList = ViewBag.Branches as IEnumerable<Branch> ?? new List<Branch>();
     var spotsList = ViewBag.Spots as IEnumerable<TouristSpot> ?? new List<TouristSpot>();
-    var routesList = ViewBag.Routes as IEnumerable<Transportation> ?? new List<Transportation>();
 }
 
 <style>
@@ -20,14 +20,14 @@
     
     <div class="d-flex align-items-center mb-4">
         <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
-        <h3 class="fw-bold mb-0 text-dark">Find & Book Tickets</h3>
+        <h3 class="fw-bold mb-0 text-dark">Find & Book Rooms</h3>
     </div>
 
     @if (TempData["ErrorMessage"] != null) { 
         <div class="alert alert-danger rounded-3 fw-bold"><i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]</div> 
     }
 
-    <form asp-action="SelectSeat" method="get" id="managerBookingForm">
+    <form asp-action="SelectRoom" method="get" id="managerBookingForm">
         
         <div class="k-card mb-4">
             <h5 class="fw-bold text-dark mb-4 border-bottom pb-3"><i class="bi bi-person-badge text-primary me-2"></i>Customer Information</h5>
@@ -60,7 +60,6 @@
                     <input type="text" id="customerSearchInput" class="k-input" placeholder="Type phone number or name to search..." autocomplete="off">
                     <div id="customerDropdown" class="custom-dropdown-menu k-card shadow-lg p-0 border"></div>
                 </div>
-
                 <div id="selectedCustomerCard" class="d-none p-3 border border-primary rounded-3 bg-primary bg-opacity-10 position-relative mt-2">
                     <button type="button" class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2 rounded-circle btn-remove-customer d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; padding: 0;" onclick="clearCustomerSelection()" title="Change Customer">
                         <i class="bi bi-x fs-5"></i>
@@ -72,54 +71,56 @@
                         <i class="bi bi-envelope-fill text-muted me-1"></i> <span id="selCustEmail">Email</span>
                     </div>
                 </div>
-
                 <input type="hidden" name="AccountId" id="hiddenAccountId" />
             </div>
         </div>
 
         <div class="k-card mb-4">
-            <h5 class="fw-bold text-dark mb-4 border-bottom pb-3"><i class="bi bi-search text-success me-2"></i>Search Route</h5>
+            <h5 class="fw-bold text-dark mb-4 border-bottom pb-3"><i class="bi bi-search text-success me-2"></i>Search Stay</h5>
             
             <div class="row g-4">
-                <div class="col-md-6 position-relative">
-                    <label class="label-karnel">Departure (From)</label>
+                <div class="col-md-12 position-relative">
+                    <label class="label-karnel">Destination (Tourist Spot)</label>
                     <div class="position-relative">
-                        <input type="text" id="fromSearchInput" class="k-input bg-light" placeholder="Type departure location..." autocomplete="off">
-                        <input type="hidden" id="searchFrom" />
-                        <div id="fromDropdown" class="custom-dropdown-menu k-card shadow-lg p-0 border"></div>
+                        <input type="text" id="spotSearchInput" class="k-input bg-light" placeholder="Type destination name..." autocomplete="off">
+                        <input type="hidden" id="searchSpot" />
+                        <div id="spotDropdown" class="custom-dropdown-menu k-card shadow-lg p-0 border"></div>
                     </div>
                 </div>
-                
-                <div class="col-md-6 position-relative">
-                    <label class="label-karnel">Destination (To)</label>
-                    <div class="position-relative">
-                        <input type="text" id="toSearchInput" class="k-input bg-light" placeholder="Type destination name..." autocomplete="off">
-                        <input type="hidden" id="searchTo" />
-                        <div id="toDropdown" class="custom-dropdown-menu k-card shadow-lg p-0 border"></div>
-                    </div>
-                </div>
-                
+
                 <div class="col-md-6">
-                    <label class="label-karnel">Transport Type</label>
-                    <select id="searchType" class="k-input bg-light">
+                    <label class="label-karnel">Stay Type</label>
+                    <select id="searchStayType" class="k-input bg-light">
                         <option value="">All Types</option>
-                        <option value="Land">🚌 Land</option>
-                        <option value="Water">🛳️ Water</option>
-                        <option value="Air">✈️ Air</option>
+                        <option value="Hotel">🏢 Hotel</option>
+                        <option value="Resort">🏖️ Resort</option>
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label class="label-karnel">Travel Date <span class="text-danger">*</span></label>
-                    <input type="date" name="TravelDate" id="travelDate" class="k-input bg-light" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                    <label class="label-karnel">Room Type</label>
+                    <select id="searchRoomType" class="k-input bg-light">
+                        <option value="">All Room Types</option>
+                        <option value="Standard">Standard</option>
+                        <option value="VIP">VIP</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="label-karnel">Check-in Date <span class="text-danger">*</span></label>
+                    <input type="date" name="CheckIn" id="checkInDate" class="k-input bg-light" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="label-karnel">Check-out Date <span class="text-danger">*</span></label>
+                    <input type="date" name="CheckOut" id="checkOutDate" class="k-input bg-light" min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" required />
                 </div>
                 <div class="col-12 mt-4 text-end">
-                    <button type="button" class="k-btn-primary px-5 py-3 w-100" onclick="filterRoutes()"><i class="bi bi-search me-2"></i> Find Routes</button>
+                    <button type="button" class="k-btn-primary px-5 py-3 w-100" onclick="filterStays()"><i class="bi bi-search me-2"></i> Find Available Stays</button>
                 </div>
             </div>
         </div>
 
-        <div id="routeResultsContainer"></div>
-        <input type="hidden" name="TransportationId" id="hiddenTransportId" />
+        <div id="stayResultsContainer"></div>
+        <input type="hidden" name="StayId" id="hiddenStayId" />
     </form>
 </div>
 
@@ -146,7 +147,7 @@
                 filtered.forEach(c => {
                     const item = document.createElement('div');
                     item.className = 'dropdown-item-custom p-3 border-bottom';
-                    item.innerHTML = `<div class="fw-bold text-dark fs-6 mb-1">${c.name}</div><div class="small text-muted"><i class="bi bi-telephone-fill text-primary me-1"></i> ${c.phone} <span class="mx-2 opacity-50">|</span> <i class="bi bi-envelope-fill text-danger me-1"></i> ${c.email || 'N/A'}</div>`;
+                    item.innerHTML = `<div class="fw-bold text-dark fs-6 mb-1">${c.name}</div><div class="small text-muted"><i class="bi bi-telephone-fill text-primary me-1"></i> ${c.phone}</div>`;
                     item.onclick = function() {
                         hiddenId.value = c.id;
                         document.getElementById('selCustName').innerText = c.name;
@@ -177,119 +178,107 @@
             document.getElementById("lblMember").classList.toggle("text-primary", isMember);
         }
 
-        // --- 2. JS TÌM KIẾM ĐIỂM XUẤT PHÁT VÀ ĐIỂM ĐẾN ---
-        const branchesData = [ @foreach(var b in branchesList) { <text>{ id: @b.BranchId, name: "@Html.Raw(b.BranchName)" },</text> } ];
+        // --- 2. JS TÌM KIẾM ĐỊA ĐIỂM ---
         const spotsData = [ @foreach(var s in spotsList) { <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)" },</text> } ];
+        const spotInput = document.getElementById('spotSearchInput'); const spotDropdown = document.getElementById('spotDropdown'); const hiddenSpotId = document.getElementById('searchSpot');
 
-        const fromInput = document.getElementById('fromSearchInput'); const fromDropdown = document.getElementById('fromDropdown'); const hiddenFromId = document.getElementById('searchFrom');
-        const toInput = document.getElementById('toSearchInput'); const toDropdown = document.getElementById('toDropdown'); const hiddenToId = document.getElementById('searchTo');
+        function renderSpotDropdown(filterText = "") {
+            spotDropdown.innerHTML = '';
+            const lowerFilter = filterText.toLowerCase();
+            const filtered = spotsData.filter(s => s.name.toLowerCase().includes(lowerFilter));
 
-        function setupAutocomplete(inputEl, dropdownEl, hiddenEl, dataArray, allText) {
-            function renderDrop(filterText) {
-                dropdownEl.innerHTML = '';
-                const lowerFilter = filterText.toLowerCase();
-                const filtered = dataArray.filter(item => item.name.toLowerCase().includes(lowerFilter));
+            const anyItem = document.createElement('div');
+            anyItem.className = 'dropdown-item-custom p-3 border-bottom text-primary fw-bold';
+            anyItem.innerText = "All Destinations (Anywhere)";
+            anyItem.onclick = function() { hiddenSpotId.value = ""; spotInput.value = ""; spotDropdown.classList.remove('show'); };
+            spotDropdown.appendChild(anyItem);
 
-                const anyItem = document.createElement('div');
-                anyItem.className = 'dropdown-item-custom p-3 border-bottom text-primary fw-bold';
-                anyItem.innerText = allText;
-                anyItem.onclick = function() { hiddenEl.value = ""; inputEl.value = ""; dropdownEl.classList.remove('show'); };
-                dropdownEl.appendChild(anyItem);
-
-                if (filtered.length === 0) {
-                    dropdownEl.innerHTML += '<div class="p-3 text-muted small fst-italic">No matches found.</div>';
-                } else {
-                    filtered.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'dropdown-item-custom p-3 border-bottom fw-bold text-dark';
-                        div.innerText = item.name;
-                        div.onclick = function() { hiddenEl.value = item.id; inputEl.value = item.name; dropdownEl.classList.remove('show'); };
-                        dropdownEl.appendChild(div);
-                    });
-                }
-                dropdownEl.classList.add('show');
+            if (filtered.length === 0) {
+                spotDropdown.innerHTML += '<div class="p-3 text-muted small fst-italic">No destinations found.</div>';
+            } else {
+                filtered.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item-custom p-3 border-bottom fw-bold text-dark';
+                    item.innerText = s.name;
+                    item.onclick = function() { hiddenSpotId.value = s.id; spotInput.value = s.name; spotDropdown.classList.remove('show'); };
+                    spotDropdown.appendChild(item);
+                });
             }
-            inputEl.addEventListener('input', function() { hiddenEl.value = ''; renderDrop(this.value); });
-            inputEl.addEventListener('focus', function() { renderDrop(this.value); });
-            document.addEventListener('click', function(e) { if (!inputEl.contains(e.target) && !dropdownEl.contains(e.target)) dropdownEl.classList.remove('show'); });
+            spotDropdown.classList.add('show');
         }
 
-        setupAutocomplete(fromInput, fromDropdown, hiddenFromId, branchesData, "All Locations");
-        setupAutocomplete(toInput, toDropdown, hiddenToId, spotsData, "All Destinations");
+        spotInput.addEventListener('input', function() { hiddenSpotId.value = ''; renderSpotDropdown(this.value); });
+        spotInput.addEventListener('focus', function() { renderSpotDropdown(this.value); });
+        document.addEventListener('click', function(e) { if (!spotInput.contains(e.target) && !spotDropdown.contains(e.target)) spotDropdown.classList.remove('show'); });
 
-        // --- 3. XỬ LÝ LỌC TUYẾN XE ---
-        const allRoutes = [
-            @foreach(var r in routesList) {
+        // --- 3. JS LỌC KHÁCH SẠN ---
+        const allStays = [
+            @foreach(var s in staysList) {
+                var types = s.Rooms != null ? string.Join(",", s.Rooms.Select(r => r.RoomType).Distinct()) : "";
                 <text>
                 {
-                    id: @r.TransportationId,
-                    name: "@Html.Raw(r.TransportName)",
-                    type: "@Html.Raw(r.TransportType)",
-                    fromId: "@r.FromBranchId",
-                    fromName: "@Html.Raw(r.FromBranch?.BranchName)",
-                    toId: "@r.ToSpotId",
-                    toName: "@Html.Raw(r.ToSpot?.SpotName)",
-                    time: "@(r.DepartureTime?.ToString("HH:mm"))",
-                    price: @(r.PriceTransport ?? 0),
-                    // BỔ SUNG ẢNH XE
-                    imageUrl: "@Html.Raw(string.IsNullOrEmpty(r.ImageUrl) ? "/img/no-image.jpg" : r.ImageUrl)"
+                    id: @s.StayId,
+                    name: "@Html.Raw(s.Name)",
+                    type: "@Html.Raw(s.StayType)",
+                    spotId: "@s.SpotId",
+                    spotName: "@Html.Raw(s.Spot?.SpotName)",
+                    minPrice: @(s.Rooms != null && s.Rooms.Any() ? (s.Rooms.Min(r => r.PriceRoom) ?? 0) : 0),
+                    roomCount: @(s.Rooms?.Count() ?? 0),
+                    roomTypes: "@Html.Raw(types)",
+                    imageUrl: "@Html.Raw(string.IsNullOrEmpty(s.ImageUrl) ? "/img/no-image.jpg" : s.ImageUrl)"
                 },
                 </text>
             }
         ];
 
-        function filterRoutes() {
-            const fromId = hiddenFromId.value;
-            const toId = hiddenToId.value;
-            const type = document.getElementById('searchType').value;
-            const date = document.getElementById('travelDate').value;
+        function filterStays() {
+            const spotId = hiddenSpotId.value;
+            const stayType = document.getElementById('searchStayType').value;
+            const roomType = document.getElementById('searchRoomType').value;
+            const dateIn = document.getElementById('checkInDate').value;
+            const dateOut = document.getElementById('checkOutDate').value;
 
-            if (!date) { alert("Please select a travel date!"); return; }
+            if (!dateIn || !dateOut) { alert("Please select both Check-in and Check-out dates!"); return; }
+            if (dateOut <= dateIn) { alert("Check-out date must be after Check-in date!"); return; }
 
-            const results = allRoutes.filter(r => { return (!fromId || r.fromId == fromId) && (!toId || r.toId == toId) && (!type || r.type == type); });
-            const container = document.getElementById('routeResultsContainer');
-            container.innerHTML = '<h5 class="fw-bold mb-3 mt-4 text-dark"><i class="bi bi-list-check text-primary me-2"></i>Suggested Routes</h5>';
+            const results = allStays.filter(s => { 
+                let matchSpot = !spotId || s.spotId == spotId;
+                let matchStayType = !stayType || s.type == stayType;
+                let matchRoomType = !roomType || s.roomTypes.includes(roomType);
+                return matchSpot && matchStayType && matchRoomType;
+            });
+
+            const container = document.getElementById('stayResultsContainer');
+            container.innerHTML = '<h5 class="fw-bold mb-3 mt-4 text-dark"><i class="bi bi-list-check text-primary me-2"></i>Available Stays</h5>';
             
             if (results.length === 0) {
-                container.innerHTML += '<div class="k-card text-center py-5 text-muted"><i class="bi bi-journal-x fs-1"></i><p class="mt-2 fw-bold">No matching routes found.</p></div>';
+                container.innerHTML += '<div class="k-card text-center py-5 text-muted"><i class="bi bi-building-x fs-1"></i><p class="mt-2 fw-bold">No matching stays found.</p></div>';
                 return;
             }
 
-            results.forEach(r => {
+            results.forEach(s => {
                 container.innerHTML += `
                 <div class="k-card mb-3 p-4 border border-primary border-opacity-10 transition-all hover-scale cursor-pointer">
-                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-3">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                            <img src="${r.imageUrl}" style="width: 70px; height: 50px; object-fit: cover; border-radius: 8px;" class="me-3 border shadow-sm" />
+                            <img src="${s.imageUrl}" style="width: 80px; height: 60px; object-fit: cover; border-radius: 8px;" class="me-3 border shadow-sm" />
                             <div>
-                                <h5 class="mb-1 fw-bold text-dark">${r.name}</h5>
-                                <span class="badge bg-light text-dark border">${r.type}</span>
+                                <h5 class="mb-1 fw-bold text-dark">${s.name}</h5>
+                                <span class="badge bg-light text-dark border me-2">${s.type}</span>
+                                <small class="text-muted fw-bold"><i class="bi bi-geo-alt-fill text-danger"></i> ${s.spotName}</small>
                             </div>
                         </div>
-                    </div>
-                    <div class="row align-items-center text-center mb-4">
-                        <div class="col-4">
-                            <h3 class="fw-bold text-dark mb-1">${r.time}</h3>
-                            <small class="text-muted fw-bold">${r.fromName}</small>
+                        <div class="text-end">
+                            <small class="text-muted d-block fw-bold">From</small>
+                            <h4 class="text-success fw-bold mb-2">$${s.minPrice.toLocaleString('en-US')} <small class="text-muted fs-6">/ night</small></h4>
+                            <button type="button" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" onclick="selectStay(${s.id})">Select Rooms</button>
                         </div>
-                        <div class="col-4"><i class="bi bi-arrow-right fs-4 text-muted"></i></div>
-                        <div class="col-4">
-                            <h3 class="fw-bold text-primary mb-1">Arrival</h3>
-                            <small class="text-muted fw-bold">${r.toName}</small>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center pt-2">
-                        <div>
-                            <small class="text-muted d-block fw-bold">Ticket Price</small>
-                            <h4 class="text-success fw-bold mb-0">$${r.price.toLocaleString('en-US')}</h4>
-                        </div>
-                        <button type="button" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" onclick="selectRoute(${r.id})">Select Seats</button>
                     </div>
                 </div>`;
             });
         }
 
-        function selectRoute(id) {
+        function selectStay(id) {
             var isMember = document.getElementById("typeMember").checked;
             if (!isMember) {
                 if (!document.getElementById("inputWalkInName").value || !document.getElementById("inputWalkInPhone").value) {
@@ -297,10 +286,10 @@
                 }
             } else {
                 if (!document.getElementById("hiddenAccountId").value) {
-                    alert("Please select a customer account first! (Make sure to click a name from the list)"); return;
+                    alert("Please select a customer account first!"); return;
                 }
             }
-            document.getElementById('hiddenTransportId').value = id;
+            document.getElementById('hiddenStayId').value = id;
             document.getElementById('managerBookingForm').submit();
         }
     </script>
