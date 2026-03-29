@@ -1,0 +1,94 @@
+@model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Invoice>
+
+@{
+    ViewData["Title"] = "Revenue Report";
+}
+
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card border-0 shadow-sm text-white rounded-4" style="background: linear-gradient(135deg, #0061e6, #00b4db);">
+            <div class="card-body p-4 position-relative overflow-hidden">
+                <p class="mb-1 fw-bold opacity-75">Total Revenue</p>
+                <h2 class="m-0 display-6 fw-bold">$@(ViewBag.TotalRevenue?.ToString("N2"))</h2>
+                <i class="bi bi-currency-dollar position-absolute opacity-25" style="top: 0px; right: 0px; font-size: 6rem; line-height: 1;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card border-0 shadow-sm text-white rounded-4" style="background: linear-gradient(135deg, #1d976c, #93f9b9);">
+            <div class="card-body p-4 position-relative overflow-hidden">
+                <p class="mb-1 fw-bold opacity-75 text-dark">Total Transactions</p>
+                <h2 class="m-0 display-6 fw-bold text-dark">@ViewBag.TotalOrders</h2>
+                <i class="bi bi-receipt position-absolute opacity-25 text-dark" style="top: 0px; right: 0px; font-size: 6rem; line-height: 1;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-4">
+        <h5 class="card-title fw-bold mb-4"><i class="bi bi-clock-history me-2 text-primary"></i>Recent Transactions</h5>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="border-0 rounded-start">Invoice ID</th>
+                        <th class="border-0">Customer</th>
+                        <th class="border-0">Created Date</th>
+                        <th class="border-0">Payment Status</th>
+                        <th class="border-0">Sub Total</th>
+                        <th class="border-0">Discount</th>
+                        <th class="border-0 text-end rounded-end">Final Total</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><span class="fw-bold text-secondary">#@item.InvoiceId</span></td>
+                            <td>
+                                @if (item.Account != null)
+                                {
+                                    <span class="fw-medium">@item.Account.FullName</span>
+                                    <br />
+                                    <small class="text-muted">@item.Account.Email</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Guest</span>
+                                }
+                            </td>
+                            <td>@(item.CreatedDate?.ToString("dd MMM yyyy HH:mm"))</td>
+                            <td>
+                                @if (item.PaymentStatus == "Paid" || item.PaymentStatus == "Completed")
+                                {
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 rounded-pill">@item.PaymentStatus</span>
+                                }
+                                else if (item.PaymentStatus == "Pending")
+                                {
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1 rounded-pill">@item.PaymentStatus</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2 py-1 rounded-pill">@(string.IsNullOrEmpty(item.PaymentStatus) ? "N/A" : item.PaymentStatus)</span>
+                                }
+                            </td>
+                            <td>$@(item.SubTotal?.ToString("N2"))</td>
+                            <td>$@(item.DiscountAmount?.ToString("N2"))</td>
+                            <td class="text-end fw-bold text-primary fs-5">$@(item.FinalTotal?.ToString("N2"))</td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-50"></i>
+                                <span>No transactions found.</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
