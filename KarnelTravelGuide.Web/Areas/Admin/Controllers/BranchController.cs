@@ -3,10 +3,12 @@ using KarnelTravelGuide.Web.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
+using KarnelTravelGuide.Web.Attributes;
 
 namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [RoleAuthorize("Admin")]
     public class BranchController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -16,13 +18,11 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             _context = context;
         }
 
-        // ===================== INDEX =====================
         public async Task<IActionResult> Index()
         {
             return View(await _context.Branches.ToListAsync());
         }
 
-        // ===================== CREATE =====================
         public IActionResult Create()
         {
             return View();
@@ -44,7 +44,6 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             return View(branch);
         }
 
-        // ===================== EDIT =====================
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -68,7 +67,6 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
                 var existing = await _context.Branches.FindAsync(id);
                 if (existing == null) return NotFound();
 
-                // update an toàn
                 existing.BranchName = branch.BranchName;
                 existing.Address = branch.Address;
                 existing.PhoneBranch = branch.PhoneBranch;
@@ -82,7 +80,6 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             return View(branch);
         }
 
-        // ===================== DELETE =====================
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -108,24 +105,20 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // ===================== VALIDATION =====================
         private void ValidateBranch(Branch branch, bool isEdit)
         {
-            // 🔥 Tên không được trùng
             if (_context.Branches.Any(b => b.BranchName == branch.BranchName &&
                 (!isEdit || b.BranchId != branch.BranchId)))
             {
                 ModelState.AddModelError("BranchName", "Tên chi nhánh đã tồn tại.");
             }
 
-            // 🔥 Validate phone
             if (!string.IsNullOrEmpty(branch.PhoneBranch) &&
                 !Regex.IsMatch(branch.PhoneBranch, @"^(0[3|5|7|8|9])[0-9]{8}$"))
             {
                 ModelState.AddModelError("PhoneBranch", "SĐT không hợp lệ.");
             }
 
-            // 🔥 Validate email
             if (!string.IsNullOrEmpty(branch.EmailBranch) &&
                 !Regex.IsMatch(branch.EmailBranch, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
             {

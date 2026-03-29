@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
+using KarnelTravelGuide.Web.Attributes;
 
 namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [RoleAuthorize("Admin")]
     public class AccountController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -17,8 +19,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             _context = context;
         }
 
-        // ===================== INDEX =====================
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string searchString, int? roleId)
         {
             var query = _context.Accounts
                 .Include(a => a.Branch)
@@ -33,13 +34,21 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
                     (a.PhoneNumber != null && a.PhoneNumber.Contains(searchString)));
             }
 
-            ViewBag.FirstAdminId = await GetFirstAdminId();
+            if (roleId.HasValue)
+            {
+                query = query.Where(a => a.RoleId == roleId);
+            }
+
+            ViewBag.RoleList = new SelectList(_context.Roles, "RoleId", "RoleName");
+
             ViewBag.CurrentFilter = searchString;
+            ViewBag.CurrentRole = roleId;
+
+            ViewBag.FirstAdminId = await GetFirstAdminId();
 
             return View(await query.ToListAsync());
         }
 
-        // ===================== CREATE =====================
         public IActionResult Create()
         {
             LoadDropdowns();
@@ -66,7 +75,6 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             return View(account);
         }
 
-        // ===================== EDIT =====================
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -118,7 +126,6 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             return View(account);
         }
 
-        // ===================== DELETE =====================
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -140,8 +147,6 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // ===================== HELPERS =====================
-
         private void ValidateAccount(Account account, bool isEdit)
         {
             if (_context.Accounts.Any(a => a.Email == account.Email &&
@@ -156,7 +161,6 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
                 ModelState.AddModelError("PhoneNumber", "SĐT đã tồn tại.");
             }
 
-            // Regex phone VN
             if (!Regex.IsMatch(account.PhoneNumber ?? "", @"^(0[3|5|7|8|9])[0-9]{8}$"))
             {
                 ModelState.AddModelError("PhoneNumber", "SĐT không hợp lệ.");

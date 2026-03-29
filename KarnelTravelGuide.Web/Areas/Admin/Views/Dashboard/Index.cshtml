@@ -1,6 +1,23 @@
 @{
     ViewData["Title"] = "System Monitor";
+    var currentFilter = ViewBag.CurrentFilter as string ?? "day"; 
+    var currentDetail = ViewBag.CurrentDetail as string ?? ""; 
 }
+
+<style>
+    .k-stat-card {
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .k-stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    .k-stat-card.active-detail {
+        background-color: #f8f9fa;
+        border-right: 4px solid #dee2e6;
+    }
+</style>
 
 <div class="row mb-4">
     <div class="col-md-12">
@@ -10,13 +27,37 @@
 </div>
 
 <div class="row">
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-0 border-start border-danger border-4 shadow-sm h-100 py-2">
+    <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary"><i class="bi bi-graph-up-arrow me-2"></i>Biểu Đồ Doanh Thu</h6>
+                
+                <div class="btn-group btn-group-sm" role="group">
+                    <a href="@Url.Action("Index", new { filter = "day", detail = currentDetail })" 
+                       class="btn @(currentFilter == "day" ? "btn-primary" : "btn-outline-primary")">
+                       Theo Ngày
+                    </a>
+                    <a href="@Url.Action("Index", new { filter = "month", detail = currentDetail })" 
+                       class="btn @(currentFilter == "month" ? "btn-primary" : "btn-outline-primary")">
+                       Theo Tháng
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card-body" style="min-height: 350px;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 border-start border-danger border-4 shadow-sm mb-3 py-2 k-stat-card @(currentDetail == "branches" ? "active-detail" : "")" 
+             onclick="window.location.href='@Url.Action("Index", new { filter = currentFilter, detail = "branches" })'">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col me-2">
-                        <div class="text-xs fw-bold text-danger text-uppercase mb-1">Active Branches</div>
-                        <div class="h3 mb-0 fw-bold text-dark">8</div>
+                        <div class="text-xs fw-bold text-danger text-uppercase mb-1">Tổng Chi Nhánh</div>
+                        <div class="h3 mb-0 fw-bold text-dark">@ViewBag.TotalBranches</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-diagram-3 fs-1 text-secondary opacity-50"></i>
@@ -24,15 +65,14 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-0 border-start border-primary border-4 shadow-sm h-100 py-2">
+        <div class="card border-0 border-start border-primary border-4 shadow-sm mb-3 py-2 k-stat-card @(currentDetail == "accounts" ? "active-detail" : "")"
+             onclick="window.location.href='@Url.Action("Index", new { filter = currentFilter, detail = "accounts" })'">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col me-2">
-                        <div class="text-xs fw-bold text-primary text-uppercase mb-1">Total Accounts</div>
-                        <div class="h3 mb-0 fw-bold text-dark">1,245</div>
+                        <div class="text-xs fw-bold text-primary text-uppercase mb-1">Tổng Tài Khoản</div>
+                        <div class="h3 mb-0 fw-bold text-dark">@ViewBag.TotalAccounts</div>
                     </div>
                     <div class="col-auto">
                         <i class="bi bi-people-fill fs-1 text-secondary opacity-50"></i>
@@ -40,21 +80,174 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-0 border-start border-success border-4 shadow-sm h-100 py-2">
+        <div class="card border-0 border-start border-success border-4 shadow-sm py-2 k-stat-card @(currentDetail == "invoices" ? "active-detail" : "")"
+             onclick="window.location.href='@Url.Action("Index", new { filter = currentFilter, detail = "invoices" })'">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col me-2">
-                        <div class="text-xs fw-bold text-success text-uppercase mb-1">System Status</div>
-                        <div class="h5 mb-0 fw-bold text-dark">Healthy (Online)</div>
+                        <div class="text-xs fw-bold text-success text-uppercase mb-1">Tổng Hoá Đơn</div>
+                        <div class="h3 mb-0 fw-bold text-dark">@ViewBag.TotalInvoices</div>
                     </div>
                     <div class="col-auto">
-                        <i class="bi bi-server fs-1 text-secondary opacity-50"></i>
+                        <i class="bi bi-receipt fs-1 text-secondary opacity-50"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@if (!string.IsNullOrEmpty(currentDetail))
+{
+    <div class="row mt-2 mb-5" id="detailSection">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                
+                @* 1. BẢNG CHI NHÁNH *@
+                @if (currentDetail == "branches" && ViewBag.DetailBranches != null)
+                {
+                    <div class="card-header bg-danger text-white border-0 pt-3 pb-3 d-flex justify-content-between">
+                        <h6 class="m-0 fw-bold"><i class="bi bi-diagram-3 me-2"></i>Chi tiết Chi Nhánh</h6>
+                        <a href="@Url.Action("Index", new { filter = currentFilter })" class="text-white"><i class="bi bi-x-lg"></i></a>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th><th>Tên Chi Nhánh</th><th>Số Điện Thoại</th><th>Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in (List<KarnelTravelGuide.Web.Models.Entities.Branch>)ViewBag.DetailBranches)
+                                {
+                                    <tr>
+                                        <td>#@item.BranchId</td>
+                                        <td class="fw-bold">@item.BranchName</td>
+                                        <td>@item.PhoneBranch</td>
+                                        <td>@item.EmailBranch</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                @* 2. BẢNG TÀI KHOẢN *@
+                @if (currentDetail == "accounts" && ViewBag.DetailAccounts != null)
+                {
+                    <div class="card-header bg-primary text-white border-0 pt-3 pb-3 d-flex justify-content-between">
+                        <h6 class="m-0 fw-bold"><i class="bi bi-people-fill me-2"></i>Chi tiết Tài Khoản</h6>
+                        <a href="@Url.Action("Index", new { filter = currentFilter })" class="text-white"><i class="bi bi-x-lg"></i></a>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Họ Tên</th><th>Email</th><th>Vai Trò</th><th>Chi Nhánh</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in (List<KarnelTravelGuide.Web.Models.Entities.Account>)ViewBag.DetailAccounts)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">@item.FullName</td>
+                                        <td>@item.Email</td>
+                                        <td><span class="badge bg-secondary">@item.Role?.RoleName</span></td>
+                                        <td>@(item.Branch?.BranchName ?? "Không")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                @* 3. BẢNG HOÁ ĐƠN *@
+                @if (currentDetail == "invoices" && ViewBag.DetailInvoices != null)
+                {
+                    <div class="card-header bg-success text-white border-0 pt-3 pb-3 d-flex justify-content-between">
+                        <h6 class="m-0 fw-bold"><i class="bi bi-receipt me-2"></i>Chi tiết Hoá Đơn (50 GD Gần Nhất)</h6>
+                        <a href="@Url.Action("Index", new { filter = currentFilter })" class="text-white"><i class="bi bi-x-lg"></i></a>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mã HĐ</th><th>Ngày Tạo</th><th>Khách Hàng</th><th>Tổng Tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in (List<KarnelTravelGuide.Web.Models.Entities.Invoice>)ViewBag.DetailInvoices)
+                                {
+                                    <tr>
+                                        <td>#@item.InvoiceId</td>
+                                        <td>@(item.CreatedDate?.ToString("dd/MM/yyyy HH:mm"))</td>
+                                        <td>@item.Account?.FullName</td>
+                                        <td class="fw-bold text-success">@string.Format("{0:N0} VNĐ", item.FinalTotal)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var detailSec = document.getElementById("detailSection");
+            if (detailSec) {
+                detailSec.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const labels = @Html.Raw(Json.Serialize(ViewBag.ChartLabels ?? new List<string>()));
+        const dataPoints = @Html.Raw(Json.Serialize(ViewBag.ChartData ?? new List<decimal>()));
+        const currentFilter = '@ViewBag.CurrentFilter';
+
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: currentFilter === 'day' ? 'Doanh thu theo ngày' : 'Doanh thu theo tháng',
+                    data: dataPoints,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#0d6efd'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true, 
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' VNĐ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}
