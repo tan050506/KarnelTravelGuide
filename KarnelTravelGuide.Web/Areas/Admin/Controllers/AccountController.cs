@@ -19,7 +19,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index(string searchString, int? roleId)
+        public async Task<IActionResult> Index(string? searchString, int? roleId)
         {
             var query = _context.Accounts
                 .Include(a => a.Branch)
@@ -104,11 +104,9 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
         {
             if (id != account.AccountId) return NotFound();
 
-            // Lấy First Admin và User hiện tại
             var firstAdminId = await GetFirstAdminId();
             var currentUserId = HttpContext.Session.GetInt32("AccountId");
 
-            // Kiểm tra phân quyền sửa (AsNoTracking để không cản trở FindAsync phía dưới)
             var existingAuthCheck = await _context.Accounts.AsNoTracking().Include(a => a.Role).FirstOrDefaultAsync(a => a.AccountId == id);
             if (existingAuthCheck == null) return NotFound();
 
@@ -169,14 +167,12 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
 
             if (account != null)
             {
-                // Kiểm tra xem tài khoản đã có Order chưa
                 if (account.Orders.Any())
                 {
                     TempData["Error"] = "Không thể xoá tài khoản này vì đã tồn tại đơn hàng (Order).";
                     return RedirectToAction(nameof(Index));
                 }
 
-                // Nếu đối tượng xoá là Admin khác, và người đang xoá KHÔNG phải Admin gốc
                 if (account.Role?.RoleName == "Admin" && currentUserId != firstAdminId)
                 {
                     TempData["Error"] = "Bạn không có quyền xoá các Admin khác. Chỉ Admin gốc mới được phép.";

@@ -59,7 +59,6 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             ViewBag.ChartLabels = labels;
             ViewBag.ChartData = dataPoints;
 
-            // ================= 3. XỬ LÝ DỮ LIỆU BẢNG CHI TIẾT BÊN DƯỚI =================
             if (detail == "branches")
             {
                 ViewBag.DetailBranches = await _context.Branches.ToListAsync();

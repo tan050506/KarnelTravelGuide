@@ -106,7 +106,6 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
                 existing.Address = branch.Address;
                 existing.PhoneBranch = branch.PhoneBranch;
                 existing.EmailBranch = branch.EmailBranch;
-                // Không cập nhật ImageUrl ở đây nều không có file mới, vì đã cập nhật bên trên nếu có file
 
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
