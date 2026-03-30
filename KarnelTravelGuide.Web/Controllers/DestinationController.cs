@@ -16,7 +16,7 @@ namespace KarnelTravelGuide.Web.Controllers
         }
 
         // 1. TRANG DANH SÁCH ĐỊA ĐIỂM
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string? searchString)
         {
             ViewBag.CurrentSearch = searchString;
 
