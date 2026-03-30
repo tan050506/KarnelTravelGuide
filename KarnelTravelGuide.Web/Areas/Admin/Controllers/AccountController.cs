@@ -79,13 +79,19 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
         {
             if (id == null) return NotFound();
 
-            var account = await _context.Accounts.FindAsync(id);
+            var account = await _context.Accounts.Include(a => a.Role).FirstOrDefaultAsync(a => a.AccountId == id);
             if (account == null) return NotFound();
 
-            if (id == await GetFirstAdminId())
+            var firstAdminId = await GetFirstAdminId();
+            var currentUserId = HttpContext.Session.GetInt32("AccountId");
+
+            if (account.Role?.RoleName == "Admin" && currentUserId != firstAdminId)
             {
-                TempData["Error"] = "Không thể sửa Admin đầu tiên.";
-                return RedirectToAction(nameof(Index));
+                if (currentUserId != id)
+                {
+                    TempData["Error"] = "Bạn không có quyền sửa các Admin khác. Bạn chỉ có thể sửa bản thân.";
+                    return RedirectToAction(nameof(Index));
+                }
             }
 
             LoadDropdowns(account);
@@ -98,10 +104,21 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
         {
             if (id != account.AccountId) return NotFound();
 
-            if (id == await GetFirstAdminId())
+            // Lấy First Admin và User hiện tại
+            var firstAdminId = await GetFirstAdminId();
+            var currentUserId = HttpContext.Session.GetInt32("AccountId");
+
+            // Kiểm tra phân quyền sửa (AsNoTracking để không cản trở FindAsync phía dưới)
+            var existingAuthCheck = await _context.Accounts.AsNoTracking().Include(a => a.Role).FirstOrDefaultAsync(a => a.AccountId == id);
+            if (existingAuthCheck == null) return NotFound();
+
+            if (existingAuthCheck.Role?.RoleName == "Admin" && currentUserId != firstAdminId)
             {
-                TempData["Error"] = "Không thể sửa Admin đầu tiên.";
-                return RedirectToAction(nameof(Index));
+                if (currentUserId != id)
+                {
+                    TempData["Error"] = "Bạn không có quyền sửa các Admin khác. Bạn chỉ có thể sửa bản thân.";
+                    return RedirectToAction(nameof(Index));
+                }
             }
 
             ValidateAccount(account, isEdit: true);
@@ -130,15 +147,42 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (id == await GetFirstAdminId())
+            var firstAdminId = await GetFirstAdminId();
+            var currentUserId = HttpContext.Session.GetInt32("AccountId");
+
+            if (id == firstAdminId)
             {
-                TempData["Error"] = "Không thể xoá Admin đầu tiên.";
+                TempData["Error"] = "Không thể xoá Admin gốc của hệ thống.";
                 return RedirectToAction(nameof(Index));
             }
 
-            var account = await _context.Accounts.FindAsync(id);
+            if (id == currentUserId)
+            {
+                TempData["Error"] = "Bạn không thể tự xoá chính mình.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var account = await _context.Accounts
+                .Include(a => a.Role)
+                .Include(a => a.Orders)
+                .FirstOrDefaultAsync(a => a.AccountId == id);
+
             if (account != null)
             {
+                // Kiểm tra xem tài khoản đã có Order chưa
+                if (account.Orders.Any())
+                {
+                    TempData["Error"] = "Không thể xoá tài khoản này vì đã tồn tại đơn hàng (Order).";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Nếu đối tượng xoá là Admin khác, và người đang xoá KHÔNG phải Admin gốc
+                if (account.Role?.RoleName == "Admin" && currentUserId != firstAdminId)
+                {
+                    TempData["Error"] = "Bạn không có quyền xoá các Admin khác. Chỉ Admin gốc mới được phép.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 _context.Remove(account);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Xoá thành công.";

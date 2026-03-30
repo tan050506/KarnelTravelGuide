@@ -10,7 +10,7 @@
 
     <div class="card shadow mb-4">
         <div class="card-body">
-            <form asp-action="Create" method="post">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 
                 <div class="row">
@@ -36,6 +36,13 @@
                         <label asp-for="EmailBranch" class="form-label">Email</label>
                         <input asp-for="EmailBranch" class="form-control" type="email" placeholder="Nhập email chi nhánh" required />
                         <span asp-validation-for="EmailBranch" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Hình ảnh chi nhánh</label>
+                        <input type="file" name="imageFile" class="form-control" accept="image/*" />
                     </div>
                 </div>
 

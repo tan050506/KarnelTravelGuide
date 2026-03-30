@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
 using KarnelTravelGuide.Web.Attributes;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
 {
@@ -12,10 +15,12 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
     public class BranchController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public BranchController(ApplicationDbContext context)
+        public BranchController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public async Task<IActionResult> Index()
@@ -30,12 +35,27 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Branch branch)
+        public async Task<IActionResult> Create(Branch branch, IFormFile? imageFile)
         {
             ValidateBranch(branch, isEdit: false);
 
             if (ModelState.IsValid)
             {
+                if (imageFile != null && imageFile.Length > 0)
+                {
+                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "branches");
+                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await imageFile.CopyToAsync(fileStream);
+                    }
+                    branch.ImageUrl = "/images/branches/" + uniqueFileName;
+                }
+
                 _context.Add(branch);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -56,7 +76,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Branch branch)
+        public async Task<IActionResult> Edit(int id, Branch branch, IFormFile? imageFile)
         {
             if (id != branch.BranchId) return NotFound();
 
@@ -67,11 +87,26 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
                 var existing = await _context.Branches.FindAsync(id);
                 if (existing == null) return NotFound();
 
+                if (imageFile != null && imageFile.Length > 0)
+                {
+                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "branches");
+                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await imageFile.CopyToAsync(fileStream);
+                    }
+                    existing.ImageUrl = "/images/branches/" + uniqueFileName;
+                }
+
                 existing.BranchName = branch.BranchName;
                 existing.Address = branch.Address;
                 existing.PhoneBranch = branch.PhoneBranch;
                 existing.EmailBranch = branch.EmailBranch;
-                existing.ImageUrl = branch.ImageUrl;
+                // Không cập nhật ImageUrl ở đây nều không có file mới, vì đã cập nhật bên trên nếu có file
 
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));

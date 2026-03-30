@@ -10,7 +10,7 @@
 
     <div class="card shadow mb-4">
         <div class="card-body">
-            <form asp-action="Edit" method="post">
+            <form asp-action="Edit" method="post" enctype="multipart/form-data">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <input type="hidden" asp-for="BranchId" />
                 
@@ -37,6 +37,20 @@
                         <label asp-for="EmailBranch" class="form-label">Email</label>
                         <input asp-for="EmailBranch" class="form-control" type="email" placeholder="Nhập email chi nhánh" required />
                         <span asp-validation-for="EmailBranch" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Thay đổi hình ảnh (Để trống nếu giữ nguyên)</label>
+                        <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                        {
+                            <div class="mt-2">
+                                <p class="mb-1 text-muted small">Ảnh hiện tại:</p>
+                                <img src="@Model.ImageUrl" alt="Current Image" class="img-thumbnail" style="max-height: 150px; object-fit: cover;" />
+                            </div>
+                        }
                     </div>
                 </div>
 

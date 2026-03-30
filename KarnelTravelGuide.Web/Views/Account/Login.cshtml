@@ -1,39 +1,92 @@
 @model KarnelTravelGuide.Web.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+    ViewData["HideHeaderFooter"] = true;
+}
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-4">
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-body p-5">
-                    <h3 class="text-center fw-bold mb-4">Đăng Nhập</h3>
-                    <form asp-action="Login" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input asp-for="Email" class="form-control rounded-3" placeholder="name@example.com" />
-                            <span asp-validation-for="Email" class="text-danger small"></span>
+<div class="d-flex align-items-center justify-content-center" style="
+    background: url('/images/background/login.jpg') no-repeat center center;
+    background-size: cover;
+    min-height: 100vh;
+    position: relative;
+">
+
+    <div style="
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 0;
+    "></div>
+
+    <div class="container position-relative z-1">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-lg border-white overflow-hidden">
+                    <div class="row g-0">
+
+                        <div class="col-md-6 d-none d-md-block position-relative"
+                            style="background: url('/images/background/walk.webp') center/cover no-repeat;">
+
+                            <div style="
+                                position: absolute;
+                                inset: 0;
+                                background: rgba(0, 0, 0, 0.4);
+                            "></div>
+                            <div class="d-flex align-items-center justify-content-center text-white text-center"
+                                style="position: absolute; inset: 0; z-index: 1; padding: 20px;">
+
+                                <div>
+                                    <h2 class="fw-bold mb-3">Chào mừng trở lại</h2>
+                                    <p class="mb-0">Đăng nhập để tiếp tục hành trình của bạn</p>
+                                </div>
+
+                            </div>
+
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Mật khẩu</label>
-                            <input asp-for="Password" class="form-control rounded-3" type="password" />
-                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        <div class="col-md-6">
+                            <div class="card-body p-5">
+                                <h3 class="text-center fw-bold mb-4">Đăng Nhập</h3>
+
+                                <form asp-action="Login" method="post">
+                                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input asp-for="Email" class="form-control rounded-3" placeholder="name@example.com" />
+                                        <span asp-validation-for="Email" class="text-danger small"></span>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Mật khẩu</label>
+                                        <input asp-for="Password" class="form-control rounded-3" type="password" />
+                                        <span asp-validation-for="Password" class="text-danger small"></span>
+                                    </div>
+
+                                    <div class="mb-3 form-check">
+                                        <input asp-for="RememberMe" class="form-check-input" />
+                                        <label class="form-check-label">Ghi nhớ đăng nhập</label>
+                                    </div>
+
+                                    <div class="d-flex gap-2">
+                                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary w-50 rounded-3 py-2 fw-bold">Trở về</a>
+                                        <button type="submit" class="btn btn-primary w-50 rounded-3 py-2 fw-bold">
+                                            Đăng nhập
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <div class="text-center mt-4">
+                                    <span class="text-muted">Chưa có tài khoản?</span> 
+                                    <a asp-action="Register" class="text-decoration-none fw-bold">Đăng ký ngay</a>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mb-3 form-check">
-                            <input asp-for="RememberMe" class="form-check-input" />
-                            <label class="form-check-label">Ghi nhớ đăng nhập</label>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100 rounded-3 py-2 fw-bold">Đăng nhập</button>
-                    </form>
-                    <div class="text-center mt-4">
-                        <span class="text-muted">Chưa có tài khoản?</span> 
-                        <a asp-action="Register" class="text-decoration-none fw-bold">Đăng ký ngay</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
 </div>
