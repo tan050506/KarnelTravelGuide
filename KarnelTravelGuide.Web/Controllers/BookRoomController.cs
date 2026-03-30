@@ -40,68 +40,64 @@ namespace KarnelTravelGuide.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Booking(int? id, string checkIn, string checkOut)
         {
-            var accountId = HttpContext.Session.GetInt32("AccountId"); 
-            if (accountId == null) 
-            {
-                TempData["ErrorMessage"] = "Please login to book a room.";
-                return RedirectToAction("Login", "Account");
-            }
-
-            if (id == null || string.IsNullOrEmpty(checkIn) || string.IsNullOrEmpty(checkOut)) 
-                return RedirectToAction("Index");
+            if (id == null) return NotFound();
 
             var stay = await _context.Stays
                 .Include(s => s.Spot)
                 .Include(s => s.Rooms)
-                .FirstOrDefaultAsync(m => m.StayId == id);
+                .FirstOrDefaultAsync(s => s.StayId == id);
 
             if (stay == null) return NotFound();
 
-            DateOnly dateIn = DateOnly.FromDateTime(DateTime.Parse(checkIn));
-            DateOnly dateOut = DateOnly.FromDateTime(DateTime.Parse(checkOut));
+            ViewBag.CheckIn = checkIn ?? DateTime.Now.ToString("yyyy-MM-dd");
+            ViewBag.CheckOut = checkOut ?? DateTime.Now.AddDays(1).ToString("yyyy-MM-dd");
 
-            var availableRoomsDict = new Dictionary<int, int>();
-            foreach(var room in stay.Rooms)
+            DateOnly dateIn = DateOnly.FromDateTime(DateTime.Parse(ViewBag.CheckIn));
+            DateOnly dateOut = DateOnly.FromDateTime(DateTime.Parse(ViewBag.CheckOut));
+            ViewBag.TotalNights = dateOut.DayNumber - dateIn.DayNumber;
+
+            var availableRooms = new Dictionary<int, int>();
+            foreach (var room in stay.Rooms)
             {
                 var bookedRooms = await _context.OrderDetails
-                    .Where(od => od.RoomBooking != null 
+                    .Where(od => od.RoomBooking != null
                               && od.RoomBooking.RoomId == room.RoomId
-                              && od.RoomBooking.CheckInDate < dateOut 
+                              && od.RoomBooking.CheckInDate < dateOut
                               && od.RoomBooking.CheckOutDate > dateIn
-                              && od.Order != null 
-                              && od.Order.Status != "Canceled")
+                              && od.Order != null && od.Order.Status != "Canceled")
                     .SumAsync(od => (int?)od.RoomBooking!.NumberOfRooms) ?? 0;
 
-                availableRoomsDict[room.RoomId] = room.Quantity - bookedRooms;
+                availableRooms[room.RoomId] = room.Quantity - bookedRooms;
             }
 
-            ViewBag.CheckIn = checkIn;
-            ViewBag.CheckOut = checkOut;
-            ViewBag.TotalNights = dateOut.DayNumber - dateIn.DayNumber;
-            ViewBag.AvailableRooms = availableRoomsDict;
-
+            ViewBag.AvailableRooms = availableRooms;
             return View(stay);
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Booking(int stayId, int roomId, string checkIn, string checkOut, int numberOfRooms)
+        public async Task<IActionResult> ConfirmBooking(int stayId, int roomId, string checkIn, string checkOut, int numberOfRooms)
         {
-            var accountId = HttpContext.Session.GetInt32("AccountId");
-            if (accountId == null) return RedirectToAction("Login", "Account");
+            int? accountId = HttpContext.Session.GetInt32("AccountId");
+            if (accountId == null)
+            {
+                TempData["ErrorMessage"] = "Please log in to book a room.";
+                return RedirectToAction("Login", "Auth");
+            }
 
-            var room = await _context.Rooms.Include(r => r.Stay).FirstOrDefaultAsync(r => r.RoomId == roomId);
-            if (room == null || numberOfRooms <= 0) return NotFound();
+            var room = await _context.Rooms.FindAsync(roomId);
+            if (room == null || numberOfRooms <= 0)
+            {
+                TempData["ErrorMessage"] = "Invalid room selection.";
+                return RedirectToAction("Booking", new { id = stayId, checkIn = checkIn, checkOut = checkOut });
+            }
 
             DateOnly dateIn = DateOnly.FromDateTime(DateTime.Parse(checkIn));
             DateOnly dateOut = DateOnly.FromDateTime(DateTime.Parse(checkOut));
             int totalNights = dateOut.DayNumber - dateIn.DayNumber;
+            decimal totalAmount = (room.PriceRoom ?? 0) * numberOfRooms * totalNights;
 
-            try 
+            try
             {
-                // FIX LỖI CS0266 TẠI ĐÂY: Thêm (room.PriceRoom ?? 0)
-                decimal totalAmount = (room.PriceRoom ?? 0) * numberOfRooms * totalNights;
-
                 var order = new Order { AccountId = accountId.Value, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Pending" };
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync(); 
@@ -125,7 +121,7 @@ namespace KarnelTravelGuide.Web.Controllers
 
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = $"Successfully booked {numberOfRooms} rooms ({room.RoomType}) for {totalNights} nights! Please check your invoice.";
+                TempData["SuccessMessage"] = $"Successfully booked {numberOfRooms} rooms ({room.RoomType}) for {totalNights} nights! You can review your bookings in your profile.";
                 return RedirectToAction("Index"); 
             }
             catch (Exception)

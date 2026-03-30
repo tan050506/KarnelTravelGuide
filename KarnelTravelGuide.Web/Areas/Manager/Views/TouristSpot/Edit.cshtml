@@ -1,11 +1,9 @@
 @model KarnelTravelGuide.Web.Models.Entities.TouristSpot
-@{
-    ViewData["Title"] = "Edit: " + Model.SpotName;
-}
+@{ ViewData["Title"] = "Edit: " + Model.SpotName; }
 
-<div class="k-card mx-auto" style="max-width: 900px;">
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 900px;">
     <div class="d-flex align-items-center border-bottom pb-3 mb-4">
-        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
         <h4 class="fw-bold m-0 text-dark">Update: <span class="text-primary">@Model.SpotName</span></h4>
     </div>
 
@@ -16,30 +14,30 @@
         
         <div class="row g-4">
             <div class="col-12">
-                <label class="label-karnel">Managing Branch</label>
-                <input type="text" class="k-input bg-light" value="@ViewBag.BranchName" readonly disabled />
+                <label class="fw-bold text-dark mb-2">Managing Branch</label>
+                <input type="text" class="form-control bg-light border" value="@ViewBag.BranchName" readonly disabled />
             </div>
 
             <div class="col-md-6">
-                <label class="label-karnel">Spot Name <span class="text-danger">*</span></label>
-                <input asp-for="SpotName" class="k-input" required />
+                <label class="fw-bold text-dark mb-2">Spot Name <span class="text-danger">*</span></label>
+                <input asp-for="SpotName" class="form-control bg-light border" required />
             </div>
             
             <div class="col-md-6">
-                <label class="label-karnel">Address <span class="text-danger">*</span></label>
-                <input asp-for="Address" class="k-input" required />
+                <label class="fw-bold text-dark mb-2">Address <span class="text-danger">*</span></label>
+                <input asp-for="Address" class="form-control bg-light border" required />
             </div>
             
             <div class="col-12">
-                <label class="label-karnel">Overview Description</label>
-                <textarea asp-for="Description" class="k-input" rows="5"></textarea>
+                <label class="fw-bold text-dark mb-2">Overview Description</label>
+                <textarea asp-for="Description" class="form-control bg-light border" rows="5"></textarea>
             </div>
 
             <div class="col-md-6">
                 <div class="p-4 border rounded-4 bg-light h-100">
-                    <label class="label-karnel text-primary"><i class="bi bi-card-image me-1"></i>Update Cover Image</label>
+                    <label class="fw-bold text-primary mb-3"><i class="bi bi-card-image me-1"></i>Update Cover Image</label>
                     @if (!string.IsNullOrEmpty(Model.ImageUrl)) {
-                        <img src="@Model.ImageUrl" class="img-fluid rounded-3 mb-3 shadow-sm d-block" style="height: 150px; object-fit: cover; width: 100%;" />
+                        <img src="@Model.ImageUrl" class="img-fluid rounded-3 mb-3 shadow-sm d-block w-100" style="height: 150px; object-fit: cover;" />
                     }
                     <input type="file" name="CoverFile" class="form-control" accept="image/*" />
                     <small class="text-muted d-block mt-2">Leave blank to keep current cover.</small>
@@ -48,20 +46,20 @@
 
             <div class="col-md-6">
                 <div class="p-4 border rounded-4 bg-light h-100">
-                    <label class="label-karnel text-success"><i class="bi bi-images me-1"></i>Add to Gallery</label>
-                    <input type="file" name="GalleryFiles" class="form-control mt-3" accept="image/*" multiple />
+                    <label class="fw-bold text-success mb-3"><i class="bi bi-images me-1"></i>Add to Gallery</label>
+                    <input type="file" name="GalleryFiles" class="form-control" accept="image/*" multiple />
                     <small class="text-muted d-block mt-2">Select multiple images to add them to the gallery.</small>
                 </div>
             </div>
 
             <div class="col-12 mt-4">
-                <label class="label-karnel mb-3"><i class="bi bi-collection me-1"></i>Current Gallery Photos & Captions (@Model.TouristSpotImages.Count)</label>
+                <label class="fw-bold text-dark mb-3"><i class="bi bi-collection me-1"></i>Current Gallery Photos & Captions (@Model.TouristSpotImages.Count)</label>
                 <div class="row g-3">
                     @foreach (var img in Model.TouristSpotImages)
                     {
                         <div class="col-md-4 col-sm-6" id="imgBox-@img.ImageId">
                             <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
-                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 rounded-circle shadow" 
+                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 rounded-circle shadow d-flex align-items-center justify-content-center" 
                                         style="width: 28px; height: 28px; padding: 0; z-index: 10;"
                                         onclick="deleteGalleryImage(@img.ImageId)">
                                     <i class="bi bi-x fs-5"></i>
@@ -85,7 +83,7 @@
             </div>
 
             <div class="col-12 mt-5 text-end border-top pt-4">
-                <button type="submit" class="k-btn-primary px-5 py-3"><i class="bi bi-check2-circle me-2"></i> Save Changes</button>
+                <button type="submit" class="btn btn-primary px-5 py-3 fw-bold rounded-3"><i class="bi bi-check2-circle me-2"></i> Save Changes</button>
             </div>
         </div>
     </form>

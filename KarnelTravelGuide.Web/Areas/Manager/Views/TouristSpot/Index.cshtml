@@ -1,60 +1,55 @@
 @model IEnumerable<KarnelTravelGuide.Web.Models.Entities.TouristSpot>
 @{
     ViewData["Title"] = "Tourist Spot Management";
-
-    // LOGIC TÍNH SỐ THỨ TỰ TỰ ĐỘNG
     int totalCount = Model?.Count() ?? 0;
     bool isDescending = ViewData["CurrentSort"]?.ToString() == "id_desc";
-    
-    // Nếu sắp xếp giảm dần (Mới lên trên), STT bắt đầu từ số To nhất. Ngược lại bắt đầu từ 1.
     int displayIndex = isDescending ? totalCount : 1;
 }
 
-<div class="k-card">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <form asp-action="Index" method="get" class="d-flex w-50">
-            <div class="input-group">
-                <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control" style="border-radius: 8px 0 0 8px; border: 1px solid #ced4da; padding: 0.75rem 1rem;" placeholder="Search destinations...">
-                <button type="submit" class="btn btn-primary px-4" style="border-radius: 0 8px 8px 0;"><i class="bi bi-search"></i></button>
-            </div>
+<style>
+    .action-btn { width: 32px; height: 32px; padding: 0; line-height: 30px; display: inline-flex; align-items: center; justify-content: center; }
+</style>
+
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3">
+        <form asp-action="Index" method="get" class="d-flex gap-2">
+            <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control bg-light border" style="min-width: 250px; border-radius: 0.5rem;" placeholder="Search destinations...">
+            <button type="submit" class="btn btn-primary" style="border-radius: 0.5rem; width: 45px;"><i class="bi bi-search"></i></button>
+            @if (!string.IsNullOrEmpty(ViewData["CurrentFilter"]?.ToString())) {
+                <a asp-action="Index" class="btn btn-light border text-muted" style="border-radius: 0.5rem;">Clear</a>
+            }
         </form>
-        <a asp-action="Create" class="k-btn-primary"><i class="bi bi-plus-lg me-2"></i> Add New Spot</a>
+        <a asp-action="Create" class="btn btn-primary fw-bold px-4" style="border-radius: 0.5rem;"><i class="bi bi-plus-lg me-2"></i> Add New Spot</a>
     </div>
 
     @if (TempData["SuccessMessage"] != null) {
         <div class="alert alert-success rounded-3 fw-bold"><i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]</div>
     }
-    
     @if (TempData["ErrorMessage"] != null) {
         <div class="alert alert-danger rounded-3 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]</div>
     }
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light text-muted small text-uppercase">
+        <table class="table align-middle table-hover table-borderless">
+            <thead class="border-bottom text-dark small fw-bold text-uppercase">
                 <tr>
                     <th style="width: 5%; text-align: center;">
-                        <a asp-action="Index" 
-                           asp-route-sortOrder="@ViewData["IdSortParm"]" 
-                           asp-route-searchString="@ViewData["CurrentFilter"]" 
-                           class="text-decoration-none text-dark d-flex justify-content-center align-items-center"
-                           title="Click to sort">
-                            <i class="bi bi-arrow-down-up fs-5 fw-bold text-dark"></i>
+                        <a asp-action="Index" asp-route-sortOrder="@ViewData["IdSortParm"]" asp-route-searchString="@ViewData["CurrentFilter"]" class="text-dark text-decoration-none" title="Click to sort">
+                            <i class="bi bi-arrow-down-up fs-5"></i>
                         </a>
                     </th>
                     <th style="width: 100px;">Cover</th>
                     <th>Destination Info</th>
                     <th>Managing Branch</th>
                     <th>Gallery</th>
-                    <th class="text-end">Actions</th>
+                    <th class="text-center" style="width: 15%;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @if (Model != null && Model.Any()) {
                     foreach (var item in Model) {
-                        <tr>
+                        <tr class="border-bottom">
                             <td class="fw-bold text-secondary fs-6 text-center">@displayIndex</td>
-
                             <td>
                                 <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/img/no-image.jpg" : item.ImageUrl)" class="rounded-3 shadow-sm border" style="width: 80px; height: 60px; object-fit: cover;" />
                             </td>
@@ -62,19 +57,20 @@
                                 <div class="fw-bold text-dark fs-6">@item.SpotName</div>
                                 <div class="small text-muted mt-1"><i class="bi bi-geo-alt me-1 text-danger"></i>@item.Address</div>
                             </td>
-                            <td><span class="badge bg-light text-dark border px-2 py-2">@item.Branch?.BranchName</span></td>
+                            <td><span class="badge bg-light text-dark border px-3 py-2 rounded-pill">@item.Branch?.BranchName</span></td>
                             <td>
                                 <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
                                     <i class="bi bi-images me-1"></i> @item.TouristSpotImages.Count Photos
                                 </span>
                             </td>
-                            <td class="text-end">
-                                <a asp-action="Details" asp-route-id="@item.SpotId" class="btn btn-sm btn-light text-info fw-bold me-1" title="Details"><i class="bi bi-eye"></i></a>
-                                <a asp-action="Edit" asp-route-id="@item.SpotId" class="btn btn-sm btn-light text-primary fw-bold me-1" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                <a asp-action="Delete" asp-route-id="@item.SpotId" class="btn btn-sm btn-light text-danger fw-bold" title="Delete"><i class="bi bi-trash"></i></a>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a asp-action="Details" asp-route-id="@item.SpotId" class="btn btn-outline-info rounded-circle action-btn" title="View Details"><i class="bi bi-eye"></i></a>
+                                    <a asp-action="Edit" asp-route-id="@item.SpotId" class="btn btn-outline-primary rounded-circle action-btn" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                                    <a asp-action="Delete" asp-route-id="@item.SpotId" class="btn btn-outline-danger rounded-circle action-btn" title="Delete"><i class="bi bi-trash"></i></a>
+                                </div>
                             </td>
                         </tr>
-
                         if (isDescending) { displayIndex--; } else { displayIndex++; }
                     }
                 } else {

@@ -16,64 +16,75 @@
     .seat { height: 45px; width: 50px; border-radius: 8px 8px 15px 15px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s ease; user-select: none; }
     .seat.available { background-color: #fff; border: 2px solid #28a745; color: #28a745; }
     .seat.available:hover { background-color: #e6f9ed; transform: translateY(-2px); }
-    .seat.booked { background-color: #e4e6eb; color: #a0a0a0; border: 2px solid #d0d0d0; cursor: not-allowed; }
-    .seat.selected { background-color: #0d6efd; color: white; border: 2px solid #0d6efd; box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3); transform: scale(1.05); }
-    
-    /* Fixed Checkout Bar - Using Grid to prevent CSS break */
-    .bottom-checkout-bar { position: sticky; bottom: 20px; background: #fff; padding: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 1000; border-radius: 1.25rem; margin-top: 30px; border: 1px solid rgba(0,0,0,0.05); }
-    .seat-scroll-box::-webkit-scrollbar { width: 6px; }
-    .seat-scroll-box::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
-    
-    .btn-custom { background-color: #0d6efd; color: white; border-radius: 0.75rem; font-weight: 700; transition: 0.3s; }
-    .btn-custom:hover:not(:disabled) { background-color: #0b5ed7; box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3); transform: translateY(-2px); }
+    .seat.booked { background-color: #e4e6eb; color: #a0a0a0; border: 2px solid #ced4da; cursor: not-allowed; }
+    .seat.selected { background-color: #0d6efd; color: #fff; border: 2px solid #0d6efd; transform: scale(1.05); box-shadow: 0 4px 10px rgba(13,110,253,0.3); }
+
+    .bottom-checkout-bar { position: sticky; bottom: 20px; background: #fff; padding: 20px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 1000; border: 1px solid #e0e0e0; border-radius: 16px; margin-top: 30px; }
 </style>
 
 <div class="container py-5" style="max-width: 900px;">
     
     <div class="d-flex align-items-center mb-4">
-        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
-        <h3 class="fw-bold mb-0 text-dark">@Model.TransportName</h3>
+        <a asp-action="Index" class="btn btn-light bg-white shadow-sm rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; border: 1px solid #eee;"><i class="bi bi-arrow-left text-dark"></i></a>
+        <div>
+            <h3 class="fw-bold mb-0 text-dark">@Model.TransportName</h3>
+        </div>
     </div>
 
     @if (TempData["ErrorMessage"] != null) { 
-        <div class="alert alert-danger rounded-4 fw-bold shadow-sm mb-4"><i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]</div> 
+        <div class="alert alert-danger rounded-3 fw-bold mb-4"><i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]</div> 
     }
 
-    <form asp-action="Booking" method="post" id="checkoutForm">
-        <input type="hidden" name="transportationId" value="@Model.TransportationId" />
-        <input type="hidden" name="travelDate" value="@ViewBag.SelectedDate" />
-        <input type="hidden" name="seat" id="selectedSeatInput" required />
+    <form asp-action="ConfirmBooking" method="post" id="checkoutForm">
+        <input type="hidden" name="transportationId" value="@Model.TransportationId" id="transportId" />
+        <input type="hidden" name="travelDate" value="@ViewBag.TravelDate" id="travelDateVal" />
+        <input type="hidden" name="selectedSeats" id="hiddenSelectedSeats" />
 
         <div class="card-custom mb-0">
-            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                <div class="d-flex align-items-center">
-                    <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-2">
-                        <i class="bi bi-calendar-event text-primary"></i>
+            <div class="row bg-light p-3 rounded-4 mb-4 g-3 border align-items-center text-center">
+                <div class="col-4 border-end">
+                    <small class="text-muted fw-bold d-block text-uppercase">From</small>
+                    <strong class="fs-6 text-dark">@Model.FromBranch?.BranchName</strong>
+                </div>
+                <div class="col-4 border-end">
+                    <small class="text-muted fw-bold d-block text-uppercase">To</small>
+                    <strong class="fs-6 text-primary">@Model.ToSpot?.SpotName</strong>
+                </div>
+                <div class="col-4">
+                    <small class="text-muted fw-bold d-block text-uppercase">Date & Time</small>
+                    <div class="fs-6 text-danger fw-bold">
+                        <i class="bi bi-calendar-event me-1"></i>@ViewBag.TravelDate
+                        <span class="mx-1 text-muted fw-normal">|</span>
+                        <i class="bi bi-clock me-1"></i>@Model.DepartureTime?.ToString("HH:mm")
                     </div>
-                    <span class="fw-bold text-dark fs-5">@ViewBag.SelectedDate</span>
                 </div>
-                <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 fs-6">$@Model.PriceTransport?.ToString("N0") / seat</span>
             </div>
 
-            <div class="legend-container">
-                <div class="legend-item"><div class="legend-box" style="background: #fff; border: 2px solid #28a745;"></div> Available</div>
-                <div class="legend-item"><div class="legend-box" style="background: #e4e6eb; border: 2px solid #d0d0d0;"></div> Booked</div>
-                <div class="legend-item"><div class="legend-box" style="background: #0d6efd;"></div> Selected</div>
+            <div class="legend-container pb-4 border-bottom">
+                <div class="legend-item"><div class="legend-box border border-2 border-success bg-white"></div>Available</div>
+                <div class="legend-item"><div class="legend-box border border-2 border-primary bg-primary"></div>Selected</div>
+                <div class="legend-item"><div class="legend-box border border-2 border-secondary bg-light"></div>Booked</div>
             </div>
 
-            <div id="loading" class="text-center py-5">
+            <div class="text-center mt-5" id="loadingSpinner">
                 <div class="spinner-border text-primary" role="status"></div>
-                <p class="mt-3 text-muted fw-bold">Loading seat map...</p>
+                <p class="mt-2 text-muted fw-bold">Loading seat map...</p>
             </div>
-
-            <div id="seatMapGrid" class="row d-none g-4 justify-content-center pb-3">
-                <div class="col-md-6">
-                    <div class="text-center fw-bold text-muted mb-3 text-uppercase">Lower Deck</div>
-                    <div class="seat-grid" id="floor1"></div>
-                </div>
-                <div class="col-md-6">
-                    <div class="text-center fw-bold text-muted mb-3 text-uppercase">Upper Deck</div>
-                    <div class="seat-grid" id="floor2"></div>
+            
+            <div id="seatMapContainer" class="d-none">
+                <div class="row justify-content-center">
+                    <div class="col-md-6 mb-4">
+                        <div class="p-4 rounded-4 bg-light border">
+                            <h5 class="text-center fw-bold mb-4 text-dark border-bottom pb-2">Lower Deck (Floor 1)</h5>
+                            <div class="seat-grid" id="floor1"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="p-4 rounded-4 bg-light border">
+                            <h5 class="text-center fw-bold mb-4 text-dark border-bottom pb-2">Upper Deck (Floor 2)</h5>
+                            <div class="seat-grid" id="floor2"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -82,14 +93,14 @@
             <div class="row align-items-center m-0">
                 <div class="col-md-5 text-start ps-0 pe-4">
                     <span class="text-muted fw-bold d-block mb-1">Selected Seats:</span>
-                    <div class="fw-bold text-dark fs-5 lh-base seat-scroll-box" id="seatLabel" style="max-height: 60px; overflow-y: auto;">None</div>
+                    <div class="fw-bold text-dark fs-5 lh-base" id="seatLabel">None</div>
                 </div>
                 <div class="col-md-4 text-center border-start border-end">
                     <span class="text-muted fw-bold d-block mb-1">Total Amount:</span>
                     <span class="fs-3 fw-bold text-primary lh-1" id="priceLabel">$0</span>
                 </div>
                 <div class="col-md-3 text-end pe-0 ps-4">
-                    <button type="submit" class="btn btn-custom py-3 w-100" id="submitBtn" disabled>Confirm Booking</button>
+                    <button type="submit" class="btn btn-primary py-3 w-100 fw-bold rounded-3 shadow-sm" id="submitBtn" disabled>Confirm Booking</button>
                 </div>
             </div>
         </div>
@@ -99,64 +110,28 @@
 @section Scripts {
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const transportId = @Model.TransportationId;
-            const travelDate = "@ViewBag.SelectedDate";
+            const tId = document.getElementById("transportId").value;
+            const tDate = document.getElementById("travelDateVal").value;
+            const capacity = @Model.SeatCapacity;
             const unitPrice = @(Model.PriceTransport ?? 0);
-            const capacity = @(Model.SeatCapacity);
-            
-            let selectedSeatsArray = [];
 
-            function updateCheckoutBar() {
-                if (selectedSeatsArray.length > 0) {
-                    selectedSeatsArray.sort();
-                    document.getElementById("seatLabel").innerText = selectedSeatsArray.join(", ");
-                    const total = selectedSeatsArray.length * unitPrice;
-                    document.getElementById("priceLabel").innerText = "$" + total.toLocaleString('en-US');
-                    document.getElementById("selectedSeatInput").value = selectedSeatsArray.join(",");
-                    document.getElementById("submitBtn").disabled = false;
-                } else {
-                    document.getElementById("seatLabel").innerText = "None";
-                    document.getElementById("priceLabel").innerText = "$0";
-                    document.getElementById("selectedSeatInput").value = "";
-                    document.getElementById("submitBtn").disabled = true;
-                }
-            }
+            fetch(`/BookTicket/GetBookedSeats?transportationId=${tId}&date=${tDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("loadingSpinner").classList.add("d-none");
+                    document.getElementById("seatMapContainer").classList.remove("d-none");
 
-            function createSeatHTML(seatId, isBooked) {
-                const div = document.createElement("div");
-                div.innerText = seatId; 
-                if (isBooked) { 
-                    div.className = "seat booked";
-                } else {
-                    div.className = "seat available";
-                    div.addEventListener("click", () => {
-                        if (div.classList.contains("selected")) {
-                            div.classList.remove("selected"); div.classList.add("available");
-                            selectedSeatsArray = selectedSeatsArray.filter(s => s !== seatId);
-                        } else {
-                            div.classList.remove("available"); div.classList.add("selected");
-                            selectedSeatsArray.push(seatId);
-                        }
-                        updateCheckoutBar();
-                    });
-                }
-                return div;
-            }
-
-            fetch(`/BookTicket/GetBookedSeats?transportationId=${transportId}&date=${travelDate}`)
-                .then(r => r.json())
-                .then(data => { 
-                    document.getElementById("loading").classList.add("d-none");
-                    document.getElementById("seatMapGrid").classList.remove("d-none");
-                    
                     const f1 = document.getElementById("floor1");
                     const f2 = document.getElementById("floor2");
                     
-                    let floor1Seats = []; let floor2Seats = [];
-                    const cols = ['A', 'B', 'C', 'D', 'E', 'F']; 
-                    let colsPerRow = capacity <= 16 ? 3 : (capacity >= 50 ? 6 : 4);
+                    let floor1Seats = [];
+                    let floor2Seats = [];
+                    let cols = ['A', 'B', 'C', 'D', 'E', 'F'];
+                    let colsPerRow = capacity > 60 ? 6 : 4; 
+                    
+                    let currentSeatCount = 0;
+                    let row = 1;
 
-                    let currentSeatCount = 0; let row = 1;
                     while (currentSeatCount < capacity) {
                         for (let c = 0; c < colsPerRow; c++) {
                             if (currentSeatCount >= capacity) break;
@@ -180,6 +155,46 @@
                     floor1Seats.forEach(id => f1.appendChild(createSeatHTML(id, data.bookedSeats.includes(id))));
                     floor2Seats.forEach(id => f2.appendChild(createSeatHTML(id, data.bookedSeats.includes(id))));
                 });
+
+            let selectedSeats = [];
+
+            function createSeatHTML(id, isBooked) {
+                let div = document.createElement("div");
+                div.className = `seat ${isBooked ? 'booked' : 'available'}`;
+                div.innerText = id;
+                if (!isBooked) {
+                    div.onclick = function () {
+                        if (div.classList.contains("selected")) {
+                            div.classList.remove("selected");
+                            selectedSeats = selectedSeats.filter(s => s !== id);
+                        } else {
+                            div.classList.add("selected");
+                            selectedSeats.push(id);
+                        }
+                        updateFooter();
+                    };
+                }
+                return div;
+            }
+
+            function updateFooter() {
+                const seatLabel = document.getElementById("seatLabel");
+                const hiddenSeats = document.getElementById("hiddenSelectedSeats");
+                const priceLabel = document.getElementById("priceLabel");
+                const submitBtn = document.getElementById("submitBtn");
+
+                if (selectedSeats.length > 0) {
+                    seatLabel.innerHTML = `<span class="badge bg-primary me-1 mb-1">${selectedSeats.join('</span> <span class="badge bg-primary me-1 mb-1">')}</span>`;
+                    hiddenSeats.value = selectedSeats.join(',');
+                    priceLabel.innerText = "$" + (selectedSeats.length * unitPrice).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+                    submitBtn.disabled = false;
+                } else {
+                    seatLabel.innerText = "None";
+                    hiddenSeats.value = "";
+                    priceLabel.innerText = "$0";
+                    submitBtn.disabled = true;
+                }
+            }
 
             document.getElementById("checkoutForm").addEventListener("submit", function() {
                 const btn = document.getElementById("submitBtn");

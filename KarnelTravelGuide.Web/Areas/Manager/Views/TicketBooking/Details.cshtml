@@ -5,42 +5,38 @@
     var seatsList = Model.OrderDetails?.Where(od => od.TicketBooking != null).Select(od => od.TicketBooking!.Seat).ToList();
 }
 
-<div class="k-card mx-auto" style="max-width: 900px;">
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 900px;">
     
     <div class="d-flex align-items-center border-bottom pb-3 mb-4">
-        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
         <h4 class="fw-bold m-0 text-dark">Order #@Model.OrderId Details</h4>
         <div class="ms-auto">
-            @if (Model.Status == "Confirmed") { <span class="badge bg-success px-3 py-2 fs-6">Confirmed</span> }
-            else if (Model.Status == "Canceled") { <span class="badge bg-danger px-3 py-2 fs-6">Canceled</span> }
-            else { <span class="badge bg-warning text-dark px-3 py-2 fs-6">Pending</span> }
+            @if (Model.Status == "Confirmed") { <span class="badge bg-success px-3 py-2 fs-6 rounded-pill">Confirmed</span> }
+            else if (Model.Status == "Canceled") { <span class="badge bg-danger px-3 py-2 fs-6 rounded-pill">Canceled</span> }
+            else { <span class="badge bg-warning text-dark px-3 py-2 fs-6 rounded-pill">Pending</span> }
         </div>
     </div>
     
     <div class="row mb-5">
         <div class="col-md-6 border-end pe-md-4">
-            <h6 class="fw-bold text-secondary text-uppercase mb-3"><i class="bi bi-person-badge text-primary me-2"></i>Customer Info</h6>
-            <div class="p-3 bg-light rounded-3 border">
-                <p class="mb-2 fw-bold text-dark fs-5">@Model.Account?.FullName</p>
-                <p class="mb-1 text-muted"><i class="bi bi-telephone me-2"></i> @Model.Account?.PhoneNumber</p>
-                <p class="mb-0 text-muted"><i class="bi bi-envelope me-2"></i> @Model.Account?.Email</p>
-            </div>
+            <h6 class="fw-bold text-secondary text-uppercase mb-3"><i class="bi bi-person-circle me-2"></i>Customer Info</h6>
+            <div class="mb-2"><span class="text-muted d-inline-block" style="width: 100px;">Full Name:</span> <strong class="text-dark">@Model.Account?.FullName</strong></div>
+            <div class="mb-2"><span class="text-muted d-inline-block" style="width: 100px;">Phone:</span> <strong class="text-primary">@Model.Account?.PhoneNumber</strong></div>
+            <div><span class="text-muted d-inline-block" style="width: 100px;">Email:</span> <span class="text-dark">@Model.Account?.Email</span></div>
         </div>
-        <div class="col-md-6 ps-md-4">
-            <h6 class="fw-bold text-secondary text-uppercase mb-3"><i class="bi bi-credit-card text-success me-2"></i>Payment Info</h6>
-            <div class="p-3 bg-light rounded-3 border">
-                <h3 class="text-success fw-bold mb-2">$@Model.TotalAmount?.ToString("N0")</h3>
-                <p class="text-muted small mb-0 fw-bold">Booking Date: <span class="text-dark">@Model.CreateDate?.ToString("dd/MM/yyyy HH:mm")</span></p>
-            </div>
+        <div class="col-md-6 ps-md-4 mt-4 mt-md-0">
+            <h6 class="fw-bold text-secondary text-uppercase mb-3"><i class="bi bi-receipt me-2"></i>Payment Summary</h6>
+            <div class="mb-2"><span class="text-muted d-inline-block" style="width: 110px;">Order Date:</span> <span class="text-dark fw-bold">@Model.CreateDate?.ToString("dd/MM/yyyy HH:mm")</span></div>
+            <div class="mb-2"><span class="text-muted d-inline-block" style="width: 110px;">Total Tickets:</span> <strong class="text-dark fs-6">@(seatsList?.Count ?? 0) Tickets</strong></div>
+            <div><span class="text-muted d-inline-block" style="width: 110px;">Total Amount:</span> <strong class="text-success fs-4">$@((Model.TotalAmount ?? 0).ToString("0.##"))</strong></div>
         </div>
     </div>
 
-    @if (firstTicket != null)
-    {
-        <div class="border border-primary border-opacity-25 rounded-4 p-4 bg-primary bg-opacity-10">
-            <h6 class="fw-bold text-primary mb-4 text-uppercase"><i class="bi bi-bus-front-fill me-2"></i>Route Information</h6>
+    @if (firstTicket != null) {
+        <div class="bg-light p-4 rounded-4 border mb-4">
+            <h6 class="fw-bold text-dark text-uppercase mb-4"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Travel Route</h6>
             
-            <div class="row align-items-center text-center mb-4 bg-white p-3 rounded-3 shadow-sm mx-1">
+            <div class="row text-center align-items-center mb-4 pb-4 border-bottom">
                 <div class="col-5">
                     <h5 class="fw-bold text-dark mb-1">@firstTicket.Transportation?.FromBranch?.BranchName</h5>
                     <small class="text-danger fw-bold"><i class="bi bi-clock me-1"></i> @firstTicket.Transportation?.DepartureTime?.ToString("HH:mm")</small>
@@ -59,7 +55,7 @@
                 </div>
                 <div class="text-end">
                     <span class="text-muted small d-block fw-bold text-uppercase mb-1">Selected Seats (@seatsList?.Count)</span>
-                    <span class="badge border border-primary text-primary px-3 py-2 fs-6 bg-white">@string.Join(", ", seatsList ?? new List<string?>())</span>
+                    <span class="badge border border-primary text-primary px-3 py-2 fs-6 bg-white rounded-pill">@string.Join(", ", seatsList ?? new List<string?>())</span>
                 </div>
             </div>
         </div>

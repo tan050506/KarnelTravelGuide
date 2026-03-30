@@ -50,11 +50,8 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
             
-            // Lưu lại trạng thái bộ lọc và sắp xếp hiện tại
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentSort"] = sortOrder;
-            
-            // Công tắc sắp xếp: Đang rỗng -> Click thành giảm dần (id_desc). Đang giảm dần -> Click thành rỗng.
             ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_desc" : "";
 
             var spots = _context.TouristSpots
@@ -70,15 +67,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     (s.Address != null && s.Address.Contains(searchString)));
             }
 
-            // THỰC THI SẮP XẾP VÀ TRẢ VỀ VIEW
             switch (sortOrder)
             {
                 case "id_desc":
-                    // Mới nhất lên đầu
                     spots = spots.OrderByDescending(t => t.SpotId);
                     break;
                 default:
-                    // Cũ nhất lên đầu (Mặc định)
                     spots = spots.OrderBy(t => t.SpotId);
                     break;
             }
@@ -162,7 +156,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 existingSpot.Description = spot.Description;
                 existingSpot.BranchId = spot.BranchId;
 
-                // Nếu chọn ảnh bìa mới, tự động xóa file ảnh bìa cũ trên máy tính
                 if (CoverFile != null && CoverFile.Length > 0)
                 {
                     if (!string.IsNullOrEmpty(existingSpot.ImageUrl))
@@ -213,14 +206,10 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(spot);
         }
 
-        // =================================================================
-        // HÀM XÓA ĐỊA ĐIỂM (CÓ RÀNG BUỘC VÀ XÓA FILE VẬT LÝ)
-        // =================================================================
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            // Lấy Spot kèm theo tất cả các dữ liệu liên quan để kiểm tra
             var spot = await _context.TouristSpots
                 .Include(t => t.TouristSpotImages)
                 .Include(t => t.Stays)
@@ -230,20 +219,14 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (spot != null)
             {
-                // 1. KIỂM TRA RÀNG BUỘC (KHÔNG CHO XÓA NẾU ĐANG CÓ DỊCH VỤ)
                 if (spot.Stays.Any() || spot.Restaurants.Any() || spot.Transportations.Any())
                 {
                     TempData["ErrorMessage"] = "Cannot delete! This destination is linked to active Stays, Restaurants, or Transportations. Please remove them first.";
                     return RedirectToAction(nameof(Index));
                 }
 
-                // 2. XÓA FILE ẢNH BÌA TRÊN MÁY TÍNH
-                if (!string.IsNullOrEmpty(spot.ImageUrl))
-                {
-                    DeletePhysicalFile(spot.ImageUrl);
-                }
+                if (!string.IsNullOrEmpty(spot.ImageUrl)) DeletePhysicalFile(spot.ImageUrl);
 
-                // 3. XÓA TẤT CẢ FILE ẢNH GALLERY TRÊN MÁY TÍNH
                 if (spot.TouristSpotImages != null && spot.TouristSpotImages.Any())
                 {
                     foreach (var img in spot.TouristSpotImages)
@@ -252,7 +235,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     }
                 }
 
-                // 4. XÓA KHỎI DATABASE
                 _context.TouristSpots.Remove(spot);
                 await _context.SaveChangesAsync();
                 
@@ -267,9 +249,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var img = await _context.TouristSpotImages.FindAsync(imageId);
             if (img != null)
             {
-                // Đồng thời xóa luôn file vật lý khi Manager bấm Xóa 1 ảnh
                 DeletePhysicalFile(img.ImageUrl);
-
                 _context.TouristSpotImages.Remove(img);
                 await _context.SaveChangesAsync();
                 return Json(new { success = true });
@@ -290,9 +270,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return Json(new { success = false });
         }
 
-        // =================================================================
-        // CÁC HÀM HỖ TRỢ XỬ LÝ FILE MÁY TÍNH
-        // =================================================================
         private async Task<string> UploadFileAsync(IFormFile file)
         {
             string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "touristspots");
@@ -311,20 +288,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         private void DeletePhysicalFile(string? relativePath)
         {
             if (string.IsNullOrEmpty(relativePath)) return;
-            
             try
             {
-                // Bỏ dấu '/' ở đầu để tránh lỗi nối chuỗi đường dẫn
                 string filePath = Path.Combine(_webHostEnvironment.WebRootPath, relativePath.TrimStart('/'));
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath);
-                }
+                if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
             }
-            catch (Exception)
-            {
-                // Bỏ qua lỗi nếu file không tồn tại hoặc bị khóa
-            }
+            catch (Exception) { }
         }
     }
 }

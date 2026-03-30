@@ -11,126 +11,123 @@
     .search-widget { background: #fff; border-radius: 1.25rem; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
     .form-control-custom { border-radius: 0.75rem; padding: 0.8rem 1rem; border: 1px solid transparent; background-color: #f1f5f9; font-weight: 500; transition: all 0.2s; color: #333; }
     .form-control-custom:focus { border-color: #0d6efd; background-color: #fff; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1); outline: none; }
-    .btn-custom { background-color: #0d6efd; color: white; border-radius: 0.75rem; font-weight: 700; padding: 0.8rem; transition: 0.3s; }
-    .btn-custom:hover { background-color: #0b5ed7; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3); }
-    .trip-card { background: #fff; border-radius: 1.25rem; padding: 1.5rem; border: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-    .trip-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
-    .time-large { font-size: 1.5rem; font-weight: 800; color: #1e293b; }
-    .price-text { color: #0d6efd; font-size: 1.4rem; font-weight: 800; }
+    .btn-custom { background-color: #0d6efd; color: white; border-radius: 0.75rem; font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px rgba(13,110,253,0.2); }
+    .btn-custom:hover { background-color: #0b5ed7; transform: translateY(-1px); box-shadow: 0 6px 15px rgba(13,110,253,0.3); }
+
+    .route-card { background: #fff; border-radius: 1.25rem; padding: 1.5rem; transition: all 0.2s ease; border: 1px solid rgba(0,0,0,0.05); }
+    .route-card:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: rgba(13,110,253,0.15); }
     
-    /* CSS Cho Dropdown Autocomplete */
-    .custom-dropdown-menu { max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1000; width: 100%; display: none; margin-top: 5px; background: #fff; border-radius: 0.75rem; }
+    .custom-dropdown-menu { max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1000; width: 100%; background: #fff; border-radius: 0.75rem; display: none; margin-top: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #eee; }
     .custom-dropdown-menu.show { display: block; }
     .dropdown-item-custom { transition: background-color 0.2s; cursor: pointer; white-space: normal; padding: 12px 15px; }
     .dropdown-item-custom:hover { background-color: #f8f9fa; }
 </style>
 
-<div class="container py-5" style="max-width: 900px;">
-    <div class="text-center mb-4">
-        <h2 class="fw-bold text-dark mb-2">Where to next?</h2>
+<div class="container py-5" style="max-width: 1000px;">
+    
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-dark mb-2">Where do you want to go?</h2>
         <p class="text-muted">Find the best routes and book your tickets instantly.</p>
     </div>
 
     @if (TempData["SuccessMessage"] != null) { 
-        <div class="alert alert-success rounded-4 fw-bold shadow-sm mb-4"><i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]</div> 
+        <div class="alert alert-success rounded-3 fw-bold mb-4"><i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]</div> 
     }
 
     <div class="search-widget mb-5">
-        <form asp-action="Index" method="get">
-            <div class="row g-3">
-                <div class="col-md-6 position-relative">
-                    <label class="text-muted small fw-bold mb-1">Departure (From)</label>
-                    <div class="position-relative">
-                        <input type="text" id="fromSearchInput" class="form-control form-control-custom" placeholder="Type departure location..." autocomplete="off">
-                        <input type="hidden" name="fromBranchId" id="hiddenFromId" value="@ViewBag.CurrentFrom" />
-                        <div id="fromDropdown" class="custom-dropdown-menu shadow-lg border"></div>
-                    </div>
-                </div>
+        <form asp-action="Index" method="get" class="row g-3 align-items-end">
+            <div class="col-md-3 position-relative">
+                <label class="form-label text-muted small fw-bold text-uppercase">From</label>
+                <input type="text" id="fromSearchInput" class="form-control form-control-custom" placeholder="Any Origin" autocomplete="off">
+                <input type="hidden" name="fromBranchId" id="hiddenFromId" value="@ViewBag.CurrentFrom" />
+                <div id="fromDropdown" class="custom-dropdown-menu p-0 border"></div>
+            </div>
 
-                <div class="col-md-6 position-relative">
-                    <label class="text-muted small fw-bold mb-1">Destination (To)</label>
-                    <div class="position-relative">
-                        <input type="text" id="toSearchInput" class="form-control form-control-custom" placeholder="Type destination name..." autocomplete="off">
-                        <input type="hidden" name="toSpotId" id="hiddenToId" value="@ViewBag.CurrentTo" />
-                        <div id="toDropdown" class="custom-dropdown-menu shadow-lg border"></div>
-                    </div>
-                </div>
+            <div class="col-md-3 position-relative">
+                <label class="form-label text-muted small fw-bold text-uppercase">To</label>
+                <input type="text" id="toSearchInput" class="form-control form-control-custom" placeholder="Any Destination" autocomplete="off">
+                <input type="hidden" name="toSpotId" id="hiddenToId" value="@ViewBag.CurrentTo" />
+                <div id="toDropdown" class="custom-dropdown-menu p-0 border"></div>
+            </div>
 
-                <div class="col-md-6">
-                    <label class="text-muted small fw-bold mb-1">Transport Type</label>
-                    <select name="transportType" class="form-select form-control-custom">
-                        <option value="">All Types</option>
-                        <option value="Land" selected="@(ViewBag.CurrentType == "Land" ? "selected" : null)">🚌 Land</option>
-                        <option value="Water" selected="@(ViewBag.CurrentType == "Water" ? "selected" : null)">🛳️ Water</option>
-                        <option value="Air" selected="@(ViewBag.CurrentType == "Air" ? "selected" : null)">✈️ Air</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-6">
-                    <label class="text-muted small fw-bold mb-1">Travel Date</label>
-                    <input type="date" name="travelDate" value="@ViewBag.CurrentDate" min="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control form-control-custom" required />
-                </div>
-                
-                <div class="col-12 mt-4">
-                    <button type="submit" class="btn btn-custom w-100"><i class="bi bi-search me-2"></i>Search Routes</button>
-                </div>
+            <div class="col-md-2">
+                <label class="form-label text-muted small fw-bold text-uppercase">Type</label>
+                <select name="transportType" class="form-select form-control-custom">
+                    <option value="">All</option>
+                    @if (ViewBag.CurrentType == "Land") { <option value="Land" selected>Land</option> } else { <option value="Land">Land</option> }
+                    @if (ViewBag.CurrentType == "Air") { <option value="Air" selected>Air</option> } else { <option value="Air">Air</option> }
+                    @if (ViewBag.CurrentType == "Water") { <option value="Water" selected>Water</option> } else { <option value="Water">Water</option> }
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label text-muted small fw-bold text-uppercase">Date</label>
+                <input type="date" name="travelDate" value="@ViewBag.CurrentDate" class="form-control form-control-custom" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label text-muted small fw-bold text-uppercase">Time (Opt)</label>
+                <input type="time" name="travelTime" value="@ViewBag.CurrentTime" class="form-control form-control-custom" />
+            </div>
+
+            <div class="col-12 mt-4">
+                <button type="submit" class="btn btn-custom w-100 py-3"><i class="bi bi-search me-2"></i> Find Routes</button>
             </div>
         </form>
     </div>
 
-    <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-list-ul text-primary me-2"></i>Available Routes</h5>
-    
-    <div class="row g-4">
-        @if (Model != null && Model.Any())
-        {
-            foreach (var item in Model)
-            {
-                <div class="col-12">
-                    <div class="trip-card">
-                        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+    <h5 class="fw-bold text-dark mb-4"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Available Routes</h5>
+
+    @if (Model != null && Model.Any()) {
+        <div class="row g-4">
+            @foreach (var item in Model) {
+                <div class="col-md-6">
+                    <div class="route-card shadow-sm h-100 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="d-flex align-items-center">
-                                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/img/no-image.jpg" : item.ImageUrl)" style="width: 80px; height: 60px; object-fit: cover; border-radius: 8px;" class="me-3 border shadow-sm" alt="@item.TransportName" />
+                                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/img/no-image.jpg" : item.ImageUrl)" style="width: 70px; height: 50px; object-fit: cover; border-radius: 8px;" class="me-3 shadow-sm border" />
                                 <div>
-                                    <h5 class="mb-1 fw-bold text-dark">@item.TransportName</h5>
-                                    <span class="badge bg-light text-dark border">@item.TransportType</span>
+                                    <h6 class="fw-bold text-dark mb-1">@item.TransportName</h6>
+                                    @if (item.TransportType == "Air") { <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1"><i class="bi bi-airplane-fill me-1"></i> Air</span> }
+                                    else if (item.TransportType == "Land") { <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1"><i class="bi bi-car-front-fill me-1"></i> Land</span> }
+                                    else { <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1"><i class="bi bi-water me-1"></i> Water</span> }
                                 </div>
                             </div>
                         </div>
 
-                        <div class="row align-items-center text-center mb-4">
-                            <div class="col-4">
-                                <div class="time-large">@item.DepartureTime?.ToString("HH:mm")</div>
-                                <small class="text-muted fw-bold">@item.FromBranch?.BranchName</small>
+                        <div class="row text-center bg-light p-2 rounded-3 mb-3 border g-0 align-items-center">
+                            <div class="col-5">
+                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">From</small>
+                                <span class="text-dark fw-bold text-truncate d-block" title="@item.FromBranch?.BranchName">@item.FromBranch?.BranchName</span>
                             </div>
-                            <div class="col-4">
-                                <i class="bi bi-arrow-right fs-3 text-muted opacity-50"></i>
-                            </div>
-                            <div class="col-4">
-                                <div class="time-large text-primary">Arrival</div>
-                                <small class="text-muted fw-bold">@item.ToSpot?.SpotName</small>
+                            <div class="col-2"><i class="bi bi-arrow-right text-primary"></i></div>
+                            <div class="col-5">
+                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">To</small>
+                                <span class="text-primary fw-bold text-truncate d-block" title="@item.ToSpot?.SpotName">@item.ToSpot?.SpotName</span>
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-3">
+                        <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
                             <div>
-                                <small class="text-muted fw-bold text-uppercase d-block mb-1">Ticket Price</small>
-                                <div class="price-text">$@item.PriceTransport?.ToString("N0")</div>
+                                <small class="text-muted d-block fw-bold text-uppercase" style="font-size: 0.7rem;">Price</small>
+                                <h4 class="text-success fw-bold mb-0">$@item.PriceTransport?.ToString("0.##")</h4>
                             </div>
-                            <a href="/BookTicket/Booking/@item.TransportationId?date=@ViewBag.CurrentDate" class="btn btn-custom px-5">Select Seats</a>
+                            <div class="text-end">
+                                <small class="text-danger fw-bold d-block mb-2"><i class="bi bi-clock me-1"></i>@item.DepartureTime?.ToString("HH:mm")</small>
+                                <a asp-action="Booking" asp-route-id="@item.TransportationId" asp-route-date="@ViewBag.CurrentDate" class="btn btn-custom px-4 py-2">Select Seats</a>
+                            </div>
                         </div>
                     </div>
                 </div>
             }
-        }
-        else
-        {
-            <div class="col-12 text-center py-5 bg-white rounded-4 shadow-sm text-muted">
-                <i class="bi bi-journal-x fs-1 d-block mb-3"></i>
-                <h5 class="fw-bold text-dark">No routes found</h5>
-                <p>Try adjusting your search criteria or dates.</p>
-            </div>
-        }
-    </div>
+        </div>
+    } else {
+        <div class="text-center py-5 bg-white rounded-4 shadow-sm border border-light">
+            <i class="bi bi-journal-x text-muted mb-3" style="font-size: 4rem;"></i>
+            <h4 class="fw-bold text-dark">No routes found</h4>
+            <p class="text-muted">Try adjusting your filters (date, origin, destination).</p>
+        </div>
+    }
 </div>
 
 @section Scripts {
@@ -138,26 +135,16 @@
         const branchesData = [ @foreach(var b in branchesList) { <text>{ id: @b.BranchId, name: "@Html.Raw(b.BranchName)" },</text> } ];
         const spotsData = [ @foreach(var s in spotsList) { <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)" },</text> } ];
 
-        const fromInput = document.getElementById('fromSearchInput'); 
-        const fromDropdown = document.getElementById('fromDropdown'); 
-        const hiddenFromId = document.getElementById('hiddenFromId');
-        
-        const toInput = document.getElementById('toSearchInput'); 
-        const toDropdown = document.getElementById('toDropdown'); 
-        const hiddenToId = document.getElementById('hiddenToId');
+        const fromInput = document.getElementById('fromSearchInput'); const fromDropdown = document.getElementById('fromDropdown'); const hiddenFromId = document.getElementById('hiddenFromId');
+        const toInput = document.getElementById('toSearchInput'); const toDropdown = document.getElementById('toDropdown'); const hiddenToId = document.getElementById('hiddenToId');
 
-        document.addEventListener("DOMContentLoaded", function () {
-            if (hiddenFromId.value) {
-                const currentFrom = branchesData.find(b => b.id == hiddenFromId.value);
-                if (currentFrom) fromInput.value = currentFrom.name;
-            }
-            if (hiddenToId.value) {
-                const currentTo = spotsData.find(s => s.id == hiddenToId.value);
-                if (currentTo) toInput.value = currentTo.name;
-            }
-        });
+        // Pre-fill inputs on load
+        window.onload = function() {
+            if (hiddenFromId.value) { const f = branchesData.find(x => x.id == hiddenFromId.value); if (f) fromInput.value = f.name; }
+            if (hiddenToId.value) { const t = spotsData.find(x => x.id == hiddenToId.value); if (t) toInput.value = t.name; }
+        };
 
-        function setupAutocomplete(inputEl, dropdownEl, hiddenEl, dataArray, allText) {
+        function setupAutocomplete(inputEl, dropdownEl, hiddenEl, dataArray, allLabel) {
             function renderDrop(filterText) {
                 dropdownEl.innerHTML = '';
                 const lowerFilter = filterText.toLowerCase();
@@ -165,7 +152,7 @@
 
                 const anyItem = document.createElement('div');
                 anyItem.className = 'dropdown-item-custom border-bottom text-primary fw-bold';
-                anyItem.innerText = allText;
+                anyItem.innerText = "-- " + allLabel + " --";
                 anyItem.onclick = function() { hiddenEl.value = ""; inputEl.value = ""; dropdownEl.classList.remove('show'); };
                 dropdownEl.appendChild(anyItem);
 

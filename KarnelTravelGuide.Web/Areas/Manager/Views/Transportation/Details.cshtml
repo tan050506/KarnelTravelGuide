@@ -3,9 +3,9 @@
     ViewData["Title"] = "Route Details";
 }
 
-<div class="k-card mx-auto" style="max-width: 900px;">
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 900px;">
     <div class="d-flex align-items-center border-bottom pb-3 mb-4">
-        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
         <h4 class="fw-bold m-0 text-dark">Route Details</h4>
         <div class="ms-auto">
             @if (Model.TransportType == "Air") { <span class="badge bg-primary fs-6 px-3 py-2"><i class="bi bi-airplane me-1"></i> Air</span> }
@@ -26,31 +26,30 @@
         </div>
         
         <div class="col-md-7 ps-md-4">
-            
-            <div class="p-3 bg-light rounded-4 border mb-4">
-                <div class="mb-3">
+            <div class="p-4 bg-light rounded-4 border mb-4">
+                <div class="mb-3 border-bottom pb-3">
                     <span class="d-block small text-muted text-uppercase fw-bold">Departure (From)</span>
-                    <h5 class="fw-bold text-dark mb-0">@Model.FromBranch?.BranchName</h5>
-                    <small class="text-danger"><i class="bi bi-geo-alt"></i> @Model.FromBranch?.Address</small>
+                    <h5 class="fw-bold text-dark mb-1">@Model.FromBranch?.BranchName</h5>
+                    <small class="text-danger"><i class="bi bi-geo-alt me-1"></i>@Model.FromBranch?.Address</small>
                 </div>
                 <div>
                     <span class="d-block small text-muted text-uppercase fw-bold">Destination (To)</span>
-                    <h5 class="fw-bold text-primary mb-0">@Model.ToSpot?.SpotName</h5>
-                    <small class="text-danger"><i class="bi bi-geo-alt"></i> @Model.ToSpot?.Address</small>
+                    <h5 class="fw-bold text-primary mb-1">@Model.ToSpot?.SpotName</h5>
+                    <small class="text-danger"><i class="bi bi-geo-alt me-1"></i>@Model.ToSpot?.Address</small>
                 </div>
             </div>
 
             <div class="row g-3 mb-4">
                 <div class="col-6">
-                    <div class="border rounded-3 p-3">
-                        <p class="text-muted mb-1 small">Fixed Time</p>
-                        <h4 class="fw-bold text-danger mb-0"><i class="bi bi-clock me-1"></i> @Model.DepartureTime?.ToString("HH:mm")</h4>
+                    <div class="border rounded-3 p-3 bg-white shadow-sm h-100">
+                        <p class="text-muted mb-1 small fw-bold">Fixed Time</p>
+                        <h4 class="fw-bold text-danger mb-0"><i class="bi bi-clock me-2"></i>@Model.DepartureTime?.ToString("HH:mm")</h4>
                     </div>
                 </div>
                 <div class="col-6">
-                    <div class="border rounded-3 p-3">
-                        <p class="text-muted mb-1 small">Ticket Price</p>
-                        <h4 class="fw-bold text-success mb-0"><i class="bi bi-cash me-1"></i> $@Model.PriceTransport?.ToString("0")</h4>
+                    <div class="border rounded-3 p-3 bg-white shadow-sm h-100">
+                        <p class="text-muted mb-1 small fw-bold">Ticket Price</p>
+                        <h4 class="fw-bold text-success mb-0"><i class="bi bi-cash me-2"></i>$@Model.PriceTransport?.ToString("0.##")</h4>
                     </div>
                 </div>
             </div>
@@ -59,13 +58,13 @@
             <p class="text-muted small"><strong>Capacity:</strong> @Model.SeatCapacity Seats</p>
 
             <hr class="opacity-25 my-4" />
-            <h6 class="label-karnel">Additional Details:</h6>
+            <h6 class="fw-bold text-dark mb-2">Additional Details:</h6>
             <p class="text-dark lh-lg" style="white-space: pre-line;">@(string.IsNullOrEmpty(Model.Description) ? "No additional details." : Model.Description)</p>
         </div>
     </div>
 
     <div class="mt-5 pt-4 border-top text-end">
-        <a asp-action="Edit" asp-route-id="@Model.TransportationId" class="k-btn-primary me-2"><i class="bi bi-pencil-square me-2"></i> Edit Route</a>
-        <a asp-action="Delete" asp-route-id="@Model.TransportationId" class="btn btn-danger fw-bold py-2 px-4 rounded-3"><i class="bi bi-trash me-2"></i> Delete</a>
+        <a asp-action="Edit" asp-route-id="@Model.TransportationId" class="btn btn-primary px-4 py-2 fw-bold rounded-3 me-2"><i class="bi bi-pencil-square me-2"></i> Edit Route</a>
+        <a asp-action="Delete" asp-route-id="@Model.TransportationId" class="btn btn-danger px-4 py-2 fw-bold rounded-3"><i class="bi bi-trash me-2"></i> Delete</a>
     </div>
 </div>

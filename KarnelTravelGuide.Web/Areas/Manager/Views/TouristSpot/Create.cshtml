@@ -1,7 +1,5 @@
 @model KarnelTravelGuide.Web.Models.Entities.TouristSpot
-@{
-    ViewData["Title"] = "Add New Tourist Spot";
-}
+@{ ViewData["Title"] = "Add New Tourist Spot"; }
 
 <style>
     .preview-box { position: relative; display: inline-block; }
@@ -9,9 +7,9 @@
     .btn-remove-preview:hover { background: #dc3545; color: #fff; transform: scale(1.1); }
 </style>
 
-<div class="k-card mx-auto" style="max-width: 900px;">
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 900px;">
     <div class="d-flex align-items-center border-bottom pb-3 mb-4">
-        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
         <h4 class="fw-bold m-0 text-dark">Add New Tourist Spot</h4>
     </div>
 
@@ -20,40 +18,38 @@
             
             <div class="col-12">
                 <div class="p-3 rounded-3 bg-primary bg-opacity-10 border border-primary border-opacity-25">
-                    <label class="label-karnel text-primary mb-1">Managing Branch</label>
+                    <label class="fw-bold text-primary mb-1">Managing Branch</label>
                     <div class="fw-bold text-dark fs-5">@ViewBag.BranchName</div>
                     <input type="hidden" asp-for="BranchId" value="@ViewBag.BranchId" />
                 </div>
             </div>
 
             <div class="col-md-6">
-                <label class="label-karnel">Spot Name <span class="text-danger">*</span></label>
-                <input asp-for="SpotName" class="k-input" required placeholder="e.g. Floating Market" />
+                <label class="fw-bold text-dark mb-2">Spot Name <span class="text-danger">*</span></label>
+                <input asp-for="SpotName" class="form-control bg-light border" required placeholder="e.g. Floating Market" />
             </div>
             
             <div class="col-md-6">
-                <label class="label-karnel">Address <span class="text-danger">*</span></label>
-                <input asp-for="Address" class="k-input" required placeholder="Enter exact address..." />
+                <label class="fw-bold text-dark mb-2">Address <span class="text-danger">*</span></label>
+                <input asp-for="Address" class="form-control bg-light border" required placeholder="Enter exact address..." />
             </div>
 
             <div class="col-12">
-                <label class="label-karnel">Overview Description</label>
-                <textarea asp-for="Description" class="k-input" rows="5" placeholder="Write an engaging description..."></textarea>
+                <label class="fw-bold text-dark mb-2">Overview Description</label>
+                <textarea asp-for="Description" class="form-control bg-light border" rows="5" placeholder="Write an engaging description..."></textarea>
             </div>
 
             <div class="col-md-6">
                 <div class="p-4 border rounded-4 bg-light h-100">
-                    <label class="label-karnel text-primary"><i class="bi bi-card-image me-1"></i>Cover Image <span class="text-danger">*</span></label>
+                    <label class="fw-bold text-primary mb-2"><i class="bi bi-card-image me-1"></i>Cover Image <span class="text-danger">*</span></label>
                     <p class="small text-muted mb-3">Select the main thumbnail for this spot.</p>
                     
                     <input type="file" name="CoverFile" id="coverInput" class="form-control" accept="image/*" required onchange="previewCover(event)" />
                     
                     <div id="coverPreviewContainer" class="mt-4 text-center d-none">
-                        <div class="preview-box">
-                            <button type="button" class="btn-remove-preview" onclick="removeCover()">
-                                <i class="bi bi-x"></i>
-                            </button>
-                            <img id="coverPreview" class="img-fluid rounded-3 shadow-sm border" style="max-height: 180px; object-fit: cover; width: 100%;" />
+                        <div class="preview-box w-100">
+                            <button type="button" class="btn-remove-preview" onclick="removeCover()"><i class="bi bi-x"></i></button>
+                            <img id="coverPreview" class="img-fluid rounded-3 shadow-sm border w-100" style="max-height: 180px; object-fit: cover;" />
                         </div>
                     </div>
                 </div>
@@ -61,7 +57,7 @@
 
             <div class="col-md-6">
                 <div class="p-4 border rounded-4 bg-light h-100">
-                    <label class="label-karnel text-success"><i class="bi bi-images me-1"></i>Photo Gallery</label>
+                    <label class="fw-bold text-success mb-2"><i class="bi bi-images me-1"></i>Photo Gallery</label>
                     <p class="small text-muted mb-3">Add as many photos as you want. You can select single photos multiple times or select many at once.</p>
                     
                     <input type="file" id="galleryInput" class="form-control" accept="image/*" multiple onchange="previewGallery(event)" />
@@ -71,7 +67,7 @@
             </div>
 
             <div class="col-12 mt-5 text-end border-top pt-4">
-                <button type="submit" class="k-btn-primary px-5 py-3"><i class="bi bi-save me-2"></i> Save Destination & Add Captions</button>
+                <button type="submit" class="btn btn-primary px-5 py-3 fw-bold rounded-3"><i class="bi bi-save me-2"></i> Save Destination & Add Captions</button>
             </div>
         </div>
     </form>
@@ -79,9 +75,6 @@
 
 @section Scripts {
     <script>
-        // =======================================================
-        // 1. XỬ LÝ ẢNH BÌA (COVER)
-        // =======================================================
         function previewCover(event) {
             const file = event.target.files[0];
             if (file) {
@@ -100,22 +93,13 @@
             document.getElementById('coverPreview').src = '';
         }
 
-        // =======================================================
-        // 2. XỬ LÝ THƯ VIỆN ẢNH (GALLERY)
-        // =======================================================
         let selectedGalleryFiles = [];
-
         function previewGallery(event) {
             const files = event.target.files;
-            
             if (files && files.length > 0) {
-                // Thêm các file mới chọn vào mảng (Cộng dồn)
-                Array.from(files).forEach(file => {
-                    selectedGalleryFiles.push(file);
-                });
-                
+                Array.from(files).forEach(file => { selectedGalleryFiles.push(file); });
                 renderGalleryPreview();
-                updateGalleryInput(); // Gọi hàm đồng bộ
+                updateGalleryInput(); 
             }
         }
 
@@ -154,28 +138,15 @@
         }
 
         function removeGalleryFile(indexToRemove) {
-            // Xóa file khỏi mảng
             selectedGalleryFiles.splice(indexToRemove, 1);
             renderGalleryPreview();
-            updateGalleryInput(); // Gọi hàm đồng bộ lại sau khi xóa
+            updateGalleryInput(); 
         }
 
-        // =======================================================
-        // 3. HÀM ĐỒNG BỘ DỮ LIỆU (PHÉP THUẬT NẰM Ở ĐÂY)
-        // =======================================================
         function updateGalleryInput() {
-            // Dùng DataTransfer để tạo ra một danh sách file ảo
             const dataTransfer = new DataTransfer();
-            
-            // Nhét toàn bộ ảnh trong mảng vào danh sách ảo này
-            selectedGalleryFiles.forEach(file => {
-                dataTransfer.items.add(file);
-            });
-            
-            // Gán danh sách ảo ngược lại vào thẻ <input>
-            // Trình duyệt sẽ tự động cập nhật chữ thành "3 files" và tự động gửi file đi khi ấn Submit!
+            selectedGalleryFiles.forEach(file => { dataTransfer.items.add(file); });
             document.getElementById('galleryInput').files = dataTransfer.files;
         }
-
     </script>
 }

@@ -1,20 +1,28 @@
 @model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Order>
-@{
-    ViewData["Title"] = "Ticket Bookings";
-
+@{ 
+    ViewData["Title"] = "Ticket Booking Management";
     int totalCount = Model?.Count() ?? 0;
     bool isDescending = ViewData["CurrentSort"]?.ToString() == "id_desc";
     int displayIndex = isDescending ? totalCount : 1;
 }
 
-<div class="k-card">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <form asp-action="Index" method="get" class="d-flex w-50 gap-2">
-            <input type="text" name="searchString" value="@ViewData["CurrentSearch"]" class="k-input m-0" placeholder="Customer name or phone...">
-            <input type="date" name="travelDate" value="@ViewData["CurrentDate"]" class="k-input m-0" style="max-width: 160px;" />
-            <button type="submit" class="btn btn-primary px-4 fw-bold rounded-3"><i class="bi bi-search"></i></button>
+<style>
+    .action-btn { width: 32px; height: 32px; padding: 0; line-height: 30px; display: inline-flex; align-items: center; justify-content: center; }
+</style>
+
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3">
+        <form asp-action="Index" method="get" class="d-flex gap-2">
+            <input type="text" name="searchString" value="@ViewData["CurrentSearch"]" class="form-control bg-light border" style="min-width: 250px; border-radius: 0.5rem;" placeholder="Customer name or phone...">
+            <div class="input-group" style="max-width: 200px;">
+                <input type="date" name="travelDate" value="@ViewData["CurrentDate"]" class="form-control bg-light border" style="border-radius: 0.5rem;">
+            </div>
+            <button type="submit" class="btn btn-primary" style="border-radius: 0.5rem; width: 45px;"><i class="bi bi-search"></i></button>
+            @if (!string.IsNullOrEmpty(ViewData["CurrentSearch"]?.ToString()) || !string.IsNullOrEmpty(ViewData["CurrentDate"]?.ToString())) {
+                <a asp-action="Index" class="btn btn-light border text-muted" style="border-radius: 0.5rem;">Clear</a>
+            }
         </form>
-        <a asp-action="Create" class="k-btn-primary"><i class="bi bi-plus-lg me-2"></i> Walk-in Booking</a>
+        <a asp-action="Create" class="btn btn-primary fw-bold px-4" style="border-radius: 0.5rem;"><i class="bi bi-plus-lg me-2"></i> Walk-in Booking</a>
     </div>
 
     @if (TempData["SuccessMessage"] != null) {
@@ -22,76 +30,83 @@
     }
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light text-muted small text-uppercase">
+        <table class="table align-middle table-hover table-borderless">
+            <thead class="border-bottom text-dark small fw-bold text-uppercase">
                 <tr>
                     <th style="width: 5%; text-align: center;">
-                        <a asp-action="Index"
-                           asp-route-sortOrder="@ViewData["IdSortParm"]"
-                           asp-route-searchString="@ViewData["CurrentSearch"]"
-                           asp-route-travelDate="@ViewData["CurrentDate"]"
-                           class="text-decoration-none text-dark d-flex justify-content-center align-items-center"
-                           title="Click to sort">
-                            <i class="bi bi-arrow-down-up fs-5 fw-bold text-dark"></i>
-                        </a>
+                        <a asp-action="Index" asp-route-sortOrder="@ViewData["IdSortParm"]" class="text-dark text-decoration-none"><i class="bi bi-arrow-down-up"></i></a>
                     </th>
-                    <th>Customer</th>
-                    <th>Route Info</th>
-                    <th>Date & Time</th>
-                    <th>Total</th>
-                    <th class="text-center">Status</th>
-                    <th class="text-end">Actions</th>
+                    <th style="width: 15%;">CUSTOMER</th>
+                    <th style="width: 20%;">ROUTE</th>
+                    <th style="width: 15%;">TRANSPORT</th>
+                    <th style="width: 12%;">DATE & TIME</th>
+                    <th style="width: 8%; text-align: center;">SEATS</th>
+                    <th style="width: 10%;">TOTAL</th>
+                    <th style="width: 5%;">STATUS</th>
+                    <th style="width: 10%; text-align: center;">ACTIONS</th>
                 </tr>
             </thead>
             <tbody>
                 @if (Model != null && Model.Any()) {
                     foreach (var order in Model) {
-                        var firstTicket = order.OrderDetails?.FirstOrDefault(od => od.TicketBooking != null)?.TicketBooking;
-                        if (firstTicket == null) continue;
+                        var firstTicketDetail = order.OrderDetails?.FirstOrDefault(od => od.TicketBooking != null);
+                        var transport = firstTicketDetail?.TicketBooking?.Transportation;
+                        int seatCount = order.OrderDetails?.Count(od => od.TicketBooking != null) ?? 0;
 
-                        var seats = string.Join(", ", order.OrderDetails!.Where(od => od.TicketBooking != null).Select(od => od.TicketBooking!.Seat));
-                        <tr>
+                        if (transport == null) continue;
+
+                        <tr class="border-bottom">
                             <td class="fw-bold text-secondary fs-6 text-center">@displayIndex</td>
                             <td>
-                                <strong class="text-dark d-block">@(order.Account?.FullName ?? "Unknown")</strong>
-                                <small class="text-muted"><i class="bi bi-telephone text-primary me-1"></i>@(order.Account?.PhoneNumber ?? "N/A")</small>
+                                <div class="fw-bold text-dark mb-1">@order.Account?.FullName</div>
+                                <div class="small fw-bold text-primary"><i class="bi bi-telephone text-primary me-1"></i>@order.Account?.PhoneNumber</div>
                             </td>
                             <td>
-                                <span class="badge bg-primary bg-opacity-10 text-primary px-2 py-1 mb-1 border border-primary border-opacity-25">Seats: @seats</span>
-                                <div class="text-dark fw-bold small">@firstTicket.Transportation?.TransportName</div>
+                                <div class="fw-bold text-dark text-truncate" style="max-width: 180px;">@transport.FromBranch?.BranchName</div>
+                                <div class="small text-muted mt-1"><i class="bi bi-arrow-return-right me-1"></i>@transport.ToSpot?.SpotName</div>
                             </td>
                             <td>
-                                <div class="text-danger fw-bold"><i class="bi bi-calendar-event me-1"></i>@(firstTicket.TravelDate.HasValue ? firstTicket.TravelDate.Value.ToString("dd/MM/yyyy") : "N/A")</div>
-                                <div class="text-muted small">@firstTicket.Transportation?.DepartureTime?.ToString("HH:mm")</div>
+                                <span class="badge bg-light text-dark border px-2 py-1 text-truncate" style="max-width: 130px;" title="@transport.TransportName">@transport.TransportName</span>
                             </td>
-                            <td class="fw-bold text-success fs-6">$@order.TotalAmount?.ToString("N0")</td>
+                            <td>
+                                <div class="fw-bold text-dark small">@(firstTicketDetail?.TicketBooking?.TravelDate?.ToString("dd/MM/yyyy") ?? "N/A")</div>
+                                <div class="small fw-bold text-danger mt-1"><i class="bi bi-clock me-1"></i>@(transport.DepartureTime?.ToString("HH:mm") ?? "N/A")</div>
+                            </td>
                             <td class="text-center">
-                                @if (order.Status == "Confirmed") { <span class="badge bg-success">Confirmed</span> }
-                                else if (order.Status == "Canceled") { <span class="badge bg-danger">Canceled</span> }
-                                else { <span class="badge bg-warning text-dark">Pending</span> }
+                                <div class="fw-bold text-primary"><i class="bi bi-person-fill me-1"></i>@seatCount</div>
                             </td>
-                            <td class="text-end">
-                                <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-light text-info fw-bold" title="View Details"><i class="bi bi-eye"></i></a>
-                                
-                                @if (order.Status == "Pending") {
-                                    <form asp-action="ConfirmBooking" method="post" class="d-inline">
-                                        <input type="hidden" name="orderId" value="@order.OrderId" />
-                                        <button type="submit" class="btn btn-sm btn-light text-success fw-bold mx-1" title="Confirm Booking"><i class="bi bi-check-lg"></i></button>
-                                    </form>
-                                }
-                                @if (order.Status != "Canceled") {
-                                    <form asp-action="CancelOrder" method="post" class="d-inline" onsubmit="return confirm('Canceling this order will release the seats. Are you sure?');">
-                                        <input type="hidden" name="orderId" value="@order.OrderId" />
-                                        <button type="submit" class="btn btn-sm btn-light text-danger fw-bold" title="Cancel Booking"><i class="bi bi-x-circle"></i></button>
-                                    </form>
-                                }
+                            <td>
+                                <div class="fw-bold text-success">$@((order.TotalAmount ?? 0).ToString("0.##"))</div>
+                            </td>
+                            <td>
+                                @if(order.Status == "Confirmed") { <span class="badge bg-success rounded-pill px-3 py-2">Confirmed</span> }
+                                else if(order.Status == "Canceled") { <span class="badge bg-danger rounded-pill px-3 py-2">Canceled</span> }
+                                else { <span class="badge bg-warning text-dark rounded-pill px-3 py-2">Pending</span> }
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-outline-info rounded-circle action-btn" title="View Details"><i class="bi bi-eye"></i></a>
+                                    
+                                    @if (order.Status == "Pending") {
+                                        <form asp-action="ConfirmBooking" method="post" class="d-inline" onsubmit="return confirm('Confirm this booking?');">
+                                            <input type="hidden" name="orderId" value="@order.OrderId" />
+                                            <button type="submit" class="btn btn-outline-success rounded-circle action-btn" title="Confirm Booking"><i class="bi bi-check-lg"></i></button>
+                                        </form>
+                                    }
+
+                                    @if (order.Status == "Pending" || order.Status == "Confirmed") {
+                                        <form asp-action="CancelOrder" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this booking? Seats will be released.');">
+                                            <input type="hidden" name="orderId" value="@order.OrderId" />
+                                            <button type="submit" class="btn btn-outline-danger rounded-circle action-btn" title="Cancel Booking"><i class="bi bi-x-lg"></i></button>
+                                        </form>
+                                    }
+                                </div>
                             </td>
                         </tr>
-                        
                         if (isDescending) { displayIndex--; } else { displayIndex++; }
                     }
                 } else {
-                    <tr><td colspan="7" class="text-center py-5 text-muted fw-bold">No bookings found.</td></tr>
+                    <tr><td colspan="9" class="text-center py-5 text-muted fw-bold">No ticket bookings found.</td></tr>
                 }
             </tbody>
         </table>

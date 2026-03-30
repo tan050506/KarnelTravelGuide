@@ -1,9 +1,5 @@
-@using KarnelTravelGuide.Web.Models.Entities
-@model Restaurant
-@{ 
-    ViewData["Title"] = "Add New Restaurant"; 
-    var spotsList = ViewBag.TouristSpots as IEnumerable<TouristSpot> ?? new List<TouristSpot>();
-}
+@model KarnelTravelGuide.Web.Models.Entities.Restaurant
+@{ ViewData["Title"] = "Add New Restaurant"; }
 
 <style>
     .preview-box { position: relative; display: inline-block; }
@@ -15,81 +11,68 @@
     .dropdown-item-custom:hover { background-color: #f8f9fa; }
 </style>
 
-<div class="k-card mx-auto" style="max-width: 900px;">
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 1000px;">
     <div class="d-flex align-items-center border-bottom pb-3 mb-4">
-        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
         <h4 class="fw-bold m-0 text-dark">Add New Restaurant</h4>
     </div>
 
     <form asp-action="Create" method="post" enctype="multipart/form-data" id="resForm">
         <div class="row g-4">
             <div class="col-md-6">
-                <label class="label-karnel">Restaurant Name <span class="text-danger">*</span></label>
-                <input asp-for="RestaurantName" class="k-input" placeholder="e.g. The Grand Buffet..." required />
+                <label class="fw-bold text-dark mb-2">Restaurant Name <span class="text-danger">*</span></label>
+                <input asp-for="RestaurantName" class="form-control bg-light border" placeholder="e.g. The Grand Buffet..." required />
             </div>
             
             <div class="col-md-6 position-relative">
-                <label class="label-karnel">Tourist Spot (Location) <span class="text-danger">*</span></label>
+                <label class="fw-bold text-dark mb-2">Tourist Spot (Location) <span class="text-danger">*</span></label>
                 <div class="position-relative">
-                    <input type="text" id="spotSearchInput" class="k-input mb-1" placeholder="Type spot name or address..." autocomplete="off" required>
+                    <input type="text" id="spotSearchInput" class="form-control bg-light border mb-1" placeholder="Type spot name or address..." autocomplete="off" required>
                     <input type="hidden" asp-for="SpotId" id="hiddenSpotId" />
                     <div id="spotDropdown" class="custom-dropdown-menu k-card shadow-lg p-0 border"></div>
                 </div>
-                <small id="spotAddressText" class="text-danger mt-1 d-block"><i class="bi bi-geo-alt me-1"></i>Please select a tourist spot...</small>
+                <small class="text-danger d-block mt-1" id="spotAddressText"><i class="bi bi-geo-alt"></i> Please select a tourist spot...</small>
+            </div>
+
+            <div class="col-12 mt-2">
+                <label class="fw-bold text-dark mb-2">Exact Address <span class="text-danger">*</span></label>
+                <input asp-for="Address" class="form-control bg-light border" placeholder="Enter exact address..." required />
             </div>
 
             <div class="col-12 mt-4">
                 <div class="p-4 border rounded-4 bg-light">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-ui-checks-grid text-primary me-2"></i>Manage Table Types</h6>
-                        <button type="button" class="btn btn-primary btn-sm fw-bold px-3" onclick="addTableRow()"><i class="bi bi-plus-lg me-1"></i> Add Table Type</button>
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                        <h5 class="fw-bold text-dark m-0"><i class="bi bi-ui-checks-grid text-primary me-2"></i>Manage Table Types</h5>
+                        <button type="button" class="btn btn-sm btn-primary fw-bold" onclick="addTableRow()"><i class="bi bi-plus-lg me-1"></i> Add Table Type</button>
                     </div>
                     
-                    <div class="table-responsive bg-white border rounded-3">
-                        <table class="table table-borderless align-middle mb-0" id="tableConfigTable">
+                    <div class="table-responsive">
+                        <table class="table table-borderless align-middle mb-0">
                             <thead class="border-bottom bg-light small text-uppercase text-muted fw-bold">
                                 <tr>
-                                    <th class="ps-3">Table Type Name</th>
-                                    <th style="width: 25%;">Price / Table ($)</th>
-                                    <th style="width: 20%;">Quantity</th>
-                                    <th style="width: 70px;" class="text-center">Action</th>
+                                    <th style="width: 40%">Table Type Name</th>
+                                    <th style="width: 25%">Price / Table ($)</th>
+                                    <th style="width: 25%">Quantity</th>
+                                    <th style="width: 10%" class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
-                                <tr>
-                                    <td class="ps-3 py-3">
-                                        <select name="TableTypes" class="form-select border-secondary bg-light" required>
-                                            <option value="Standard">Standard</option>
-                                            <option value="VIP">VIP</option>
-                                            <option value="Private">Private</option>
-                                            <option value="Outdoor">Outdoor</option>
-                                        </select>
-                                    </td>
-                                    <td class="py-3"><input type="number" name="Prices" class="form-control border-secondary bg-light" step="any" min="0" required /></td>
-                                    <td class="py-3"><input type="number" name="Quantities" class="form-control border-secondary bg-light" min="1" required /></td>
-                                    <td class="text-center py-3"><button type="button" class="btn btn-danger btn-sm rounded-3" onclick="removeTableRow(this)"><i class="bi bi-trash"></i></button></td>
-                                </tr>
-                            </tbody>
+                                </tbody>
                         </table>
+                        <small class="text-danger mt-2 fw-bold d-none" id="tableErrorMsg"><i class="bi bi-exclamation-triangle-fill me-1"></i> Error: Price must be $1 - $1,000,000,000. Quantity must be 1 - 100.</small>
                     </div>
-                    <small class="text-danger mt-2 d-block fst-italic">* You must add at least 1 table type.</small>
                 </div>
             </div>
 
-            <div class="col-md-12 mt-4">
-                <label class="label-karnel">Exact Address</label>
-                <input asp-for="Address" class="k-input" placeholder="Enter exact address..." />
-            </div>
-
             <div class="col-12">
-                <label class="label-karnel">Overview Description</label>
-                <textarea asp-for="Description" class="k-input" rows="4"></textarea>
+                <label class="fw-bold text-dark mb-2">Overview Description</label>
+                <textarea asp-for="Description" class="form-control bg-light border" rows="3"></textarea>
             </div>
 
             <div class="col-12">
                 <div class="p-4 border rounded-4 bg-light text-center">
-                    <label class="label-karnel d-block text-start mb-3"><i class="bi bi-image me-1"></i>Cover Image</label>
-                    <input type="file" name="imageFile" id="imageInput" class="form-control w-50 mx-auto" accept="image/*" onchange="previewImage(event)" />
+                    <label class="fw-bold text-primary d-block text-start mb-3"><i class="bi bi-image me-1"></i>Cover Image <span class="text-danger">*</span></label>
+                    <input type="file" name="imageFile" id="imageInput" class="form-control w-50 mx-auto bg-white" accept="image/*" required onchange="previewImage(event)" />
                     
                     <div id="previewContainer" class="mt-4 d-none">
                         <div class="preview-box">
@@ -101,7 +84,7 @@
             </div>
 
             <div class="col-12 mt-5 text-end border-top pt-4">
-                <button type="submit" class="k-btn-primary px-5 py-3"><i class="bi bi-save me-2"></i> Save Restaurant</button>
+                <button type="submit" class="btn btn-primary px-5 py-3 fw-bold rounded-3"><i class="bi bi-save me-2"></i> Save Restaurant</button>
             </div>
         </div>
     </form>
@@ -109,85 +92,100 @@
 
 @section Scripts {
     <script>
+        const MAX_TABLES = 10;
+
         function addTableRow() {
             const tbody = document.getElementById('tableBody');
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td class="ps-3 py-3">
-                    <select name="TableTypes" class="form-select border-secondary bg-light" required>
+            if (tbody.children.length >= MAX_TABLES) {
+                alert("You can only add a maximum of " + MAX_TABLES + " table types.");
+                return;
+            }
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="py-3">
+                    <select name="TableTypes" class="form-select bg-white border" required>
                         <option value="Standard">Standard</option>
                         <option value="VIP">VIP</option>
                         <option value="Private">Private</option>
                         <option value="Outdoor">Outdoor</option>
                     </select>
                 </td>
-                <td class="py-3"><input type="number" name="Prices" class="form-control border-secondary bg-light" step="any" min="0" required /></td>
-                <td class="py-3"><input type="number" name="Quantities" class="form-control border-secondary bg-light" min="1" required /></td>
-                <td class="text-center py-3"><button type="button" class="btn btn-danger btn-sm rounded-3" onclick="removeTableRow(this)"><i class="bi bi-trash"></i></button></td>
+                <td class="py-3">
+                    <input type="number" name="Prices" class="form-control bg-white border" min="1" max="1000000000" step="any" placeholder="e.g. 50" required />
+                </td>
+                <td class="py-3">
+                    <input type="number" name="Quantities" class="form-control bg-white border" min="1" max="100" placeholder="e.g. 10" required />
+                </td>
+                <td class="text-center py-3">
+                    <button type="button" class="btn btn-sm btn-danger fw-bold rounded-3" onclick="removeTableRow(this)"><i class="bi bi-trash"></i></button>
+                </td>
             `;
-            tbody.appendChild(row);
+            tbody.appendChild(tr);
         }
 
         function removeTableRow(btn) {
-            const tbody = document.getElementById('tableBody');
-            if (tbody.children.length > 1) {
-                btn.closest('tr').remove();
-            } else {
-                alert("You must have at least one table type!");
-            }
+            btn.closest('tr').remove();
+            validateTableInputs();
         }
+
+        function validateTableInputs() {
+            let isValid = true;
+            
+            document.querySelectorAll('input[name="Prices"]').forEach(inp => {
+                let val = parseFloat(inp.value);
+                if (inp.value !== "" && (isNaN(val) || val < 1 || val > 1000000000)) { 
+                    inp.classList.add('border-danger'); isValid = false; 
+                } else { inp.classList.remove('border-danger'); }
+            });
+
+            document.querySelectorAll('input[name="Quantities"]').forEach(inp => {
+                let val = parseInt(inp.value);
+                if (inp.value !== "" && (isNaN(val) || val < 1 || val > 100)) { 
+                    inp.classList.add('border-danger'); isValid = false; 
+                } else { inp.classList.remove('border-danger'); }
+            });
+
+            const errorMsg = document.getElementById('tableErrorMsg');
+            if (!isValid) { errorMsg.classList.remove('d-none'); } else { errorMsg.classList.add('d-none'); }
+            
+            return isValid;
+        }
+
+        document.getElementById('tableBody').addEventListener('input', validateTableInputs);
+
+        window.onload = function() { addTableRow(); }
 
         function previewImage(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('imagePreview').src = e.target.result;
-                    document.getElementById('previewContainer').classList.remove('d-none');
-                }
+                reader.onload = function(e) { document.getElementById('imagePreview').src = e.target.result; document.getElementById('previewContainer').classList.remove('d-none'); }
                 reader.readAsDataURL(file);
             }
         }
-        function removeImage() {
-            document.getElementById('imageInput').value = '';
-            document.getElementById('previewContainer').classList.add('d-none');
-            document.getElementById('imagePreview').src = '';
-        }
+        function removeImage() { document.getElementById('imageInput').value = ''; document.getElementById('previewContainer').classList.add('d-none'); document.getElementById('imagePreview').src = ''; }
 
-        // ĐÃ BỔ SUNG ADDRESS VÀO MẢNG DỮ LIỆU
-        const spotsData = [ 
-            @foreach(var s in spotsList) { 
-                var safeAddr = string.IsNullOrEmpty(s.Address) ? "No address available" : s.Address.Replace("\"", "\\\"").Replace("\n", " ").Replace("\r", "");
-                <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)", address: "@Html.Raw(safeAddr)" },</text> 
-            } 
-        ];
-
-        const spotInput = document.getElementById('spotSearchInput'); 
-        const spotDropdown = document.getElementById('spotDropdown'); 
-        const hiddenSpotId = document.getElementById('hiddenSpotId');
-        const spotAddressText = document.getElementById('spotAddressText'); // Biến hiển thị địa chỉ
+        const spotsData = [ @foreach(var s in ViewBag.TouristSpots) { <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)", address: "@Html.Raw(s.Address)" },</text> } ];
+        const spotInput = document.getElementById('spotSearchInput'); const spotDropdown = document.getElementById('spotDropdown'); const hiddenSpotId = document.getElementById('hiddenSpotId'); const spotAddressText = document.getElementById('spotAddressText');
 
         function renderSpotDropdown(filterText = "") {
             spotDropdown.innerHTML = '';
             const lowerFilter = filterText.toLowerCase();
-            const filtered = spotsData.filter(s => s.name.toLowerCase().includes(lowerFilter));
+            const filtered = spotsData.filter(s => (s.name && s.name.toLowerCase().includes(lowerFilter)) || (s.address && s.address.toLowerCase().includes(lowerFilter)));
 
-            if (filtered.length === 0) {
-                spotDropdown.innerHTML += '<div class="p-3 text-muted small fst-italic">No spots found.</div>';
-            } else {
+            if (filtered.length === 0) { spotDropdown.innerHTML += '<div class="p-3 text-muted small fst-italic">No spots found.</div>'; } 
+            else {
                 filtered.forEach(s => {
                     const item = document.createElement('div');
-                    item.className = 'dropdown-item-custom p-3 border-bottom fw-bold text-dark';
-                    item.innerText = s.name;
+                    item.className = 'dropdown-item-custom p-3 border-bottom';
+                    item.innerHTML = `<div class="fw-bold text-dark fs-6 mb-1">${s.name}</div><div class="small text-muted"><i class="bi bi-geo-alt text-danger me-1"></i> ${s.address || 'N/A'}</div>`;
                     item.onclick = function() { 
-                        hiddenSpotId.value = s.id; 
-                        spotInput.value = s.name; 
-                        
-                        // Đổi text và màu khi chọn thành công
-                        spotAddressText.innerHTML = '<i class="bi bi-geo-alt me-1"></i>' + s.address;
+                        hiddenSpotId.value = s.id; spotInput.value = s.name; 
+                        spotAddressText.innerHTML = `<i class="bi bi-geo-alt me-1"></i>${s.address || 'Address not available'}`;
                         spotAddressText.classList.replace('text-danger', 'text-muted');
-
                         spotDropdown.classList.remove('show'); 
+                        spotInput.classList.remove('border-danger');
                     };
                     spotDropdown.appendChild(item);
                 });
@@ -196,24 +194,16 @@
         }
 
         spotInput.addEventListener('input', function() { 
-            hiddenSpotId.value = ''; 
-            
-            // Trả về text cảnh báo đỏ khi xóa hoặc sửa chữ
-            spotAddressText.innerHTML = '<i class="bi bi-geo-alt me-1"></i>Please select a tourist spot...';
-            spotAddressText.classList.replace('text-muted', 'text-danger');
-
+            hiddenSpotId.value = ''; spotAddressText.innerHTML = '<i class="bi bi-geo-alt"></i> Please select a tourist spot...'; spotAddressText.classList.replace('text-muted', 'text-danger');
             renderSpotDropdown(this.value); 
         });
-        
         spotInput.addEventListener('focus', function() { renderSpotDropdown(this.value); });
         document.addEventListener('click', function(e) { if (!spotInput.contains(e.target) && !spotDropdown.contains(e.target)) spotDropdown.classList.remove('show'); });
 
         document.getElementById('resForm').addEventListener('submit', function(e) {
-            if (!hiddenSpotId.value) {
-                e.preventDefault();
-                alert("Please select a Tourist Spot from the dropdown list!");
-                spotInput.focus();
-            }
+            if (!hiddenSpotId.value) { e.preventDefault(); alert("Please select a Tourist Spot!"); spotInput.classList.add('border-danger'); spotInput.focus(); return; }
+            if (document.getElementById('tableBody').children.length === 0) { e.preventDefault(); alert("You must add at least 1 table type!"); return; }
+            if (!validateTableInputs()) { e.preventDefault(); alert("Please fix the red highlighted errors before saving!"); }
         });
     </script>
 }

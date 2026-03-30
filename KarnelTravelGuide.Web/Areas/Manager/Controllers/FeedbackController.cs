@@ -1,7 +1,7 @@
-using KarnelTravelGuide.Web.Data;
-using KarnelTravelGuide.Web.Models.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using KarnelTravelGuide.Web.Data;
+using KarnelTravelGuide.Web.Models.Entities;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,83 +17,62 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context = context;
         }
 
-        // GET: /Manager/Feedback/Index
-        public async Task<IActionResult> Index()
+        // 1. INDEX: Hiển thị và lọc danh sách đánh giá
+        public async Task<IActionResult> Index(string searchString, string serviceType)
         {
-            var feedbacks = await _context.Feedbacks
+            ViewData["CurrentSearch"] = searchString;
+            ViewData["CurrentType"] = serviceType;
+
+            var query = _context.Feedbacks
                 .Include(f => f.Account)
                 .Include(f => f.Stay)
                 .Include(f => f.Restaurant)
-                .OrderByDescending(f => f.FeedbackId)
-                .ToListAsync();
+                .AsQueryable();
 
-            return View(feedbacks);
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(f =>
+                    (f.Account != null && f.Account.FullName != null && f.Account.FullName.Contains(searchString)) ||
+                    (f.Message != null && f.Message.Contains(searchString)));
+            }
+
+            if (!string.IsNullOrEmpty(serviceType))
+            {
+                if (serviceType == "Stay") query = query.Where(f => f.StayId != null);
+                else if (serviceType == "Restaurant") query = query.Where(f => f.RestaurantId != null);
+            }
+
+            // Vì Database không có CreatedDate, ta sắp xếp theo ID để tin mới nhất lên đầu
+            query = query.OrderByDescending(f => f.FeedbackId);
+
+            return View(await query.ToListAsync());
         }
 
-        // GET: /Manager/Feedback/Reply/5
-        public async Task<IActionResult> Reply(int? id)
+        // 2. DETAILS: Xem chi tiết nội dung đánh giá
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null) return NotFound();
-
             var feedback = await _context.Feedbacks
                 .Include(f => f.Account)
                 .Include(f => f.Stay)
                 .Include(f => f.Restaurant)
-                .FirstOrDefaultAsync(m => m.FeedbackId == id);
+                .FirstOrDefaultAsync(f => f.FeedbackId == id);
 
             if (feedback == null) return NotFound();
-
             return View(feedback);
         }
 
-        // POST: /Manager/Feedback/Reply/5
+        // 3. DELETE: Xóa các đánh giá vi phạm tiêu chuẩn cộng đồng
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Reply(int id, [Bind("FeedbackId,ReplyMessage")] Feedback feedbackUpdates)
-        {
-            if (id != feedbackUpdates.FeedbackId) return NotFound();
-
-            var feedback = await _context.Feedbacks.FindAsync(id);
-            if (feedback == null) return NotFound();
-
-            feedback.ReplyMessage = feedbackUpdates.ReplyMessage;
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(feedback);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!FeedbackExists(feedback.FeedbackId)) return NotFound();
-                    else throw;
-                }
-                TempData["SuccessMessage"] = "Phản hồi đã được gửi thành công!";
-                return RedirectToAction(nameof(Index));
-            }
-            return View(feedback);
-        }
-
-        // POST: /Manager/Feedback/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var feedback = await _context.Feedbacks.FindAsync(id);
             if (feedback != null)
             {
                 _context.Feedbacks.Remove(feedback);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Đã xóa đánh giá thành công!";
+                TempData["SuccessMessage"] = "Feedback deleted successfully!";
             }
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool FeedbackExists(int id)
-        {
-            return _context.Feedbacks.Any(e => e.FeedbackId == id);
         }
     }
 }

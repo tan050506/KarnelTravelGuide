@@ -17,7 +17,7 @@
 <div class="container py-4" style="max-width: 900px;">
     
     <div class="d-flex align-items-center mb-4">
-        <a asp-action="Create" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <a asp-action="Create" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
         <h3 class="fw-bold mb-0 text-dark">@Model.RestaurantName</h3>
     </div>
 
@@ -37,15 +37,15 @@
         <input type="hidden" name="TableId" id="selectedTableId" required />
         <input type="hidden" name="NumberOfTables" id="selectedQty" required />
 
-        <div class="k-card text-center mb-0">
-            <div class="row bg-light p-3 rounded-4 mb-4 g-3 border">
+        <div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mb-0 text-center">
+            <div class="row bg-light p-3 rounded-4 mb-4 g-3 border align-items-center">
                 <div class="col-6 border-end">
                     <small class="text-muted fw-bold d-block text-uppercase">Date</small>
-                    <strong class="fs-5 text-dark">@ViewBag.ResDate</strong>
+                    <strong class="fs-5 text-dark"><i class="bi bi-calendar-event me-1"></i>@ViewBag.ResDate</strong>
                 </div>
                 <div class="col-6">
                     <small class="text-muted fw-bold d-block text-uppercase">Time</small>
-                    <strong class="fs-5 text-primary">@ViewBag.ResTime</strong>
+                    <strong class="fs-5 text-danger"><i class="bi bi-clock me-1"></i>@ViewBag.ResTime</strong>
                 </div>
             </div>
 
@@ -81,7 +81,7 @@
                                     }
                                 </div>
                                 <div class="text-end pe-5">
-                                    <h4 class="fw-bold text-primary mb-0">$@((table.PriceRes ?? 0).ToString("N0"))</h4>
+                                    <h4 class="fw-bold text-primary mb-0">$@((table.PriceRes ?? 0).ToString("0.##"))</h4>
                                     <small class="text-muted">/ table</small>
                                 </div>
                             </div>
@@ -111,7 +111,7 @@
                     <span class="fs-3 fw-bold text-primary lh-1" id="priceLabel">$0</span>
                 </div>
                 <div class="col-md-3 text-end pe-0 ps-4">
-                    <button type="submit" class="k-btn-primary py-3 w-100" id="submitBtn" disabled>Create Order</button>
+                    <button type="submit" class="btn btn-primary py-3 w-100 fw-bold rounded-3" id="submitBtn" disabled>Create Order</button>
                 </div>
             </div>
         </div>
@@ -164,7 +164,7 @@
 
         function calcTotal() {
             let total = currentPrice * currentQty;
-            document.getElementById("priceLabel").innerText = "$" + total.toLocaleString('en-US');
+            document.getElementById("priceLabel").innerText = "$" + total.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
         }
 
         document.getElementById("checkoutForm").addEventListener("submit", function() {

@@ -1,7 +1,6 @@
 @using KarnelTravelGuide.Web.Models.Entities
 @{ 
     ViewData["Title"] = "Find & Book Rooms"; 
-    
     var staysList = ViewBag.Stays as IEnumerable<Stay> ?? new List<Stay>();
     var customersList = ViewBag.Customers as IEnumerable<Account> ?? new List<Account>();
     var spotsList = ViewBag.Spots as IEnumerable<TouristSpot> ?? new List<TouristSpot>();
@@ -19,7 +18,7 @@
 <div class="container py-4" style="max-width: 900px;">
     
     <div class="d-flex align-items-center mb-4">
-        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
         <h3 class="fw-bold mb-0 text-dark">Find & Book Rooms</h3>
     </div>
 
@@ -29,7 +28,7 @@
 
     <form asp-action="SelectRoom" method="get" id="managerBookingForm">
         
-        <div class="k-card mb-4">
+        <div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mb-4">
             <h5 class="fw-bold text-dark mb-4 border-bottom pb-3"><i class="bi bi-person-badge text-primary me-2"></i>Customer Information</h5>
             
             <div class="d-flex gap-4 mb-4">
@@ -45,19 +44,20 @@
 
             <div id="walkInDiv" class="row g-3">
                 <div class="col-md-6">
-                    <label class="label-karnel">Full Name <span class="text-danger">*</span></label>
-                    <input type="text" name="WalkInName" id="inputWalkInName" class="k-input" placeholder="Enter customer name..." />
+                    <label class="fw-bold text-dark mb-2">Full Name <span class="text-danger">*</span></label>
+                    <input type="text" name="WalkInName" id="inputWalkInName" class="form-control bg-light border" placeholder="Enter customer name..." />
                 </div>
                 <div class="col-md-6">
-                    <label class="label-karnel">Phone Number <span class="text-danger">*</span></label>
-                    <input type="text" name="WalkInPhone" id="inputWalkInPhone" class="k-input" placeholder="Enter phone number..." />
+                    <label class="fw-bold text-dark mb-2">Phone Number (VN) <span class="text-danger">*</span></label>
+                    <input type="text" name="WalkInPhone" id="inputWalkInPhone" class="form-control bg-light border" placeholder="e.g. 0912345678" maxlength="10" />
+                    <small class="text-danger fw-bold d-none mt-1" id="phoneErrorMsg"><i class="bi bi-exclamation-triangle-fill me-1"></i> Invalid format. Must be 10 digits starting with 03, 05, 07, 08, or 09.</small>
                 </div>
             </div>
 
             <div id="memberSelectDiv" class="d-none position-relative">
-                <label class="label-karnel">Search Existing Account <span class="text-danger">*</span></label>
+                <label class="fw-bold text-dark mb-2">Search Existing Account <span class="text-danger">*</span></label>
                 <div class="position-relative" id="searchCustomerWrapper">
-                    <input type="text" id="customerSearchInput" class="k-input" placeholder="Type phone number or name to search..." autocomplete="off">
+                    <input type="text" id="customerSearchInput" class="form-control bg-light border" placeholder="Type phone number or name to search..." autocomplete="off">
                     <div id="customerDropdown" class="custom-dropdown-menu k-card shadow-lg p-0 border"></div>
                 </div>
                 <div id="selectedCustomerCard" class="d-none p-3 border border-primary rounded-3 bg-primary bg-opacity-10 position-relative mt-2">
@@ -75,46 +75,49 @@
             </div>
         </div>
 
-        <div class="k-card mb-4">
+        <div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mb-4">
             <h5 class="fw-bold text-dark mb-4 border-bottom pb-3"><i class="bi bi-search text-success me-2"></i>Search Stay</h5>
             
             <div class="row g-4">
                 <div class="col-md-12 position-relative">
-                    <label class="label-karnel">Destination (Tourist Spot)</label>
+                    <label class="fw-bold text-dark mb-2">Destination (Tourist Spot)</label>
                     <div class="position-relative">
-                        <input type="text" id="spotSearchInput" class="k-input bg-light" placeholder="Type destination name..." autocomplete="off">
+                        <input type="text" id="spotSearchInput" class="form-control bg-light border" placeholder="Type destination name..." autocomplete="off">
                         <input type="hidden" id="searchSpot" />
                         <div id="spotDropdown" class="custom-dropdown-menu k-card shadow-lg p-0 border"></div>
                     </div>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="label-karnel">Stay Type</label>
-                    <select id="searchStayType" class="k-input bg-light">
+                    <label class="fw-bold text-dark mb-2">Stay Type</label>
+                    <select id="searchStayType" class="form-select bg-light border">
                         <option value="">All Types</option>
                         <option value="Hotel">🏢 Hotel</option>
                         <option value="Resort">🏖️ Resort</option>
                     </select>
                 </div>
+               
                 <div class="col-md-6">
-                    <label class="label-karnel">Room Type</label>
-                    <select id="searchRoomType" class="k-input bg-light">
+                    <label class="fw-bold text-dark mb-2">Room Type</label>
+                    <select id="searchRoomType" class="form-select bg-light border">
                         <option value="">All Room Types</option>
                         <option value="Standard">Standard</option>
                         <option value="VIP">VIP</option>
+                        <option value="Deluxe">Deluxe</option>
+                        <option value="Superior">Superior</option>
                     </select>
                 </div>
 
                 <div class="col-md-6">
-                    <label class="label-karnel">Check-in Date <span class="text-danger">*</span></label>
-                    <input type="date" name="CheckIn" id="checkInDate" class="k-input bg-light" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                    <label class="fw-bold text-dark mb-2">Check-in Date <span class="text-danger">*</span></label>
+                    <input type="date" name="CheckIn" id="checkInDate" class="form-control bg-light border" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
                 </div>
                 <div class="col-md-6">
-                    <label class="label-karnel">Check-out Date <span class="text-danger">*</span></label>
-                    <input type="date" name="CheckOut" id="checkOutDate" class="k-input bg-light" min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" required />
+                    <label class="fw-bold text-dark mb-2">Check-out Date <span class="text-danger">*</span></label>
+                    <input type="date" name="CheckOut" id="checkOutDate" class="form-control bg-light border" min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")" required />
                 </div>
                 <div class="col-12 mt-4 text-end">
-                    <button type="button" class="k-btn-primary px-5 py-3 w-100" onclick="filterStays()"><i class="bi bi-search me-2"></i> Find Available Stays</button>
+                    <button type="button" class="btn btn-primary px-5 py-3 w-100 fw-bold rounded-3" onclick="filterStays()"><i class="bi bi-search me-2"></i> Find Available Stays</button>
                 </div>
             </div>
         </div>
@@ -126,6 +129,36 @@
 
 @section Scripts {
     <script>
+        // ================== LOGIC VALIDATION SỐ ĐIỆN THOẠI ==================
+        const walkInPhoneInput = document.getElementById('inputWalkInPhone');
+        const phoneErrorMsg = document.getElementById('phoneErrorMsg');
+
+        function validatePhone() {
+            const phoneRegex = /^(03|05|07|08|09)\d{8}$/;
+            const val = walkInPhoneInput.value.trim();
+            
+            if (val === '') {
+                walkInPhoneInput.classList.remove('border-danger');
+                phoneErrorMsg.classList.add('d-none');
+                return false; 
+            }
+
+            if (!phoneRegex.test(val)) {
+                walkInPhoneInput.classList.add('border-danger');
+                phoneErrorMsg.classList.remove('d-none');
+                return false;
+            } else {
+                walkInPhoneInput.classList.remove('border-danger');
+                phoneErrorMsg.classList.add('d-none');
+                return true;
+            }
+        }
+        walkInPhoneInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            validatePhone();
+        });
+
+
         // --- 1. JS TÌM KIẾM KHÁCH HÀNG ---
         const customers = [
             @foreach(var acc in customersList) { <text>{ id: @acc.AccountId, name: "@Html.Raw(acc.FullName)", phone: "@Html.Raw(acc.PhoneNumber)", email: "@Html.Raw(acc.Email)" },</text> }
@@ -140,7 +173,6 @@
             dropdown.innerHTML = '';
             const lowerFilter = filterText.toLowerCase();
             const filtered = customers.filter(c => (c.name && c.name.toLowerCase().includes(lowerFilter)) || (c.phone && c.phone.includes(lowerFilter)));
-
             if (filtered.length === 0) {
                 dropdown.innerHTML = '<div class="p-3 text-muted small fst-italic">No customers found.</div>';
             } else {
@@ -252,13 +284,13 @@
             container.innerHTML = '<h5 class="fw-bold mb-3 mt-4 text-dark"><i class="bi bi-list-check text-primary me-2"></i>Available Stays</h5>';
             
             if (results.length === 0) {
-                container.innerHTML += '<div class="k-card text-center py-5 text-muted"><i class="bi bi-building-x fs-1"></i><p class="mt-2 fw-bold">No matching stays found.</p></div>';
+                container.innerHTML += '<div class="k-card p-5 bg-white rounded-4 shadow-sm border-0 text-center text-muted"><i class="bi bi-building-x fs-1"></i><p class="mt-2 fw-bold">No matching stays found.</p></div>';
                 return;
             }
 
             results.forEach(s => {
                 container.innerHTML += `
-                <div class="k-card mb-3 p-4 border border-primary border-opacity-10 transition-all hover-scale cursor-pointer">
+                <div class="k-card mb-3 p-4 bg-white rounded-4 shadow-sm border border-primary border-opacity-10 transition-all hover-scale cursor-pointer">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
                             <img src="${s.imageUrl}" style="width: 80px; height: 60px; object-fit: cover; border-radius: 8px;" class="me-3 border shadow-sm" />
@@ -270,7 +302,7 @@
                         </div>
                         <div class="text-end">
                             <small class="text-muted d-block fw-bold">From</small>
-                            <h4 class="text-success fw-bold mb-2">$${s.minPrice.toLocaleString('en-US')} <small class="text-muted fs-6">/ night</small></h4>
+                            <h4 class="text-success fw-bold mb-2">$${s.minPrice.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} <small class="text-muted fs-6">/ night</small></h4>
                             <button type="button" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" onclick="selectStay(${s.id})">Select Rooms</button>
                         </div>
                     </div>
@@ -281,12 +313,20 @@
         function selectStay(id) {
             var isMember = document.getElementById("typeMember").checked;
             if (!isMember) {
-                if (!document.getElementById("inputWalkInName").value || !document.getElementById("inputWalkInPhone").value) {
-                    alert("Please enter full name and phone number for walk-in customer!"); return;
+                if (!document.getElementById("inputWalkInName").value.trim()) {
+                    alert("Please enter full name for walk-in customer!");
+                    document.getElementById("inputWalkInName").focus();
+                    return;
+                }
+                if (!validatePhone()) {
+                    alert("Please check the phone number format!");
+                    walkInPhoneInput.focus();
+                    return;
                 }
             } else {
                 if (!document.getElementById("hiddenAccountId").value) {
-                    alert("Please select a customer account first!"); return;
+                    alert("Please select a customer account first! (Make sure to click a name from the list)"); 
+                    return;
                 }
             }
             document.getElementById('hiddenStayId').value = id;

@@ -101,9 +101,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(order);
         }
 
-        // ---------------- THÊM MỚI CHỨC NĂNG TẠO ĐƠN ----------------
-
-        // 5. GET: Create (Giao diện nhập khách hàng & Tìm khách sạn)
+        // 5. GET: Create
         public async Task<IActionResult> Create()
         {
             ViewBag.Customers = await _context.Accounts.Where(a => a.RoleId == 3).ToListAsync();
@@ -112,7 +110,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View();
         }
 
-        // 6. GET: SelectRoom (Chuyển qua giao diện chọn phòng của Manager)
+        // 6. GET: SelectRoom
         public async Task<IActionResult> SelectRoom(int stayId, string checkIn, string checkOut, string customerType, int? accountId, string walkInName, string walkInPhone)
         {
             var stay = await _context.Stays
@@ -125,7 +123,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             DateOnly dateIn = DateOnly.FromDateTime(DateTime.Parse(checkIn));
             DateOnly dateOut = DateOnly.FromDateTime(DateTime.Parse(checkOut));
 
-            // Thuật toán tính phòng trống
             var availableRoomsDict = new Dictionary<int, int>();
             foreach (var room in stay.Rooms)
             {
@@ -152,14 +149,13 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(stay);
         }
 
-        // 7. POST: Create (Xử lý lưu vào Database)
+        // 7. POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int? AccountId, string CustomerType, string WalkInName, string WalkInPhone, int StayId, int RoomId, string CheckIn, string CheckOut, int NumberOfRooms)
         {
             int finalAccountId = 0;
 
-            // Xử lý tạo khách hàng vãng lai nếu cần
             if (CustomerType == "WalkIn")
             {
                 if (string.IsNullOrEmpty(WalkInName) || string.IsNullOrEmpty(WalkInPhone))
@@ -188,7 +184,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 finalAccountId = AccountId.Value;
             }
 
-            // Xử lý đặt phòng
             var room = await _context.Rooms.FirstOrDefaultAsync(r => r.RoomId == RoomId);
             if (room == null || NumberOfRooms <= 0) return NotFound();
 
@@ -197,7 +192,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             int totalNights = dateOut.DayNumber - dateIn.DayNumber;
             decimal totalAmount = (room.PriceRoom ?? 0) * NumberOfRooms * totalNights;
 
-            // ĐÃ SỬA: Đặt trạng thái đơn hàng là Pending thay vì Confirmed
             var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Pending" }; 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
@@ -207,13 +201,10 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             await _context.SaveChangesAsync();
 
             _context.OrderDetails.Add(new OrderDetail { OrderId = order.OrderId, RoomBookingId = roomBooking.RoomBookingId, Price = totalAmount, Quantity = 1 });
-            
-            // ĐÃ SỬA: Đặt trạng thái thanh toán là Unpaid thay vì Paid
             _context.Invoices.Add(new Invoice { AccountId = finalAccountId, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, FinalTotal = totalAmount, PaymentStatus = "Unpaid" }); 
             
             await _context.SaveChangesAsync();
 
-            // Cập nhật lại câu thông báo
             TempData["SuccessMessage"] = $"Successfully created an order for {NumberOfRooms} rooms! Please review and confirm it below.";
             return RedirectToAction(nameof(Index));
         }

@@ -1,97 +1,100 @@
 @model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Feedback>
-
-@{
-    ViewData["Title"] = "Quản lý Đánh giá & Phản hồi";
+@{ 
+    ViewData["Title"] = "Feedback Management"; 
+    int totalCount = Model?.Count() ?? 0;
+    int displayIndex = 1;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="h4 text-danger fw-bold"><i class="bi bi-chat-left-text me-2"></i>@ViewData["Title"]</h2>
-</div>
+<style>
+    .action-btn { width: 32px; height: 32px; padding: 0; line-height: 30px; display: inline-flex; align-items: center; justify-content: center; }
+</style>
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3">
+        <h4 class="fw-bold m-0 text-dark">Feedback Management</h4>
+        
+        <form asp-action="Index" method="get" class="d-flex gap-2">
+            <input type="text" name="searchString" value="@ViewData["CurrentSearch"]" class="form-control bg-light border" style="min-width: 250px; border-radius: 0.5rem;" placeholder="Search customer or message...">
+            
+            <select name="serviceType" class="form-select bg-light border" style="width: 160px; border-radius: 0.5rem;">
+                <option value="">All Services</option>
+                @if (ViewData["CurrentType"]?.ToString() == "Stay") { <option value="Stay" selected>Stays (Rooms)</option> } else { <option value="Stay">Stays (Rooms)</option> }
+                @if (ViewData["CurrentType"]?.ToString() == "Restaurant") { <option value="Restaurant" selected>Restaurants</option> } else { <option value="Restaurant">Restaurants</option> }
+            </select>
+
+            <button type="submit" class="btn btn-primary" style="border-radius: 0.5rem; width: 45px;"><i class="bi bi-search"></i></button>
+            @if (!string.IsNullOrEmpty(ViewData["CurrentSearch"]?.ToString()) || !string.IsNullOrEmpty(ViewData["CurrentType"]?.ToString())) {
+                <a asp-action="Index" class="btn btn-light border text-muted" style="border-radius: 0.5rem;">Clear</a>
+            }
+        </form>
     </div>
-}
 
-<div class="card shadow-sm border-0">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th class="ps-4">#</th>
-                        <th>Khách hàng</th>
-                        <th>Nội dung</th>
-                        <th>Đối tượng</th>
-                        <th>Trạng thái</th>
-                        <th class="text-end pe-4">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr>
-                            <td class="ps-4 text-muted fw-bold">@item.FeedbackId</td>
+    @if (TempData["SuccessMessage"] != null) {
+        <div class="alert alert-success rounded-3 fw-bold mb-4"><i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]</div>
+    }
+
+    <div class="table-responsive">
+        <table class="table align-middle table-hover table-borderless">
+            <thead class="border-bottom text-dark small fw-bold text-uppercase">
+                <tr>
+                    <th style="width: 5%; text-align: center;">#</th>
+                    <th style="width: 20%;">CUSTOMER</th>
+                    <th style="width: 25%;">SERVICE INFO</th>
+                    <th style="width: 35%;">MESSAGE</th>
+                    <th style="width: 15%; text-align: center;">ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any()) {
+                    foreach (var item in Model) {
+                        string serviceName = "Unknown";
+                        string serviceBadge = "";
+
+                        if (item.StayId != null) { 
+                            serviceName = item.Stay?.Name ?? "N/A"; 
+                            serviceBadge = "<span class='badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-1'>Stay</span>"; 
+                        }
+                        else if (item.RestaurantId != null) { 
+                            serviceName = item.Restaurant?.RestaurantName ?? "N/A"; 
+                            serviceBadge = "<span class='badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-1'>Restaurant</span>"; 
+                        }
+
+                        <tr class="border-bottom">
+                            <td class="fw-bold text-secondary fs-6 text-center">@displayIndex</td>
+                            
                             <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="fw-bold">@(item.Account?.FullName ?? "Khách vãng lai")</div>
+                                <div class="fw-bold text-dark mb-1">@item.Account?.FullName</div>
+                                <div class="small fw-bold text-primary"><i class="bi bi-telephone text-primary me-1"></i>@(item.Account?.PhoneNumber ?? "N/A")</div>
+                            </td>
+                            
+                            <td>
+                                <div class="fw-bold text-dark text-truncate mb-2" style="max-width: 220px;" title="@serviceName">@serviceName</div>
+                                <div>@Html.Raw(serviceBadge)</div>
+                            </td>
+
+                            <td>
+                                <div class="text-truncate text-dark fst-italic" style="max-width: 300px;" title="@item.Message">
+                                    "@(string.IsNullOrEmpty(item.Message) ? "No message" : item.Message)"
                                 </div>
                             </td>
-                            <td>
-                                <span class="d-inline-block text-truncate" style="max-width: 250px;" title="@item.Message">
-                                    @item.Message
-                                </span>
-                            </td>
-                            <td>
-                                @if (item.StayId.HasValue)
-                                {
-                                    <span class="badge bg-primary rounded-pill"><i class="bi bi-building me-1"></i> Khách sạn</span>
-                                }
-                                else if (item.RestaurantId.HasValue)
-                                {
-                                    <span class="badge bg-warning text-dark rounded-pill"><i class="bi bi-cup-hot-fill me-1"></i> Nhà hàng</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary rounded-pill">Chung</span>
-                                }
-                            </td>
-                            <td>
-                                @if (string.IsNullOrEmpty(item.ReplyMessage))
-                                {
-                                    <span class="badge bg-danger rounded-pill px-3 py-2"><i class="bi bi-x-circle me-1"></i> Chưa phản hồi</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success rounded-pill px-3 py-2"><i class="bi bi-check-circle me-1"></i> Đã phản hồi</span>
-                                }
-                            </td>
-                            <td class="text-end pe-4">
-                                <form asp-action="Delete" asp-route-id="@item.FeedbackId" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đánh giá này?');">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger me-2" title="Xóa">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
-                                <a asp-action="Reply" asp-route-id="@item.FeedbackId" class="btn btn-sm btn-primary" title="Xem & Phản hồi">
-                                    <i class="bi bi-reply-fill"></i> Xem / Phản hồi
-                                </a>
+                            
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a asp-action="Details" asp-route-id="@item.FeedbackId" class="btn btn-outline-info rounded-circle action-btn" title="View Details"><i class="bi bi-eye"></i></a>
+                                    
+                                    <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this feedback? This action cannot be undone.');">
+                                        <input type="hidden" name="id" value="@item.FeedbackId" />
+                                        <button type="submit" class="btn btn-outline-danger rounded-circle action-btn" title="Delete Feedback"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
+                        displayIndex++;
                     }
-                    @if (!Model.Any())
-                    {
-                        <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                                Hiện tại chưa có đánh giá hoặc phản hồi nào.
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                } else {
+                    <tr><td colspan="5" class="text-center py-5 text-muted fw-bold">No feedbacks found matching your criteria.</td></tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>

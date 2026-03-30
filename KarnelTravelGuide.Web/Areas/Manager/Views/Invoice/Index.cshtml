@@ -1,0 +1,119 @@
+@{ 
+    ViewData["Title"] = "Invoice Management"; 
+    string activeTab = ViewData["ActiveTab"]?.ToString() ?? "pending";
+}
+
+<style>
+    .action-btn { width: 32px; height: 32px; padding: 0; line-height: 30px; display: inline-flex; align-items: center; justify-content: center; }
+    .nav-tabs .nav-link { font-weight: bold; color: #6c757d; border: none; border-bottom: 3px solid transparent; padding: 12px 24px; }
+    .nav-tabs .nav-link.active { color: #0d6efd; background: transparent; border-color: #0d6efd; }
+    .nav-tabs .nav-link:hover { border-color: #dee2e6; }
+</style>
+
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold m-0 text-dark">Invoice & Payment</h4>
+        
+        <form asp-action="Index" method="get" class="d-flex gap-2">
+            <input type="hidden" name="tab" value="@activeTab" />
+            <input type="text" name="searchString" value="@ViewData["CurrentSearch"]" class="form-control bg-light border" style="min-width: 250px; border-radius: 0.5rem;" placeholder="Search customer or phone...">
+            <button type="submit" class="btn btn-primary" style="border-radius: 0.5rem; width: 45px;"><i class="bi bi-search"></i></button>
+            @if (!string.IsNullOrEmpty(ViewData["CurrentSearch"]?.ToString())) {
+                <a asp-action="Index" asp-route-tab="@activeTab" class="btn btn-light border text-muted" style="border-radius: 0.5rem;">Clear</a>
+            }
+        </form>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null) {
+        <div class="alert alert-success rounded-3 fw-bold mb-4"><i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null) {
+        <div class="alert alert-danger rounded-3 fw-bold mb-4"><i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]</div>
+    }
+
+    <ul class="nav nav-tabs mb-4 border-bottom">
+        <li class="nav-item">
+            <a class="nav-link @(activeTab == "pending" ? "active" : "")" asp-action="Index" asp-route-tab="pending"><i class="bi bi-hourglass-split me-2"></i>Pending Bills (Counter Pay)</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(activeTab == "history" ? "active" : "")" asp-action="Index" asp-route-tab="history"><i class="bi bi-clock-history me-2"></i>Invoice History</a>
+        </li>
+    </ul>
+
+    <div class="table-responsive">
+        <table class="table align-middle table-hover table-borderless">
+            <thead class="border-bottom text-dark small fw-bold text-uppercase">
+                <tr>
+                    <th style="width: 5%; text-align: center;">#</th>
+                    @if (activeTab == "pending") {
+                        <th style="width: 25%;">CUSTOMER</th>
+                        <th style="width: 20%; text-align: center;">PENDING ORDERS</th>
+                        <th style="width: 20%; text-align: center;">TOTAL SERVICES</th>
+                        <th style="width: 15%;">SUBTOTAL</th>
+                        <th style="width: 15%; text-align: center;">ACTION</th>
+                    } else {
+                        <th style="width: 15%;">INVOICE NO.</th>
+                        <th style="width: 25%;">CUSTOMER</th>
+                        <th style="width: 15%;">DATE</th>
+                        <th style="width: 15%;">FINAL TOTAL</th>
+                        <th style="width: 10%; text-align: center;">STATUS</th>
+                        <th style="width: 15%; text-align: center;">ACTION</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (activeTab == "pending") {
+                    var list = ViewBag.PendingGroups as List<KarnelTravelGuide.Web.Areas.Manager.Controllers.PendingBillViewModel>;
+                    if (list != null && list.Any()) {
+                        int idx = 1;
+                        foreach (var item in list) {
+                            <tr class="border-bottom">
+                                <td class="fw-bold text-secondary fs-6 text-center">@idx</td>
+                                <td>
+                                    <div class="fw-bold text-dark mb-1">@item.Account?.FullName</div>
+                                    <div class="small fw-bold text-primary"><i class="bi bi-telephone text-primary me-1"></i>@item.Account?.PhoneNumber</div>
+                                </td>
+                                <td class="text-center"><span class="badge bg-warning text-dark px-3 py-2 rounded-pill">@item.TotalInvoices Orders</span></td>
+                                <td class="text-center"><div class="fw-bold text-primary"><i class="bi bi-box-seam me-1"></i> @item.TotalServices Items</div></td>
+                                <td><div class="fw-bold text-danger fs-6">$@item.SubTotal.ToString("0.##")</div></td>
+                                <td class="text-center">
+                                    <a asp-action="CustomerBill" asp-route-accountId="@item.Account?.AccountId" class="btn btn-primary btn-sm fw-bold px-3 rounded-pill shadow-sm">View & Pay <i class="bi bi-arrow-right ms-1"></i></a>
+                                </td>
+                            </tr>
+                            idx++;
+                        }
+                    } else {
+                        <tr><td colspan="6" class="text-center py-5 text-muted fw-bold">No customers with pending bills.</td></tr>
+                    }
+                } else {
+                    var list = ViewBag.HistoryInvoices as List<KarnelTravelGuide.Web.Models.Entities.Invoice>;
+                    if (list != null && list.Any()) {
+                        int idx = 1;
+                        foreach (var item in list) {
+                            <tr class="border-bottom">
+                                <td class="fw-bold text-secondary fs-6 text-center">@idx</td>
+                                <td><strong class="text-dark">INV-@item.InvoiceId.ToString("D5")</strong></td>
+                                <td>
+                                    <div class="fw-bold text-dark mb-1">@item.Account?.FullName</div>
+                                    <div class="small fw-bold text-primary">@item.Account?.PhoneNumber</div>
+                                </td>
+                                <td><div class="small fw-bold text-muted">@item.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</div></td>
+                                <td><div class="fw-bold text-success fs-6">$@((item.FinalTotal ?? 0).ToString("0.##"))</div></td>
+                                <td class="text-center">
+                                    @if(item.PaymentStatus == "Paid") { <span class="badge bg-success rounded-pill px-3 py-2">Paid</span> }
+                                    else { <span class="badge bg-danger rounded-pill px-3 py-2">Canceled</span> }
+                                </td>
+                                <td class="text-center">
+                                    <a asp-action="Details" asp-route-id="@item.InvoiceId" class="btn btn-outline-info rounded-circle action-btn" title="View Detail"><i class="bi bi-eye"></i></a>
+                                </td>
+                            </tr>
+                            idx++;
+                        }
+                    } else {
+                        <tr><td colspan="7" class="text-center py-5 text-muted fw-bold">No invoice history found.</td></tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

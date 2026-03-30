@@ -157,7 +157,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(stay);
         }
 
-        // --- ĐÃ THÊM HÀM NÀY ĐỂ HIỂN THỊ GIAO DIỆN XÓA XỊN XÒ ---
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -174,7 +173,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            // KIỂM TRA RÀNG BUỘC: Nếu Stay này đã có người đặt phòng thì TUYỆT ĐỐI KHÔNG ĐƯỢC XÓA
+            // 1. KIỂM TRA RÀNG BUỘC: Nếu Stay này đã có người đặt phòng thì TUYỆT ĐỐI KHÔNG ĐƯỢC XÓA
             bool hasBookings = await _context.RoomBookings.AnyAsync(rb => rb.Room != null && rb.Room.StayId == id);
             if (hasBookings)
             {
@@ -182,13 +181,25 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var stay = await _context.Stays.FindAsync(id);
+            // 2. TÌM STAY VÀ BAO GỒM CẢ CÁC ROOM CỦA NÓ (Dùng Include)
+            var stay = await _context.Stays
+                .Include(s => s.Rooms)
+                .FirstOrDefaultAsync(s => s.StayId == id);
+
             if (stay != null)
             {
+                // 3. XÓA TẤT CẢ CÁC PHÒNG (ROOM) CỦA STAY NÀY TRƯỚC
+                if (stay.Rooms != null && stay.Rooms.Any())
+                {
+                    _context.Rooms.RemoveRange(stay.Rooms);
+                }
+
+                // 4. XÓA ẢNH VÀ XÓA STAY
                 DeletePhysicalFile(stay.ImageUrl); 
                 _context.Stays.Remove(stay);
+                
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Stay deleted successfully!";
+                TempData["SuccessMessage"] = "Stay and all its room types deleted successfully!";
             }
             return RedirectToAction(nameof(Index));
         }

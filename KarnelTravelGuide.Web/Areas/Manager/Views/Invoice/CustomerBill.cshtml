@@ -1,0 +1,117 @@
+@model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Invoice>
+@{ 
+    ViewData["Title"] = "Customer Billing Checkout"; 
+    var account = ViewBag.Account as KarnelTravelGuide.Web.Models.Entities.Account;
+    bool hasDiscount = ViewBag.HasDiscount;
+}
+
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 900px;">
+    
+    <div class="d-flex align-items-center border-bottom pb-3 mb-4">
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="fw-bold m-0 text-dark">Checkout & Payment</h4>
+    </div>
+
+    <div class="bg-light p-4 rounded-4 border mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="fw-bold text-secondary text-uppercase mb-2"><i class="bi bi-person-circle me-2"></i>Customer Info</h6>
+            <h5 class="fw-bold text-dark mb-1">@account?.FullName</h5>
+            <div class="text-primary fw-bold"><i class="bi bi-telephone-fill me-1"></i>@account?.PhoneNumber</div>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-warning text-dark px-4 py-2 rounded-pill fs-6 mb-2">Unpaid Bills</span>
+            <div class="fw-bold text-muted small">Total: @ViewBag.TotalServices Services</div>
+        </div>
+    </div>
+
+    @if (hasDiscount) {
+        <div class="alert alert-success border-success border-opacity-25 rounded-4 p-3 mb-4 d-flex align-items-center shadow-sm">
+            <i class="bi bi-stars fs-2 text-success me-3"></i>
+            <div>
+                <h6 class="fw-bold text-success mb-1">Multi-Service Discount Unlocked!</h6>
+                <span class="small text-dark">This customer booked 2 or more services at the same time and is eligible for a <strong>10% discount</strong> on the entire bill.</span>
+            </div>
+        </div>
+    }
+
+    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-receipt text-primary me-2"></i>Pending Services Detail</h5>
+
+    <div class="table-responsive border rounded-4 mb-4">
+        <table class="table table-borderless bg-white align-middle mb-0">
+            <thead class="bg-light border-bottom text-uppercase small text-muted fw-bold">
+                <tr>
+                    <th class="ps-4 py-3" style="width: 45%">Service Type</th>
+                    <th class="py-3" style="width: 30%">Details</th>
+                    <th class="py-3 text-center" style="width: 10%">Qty</th>
+                    <th class="pe-4 py-3 text-end" style="width: 15%">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var inv in Model) {
+                    if (inv.Order?.OrderDetails != null) {
+                        foreach(var od in inv.Order.OrderDetails) {
+                            <tr class="border-bottom border-light">
+                                <td class="ps-4 py-3">
+                                    @if(od.RoomBooking != null) {
+                                        <div class="fw-bold text-dark"><i class="bi bi-door-open-fill text-primary me-2"></i>Room: @od.RoomBooking.Room?.Stay?.Name</div>
+                                        <div class="small text-muted mt-1 ps-4">@od.RoomBooking.Room?.RoomType</div>
+                                    } 
+                                    else if(od.TicketBooking != null) {
+                                        <div class="fw-bold text-dark"><i class="bi bi-ticket-detailed-fill text-info me-2"></i>Ticket: @od.TicketBooking.Transportation?.TransportName</div>
+                                        <div class="small text-muted mt-1 ps-4">Route: @od.TicketBooking.Transportation?.FromBranch?.BranchName &rarr; @od.TicketBooking.Transportation?.ToSpot?.SpotName</div>
+                                    }
+                                    else if(od.ResBooking != null) {
+                                        <div class="fw-bold text-dark"><i class="bi bi-ui-checks-grid text-success me-2"></i>Table: @od.ResBooking.RestaurantTable?.Restaurant?.RestaurantName</div>
+                                        <div class="small text-muted mt-1 ps-4">@od.ResBooking.RestaurantTable?.TableType</div>
+                                    }
+                                </td>
+                                <td class="py-3">
+                                    @if(od.RoomBooking != null) {
+                                        <span class="small fw-bold text-dark">Date: @od.RoomBooking.CheckInDate?.ToString("dd/MM") - @od.RoomBooking.CheckOutDate?.ToString("dd/MM")</span>
+                                    } else if (od.TicketBooking != null) {
+                                        <span class="small fw-bold text-dark">Date: @od.TicketBooking.TravelDate?.ToString("dd/MM/yyyy")</span><br/>
+                                        <span class="small fw-bold text-danger">Seat: @od.TicketBooking.Seat</span>
+                                    } else if (od.ResBooking != null) {
+                                        <span class="small fw-bold text-dark">Date: @od.ResBooking.ReservationDateTime?.ToString("dd/MM HH:mm")</span>
+                                    }
+                                </td>
+                                <td class="py-3 text-center fw-bold text-secondary">x @(od.Quantity ?? 1)</td>
+                                <td class="pe-4 py-3 text-end fw-bold text-dark">$@((od.Price ?? 0).ToString("0.##"))</td>
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 offset-md-6">
+            <div class="p-4 bg-light rounded-4 border">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-bold text-muted">Subtotal:</span>
+                    <span class="fw-bold text-dark fs-5">$@ViewBag.SubTotal.ToString("0.##")</span>
+                </div>
+                
+                @if (hasDiscount) {
+                    <div class="d-flex justify-content-between mb-3 text-success">
+                        <span class="fw-bold">Discount (10%):</span>
+                        <span class="fw-bold fs-5">-$@ViewBag.DiscountAmount.ToString("0.##")</span>
+                    </div>
+                }
+
+                <div class="border-top pt-3 mt-2 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-dark text-uppercase fs-5">Final Total:</span>
+                    <span class="fw-bold text-primary fs-2">$@ViewBag.FinalTotal.ToString("0.##")</span>
+                </div>
+            </div>
+
+            <form asp-action="ConfirmPayment" method="post" class="mt-4" onsubmit="return confirm('Confirm payment? All listed services will be automatically marked as Confirmed.');">
+                <input type="hidden" name="accountId" value="@account?.AccountId" />
+                <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill fs-5 shadow-sm">
+                    <i class="bi bi-cash-stack me-2"></i> Confirm Payment
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

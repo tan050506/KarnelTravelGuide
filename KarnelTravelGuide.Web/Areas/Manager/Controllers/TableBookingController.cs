@@ -19,7 +19,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context = context;
         }
 
-        // 1. INDEX: Quản lý danh sách đơn
+        // 1. INDEX
         public async Task<IActionResult> Index(string searchString, string resDate, string sortOrder)
         {
             var query = _context.Orders
@@ -100,7 +100,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(order);
         }
 
-        // 5. GET: Create (Giao diện nhập khách hàng & Tìm nhà hàng)
+        // 5. GET: Create
         public async Task<IActionResult> Create()
         {
             ViewBag.Customers = await _context.Accounts.Where(a => a.RoleId == 3).ToListAsync();
@@ -109,7 +109,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View();
         }
 
-        // 6. GET: SelectTable (Giao diện chọn bàn)
+        // 6. GET: SelectTable
         public async Task<IActionResult> SelectTable(int restaurantId, string resDate, string resTime, string customerType, int? accountId, string walkInName, string walkInPhone)
         {
             var restaurant = await _context.Restaurants
@@ -146,7 +146,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(restaurant);
         }
 
-        // 7. POST: Create (Xử lý lưu vào Database)
+        // 7. POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int? AccountId, string CustomerType, string WalkInName, string WalkInPhone, int RestaurantId, int TableId, string ResDate, string ResTime, int NumberOfTables, int NumberOfGuests, string SpecialRequest)
@@ -187,7 +187,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             DateTime resDateTime = DateTime.Parse($"{ResDate} {ResTime}");
             decimal totalAmount = (table.PriceRes ?? 0) * NumberOfTables;
 
-            // ĐÃ SỬA: Đặt trạng thái đơn hàng là Pending thay vì Confirmed
             var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Pending" }; 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
@@ -197,14 +196,11 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             await _context.SaveChangesAsync();
 
             _context.OrderDetails.Add(new OrderDetail { OrderId = order.OrderId, ResBookingId = resBooking.ResBookingId, Price = totalAmount, Quantity = NumberOfTables });
-            
-            // ĐÃ SỬA: Đặt trạng thái thanh toán là Unpaid thay vì Paid
             _context.Invoices.Add(new Invoice { AccountId = finalAccountId, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, FinalTotal = totalAmount, PaymentStatus = "Unpaid" }); 
             
             await _context.SaveChangesAsync();
 
-            // Cập nhật lại câu thông báo cho phù hợp
-            TempData["SuccessMessage"] = $"Successfully created an order for {NumberOfTables} tables! Please review and confirm it below.";
+            TempData["SuccessMessage"] = $"Successfully booked {NumberOfTables} tables! Please review and confirm it below.";
             return RedirectToAction(nameof(Index));
         }
     }

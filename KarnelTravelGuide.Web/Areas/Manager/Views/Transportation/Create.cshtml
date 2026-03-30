@@ -8,16 +8,15 @@
     .btn-remove-preview { position: absolute; top: -10px; right: -10px; width: 25px; height: 25px; padding: 0; background: #fff; color: #dc3545; border-radius: 50%; border: 1px solid #dc3545; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; transition: 0.3s; z-index: 5; }
     .btn-remove-preview:hover { background: #dc3545; color: #fff; transform: scale(1.1); }
     
-    /* CSS cho Dropdown tìm kiếm */
     .custom-dropdown-menu { max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1000; width: 100%; display: none; margin-top: 5px; }
     .custom-dropdown-menu.show { display: block; }
     .dropdown-item-custom { transition: background-color 0.2s; cursor: pointer; white-space: normal; }
     .dropdown-item-custom:hover { background-color: #f8f9fa; }
 </style>
 
-<div class="k-card mx-auto" style="max-width: 900px;">
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 900px;">
     <div class="d-flex align-items-center border-bottom pb-3 mb-4">
-        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
         <h4 class="fw-bold m-0 text-dark">Add New Route</h4>
     </div>
 
@@ -25,33 +24,30 @@
         <div class="row g-4">
             
             <div class="col-md-6">
-                <div class="p-3 rounded-3 bg-light border h-100">
-                    <label class="label-karnel text-muted">Departure (From)</label>
+                <div class="p-3 rounded-3 bg-primary bg-opacity-10 border border-primary border-opacity-25 h-100">
+                    <label class="fw-bold text-primary mb-1">Departure (From)</label>
                     <div class="fw-bold text-dark fs-5 mb-1">@ViewBag.BranchName</div>
-                    <small class="text-danger"><i class="bi bi-geo-alt"></i> @ViewBag.BranchAddress</small>
+                    <small class="text-danger"><i class="bi bi-geo-alt me-1"></i>@ViewBag.BranchAddress</small>
                     <input type="hidden" asp-for="FromBranchId" value="@ViewBag.FromBranchId" />
                 </div>
             </div>
 
             <div class="col-md-6 position-relative">
                 <div class="p-3 rounded-3 bg-light border h-100 position-relative">
-                    <label class="label-karnel text-muted">Destination (To) <span class="text-danger">*</span></label>
-                    
+                    <label class="fw-bold text-dark mb-2">Destination (To) <span class="text-danger">*</span></label>
                     <div class="position-relative">
-                        <input type="text" id="spotSearchInput" class="k-input mb-1" placeholder="Type spot name or address..." autocomplete="off" required>
+                        <input type="text" id="spotSearchInput" class="form-control bg-white border mb-1" placeholder="Type destination name..." autocomplete="off" required>
                         <input type="hidden" asp-for="ToSpotId" id="hiddenSpotId" />
-                        
                         <div id="spotDropdown" class="custom-dropdown-menu k-card shadow-lg p-0 border"></div>
                     </div>
-                    
-                    <small class="text-danger d-block mt-1" id="destAddressText"><i class="bi bi-geo-alt"></i> Please select a destination...</small>
+                    <small class="text-danger d-block mt-1" id="destAddressText"><i class="bi bi-geo-alt me-1"></i>Please select a destination...</small>
                 </div>
             </div>
 
             <div class="col-md-3">
-                <label class="label-karnel">Transport Type <span class="text-danger">*</span></label>
-                <select asp-for="TransportType" class="k-input" required>
-                    <option value="">-- Select --</option>
+                <label class="fw-bold text-dark mb-2">Transport Type <span class="text-danger">*</span></label>
+                <select asp-for="TransportType" class="form-select bg-light border" required>
+                    <option value="" disabled selected>-- Select --</option>
                     <option value="Land">🚌 Land</option>
                     <option value="Air">✈️ Air</option>
                     <option value="Water">🛳️ Water</option>
@@ -59,34 +55,36 @@
             </div>
 
             <div class="col-md-3">
-                <label class="label-karnel">Fixed Time <span class="text-danger">*</span></label>
-                <input asp-for="DepartureTime" class="k-input" type="time" required />
+                <label class="fw-bold text-dark mb-2">Fixed Time <span class="text-danger">*</span></label>
+                <input asp-for="DepartureTime" class="form-control bg-light border" type="time" required />
             </div>
 
             <div class="col-md-3">
-                <label class="label-karnel">Price (USD) <span class="text-danger">*</span></label>
-                <input asp-for="PriceTransport" class="k-input" type="number" min="0" step="1" required />
+                <label class="fw-bold text-dark mb-2">Price (USD) <span class="text-danger">*</span></label>
+                <input asp-for="PriceTransport" id="PriceTransport" class="form-control bg-light border" type="number" min="1" max="1000000000" step="any" placeholder="e.g. 50" required />
+                <small class="text-danger fw-bold d-none mt-1" id="priceError">Price must be between 1 and 1,000,000,000.</small>
             </div>
 
             <div class="col-md-3">
-                <label class="label-karnel">Total Seats <span class="text-danger">*</span></label>
-                <input asp-for="SeatCapacity" class="k-input" type="number" min="5" max="100" placeholder="e.g. 34" required />
+                <label class="fw-bold text-dark mb-2">Total Seats <span class="text-danger">*</span></label>
+                <input asp-for="SeatCapacity" id="SeatCapacity" class="form-control bg-light border" type="number" min="1" max="100" placeholder="e.g. 34" required />
+                <small class="text-danger fw-bold d-none mt-1" id="seatError">Seats must be between 1 and 100.</small>
             </div>
 
             <div class="col-md-6">
-                <label class="label-karnel">Transport Name <span class="text-danger">*</span></label>
-                <input asp-for="TransportName" class="k-input" placeholder="e.g. Boeing 747, Limousine..." required />
+                <label class="fw-bold text-dark mb-2">Transport Name <span class="text-danger">*</span></label>
+                <input asp-for="TransportName" class="form-control bg-light border" placeholder="e.g. Boeing 747, Limousine..." required />
             </div>
 
             <div class="col-md-6">
-                <label class="label-karnel">Additional Details</label>
-                <textarea asp-for="Description" class="k-input" rows="1" placeholder="e.g. Free Wi-Fi, AC..."></textarea>
+                <label class="fw-bold text-dark mb-2">Additional Details</label>
+                <textarea asp-for="Description" class="form-control bg-light border" rows="1" placeholder="e.g. Free Wi-Fi, AC..."></textarea>
             </div>
 
             <div class="col-12">
                 <div class="p-4 border rounded-4 bg-light text-center">
-                    <label class="label-karnel d-block text-start mb-3"><i class="bi bi-image me-1"></i>Transport Image <span class="text-danger">*</span></label>
-                    <input type="file" name="imageFile" id="imageInput" class="form-control w-50 mx-auto" accept="image/*" required onchange="previewImage(event)" />
+                    <label class="fw-bold text-primary d-block text-start mb-3"><i class="bi bi-image me-1"></i>Transport Image <span class="text-danger">*</span></label>
+                    <input type="file" name="imageFile" id="imageInput" class="form-control w-50 mx-auto bg-white" accept="image/*" required onchange="previewImage(event)" />
                     
                     <div id="previewContainer" class="mt-4 d-none">
                         <div class="preview-box">
@@ -98,7 +96,7 @@
             </div>
 
             <div class="col-12 mt-5 text-end border-top pt-4">
-                <button type="submit" class="k-btn-primary px-5 py-3"><i class="bi bi-save me-2"></i> Save Route</button>
+                <button type="submit" class="btn btn-primary px-5 py-3 fw-bold rounded-3"><i class="bi bi-save me-2"></i> Save Route</button>
             </div>
         </div>
     </form>
@@ -106,7 +104,42 @@
 
 @section Scripts {
     <script>
-        // Xử lý ảnh
+        // LOGIC VALIDATION ĐỘNG
+        const priceInput = document.getElementById('PriceTransport');
+        const seatInput = document.getElementById('SeatCapacity');
+        const priceError = document.getElementById('priceError');
+        const seatError = document.getElementById('seatError');
+
+        function validatePrice() {
+            const val = parseFloat(priceInput.value);
+            if (isNaN(val) || val < 1 || val > 1000000000) {
+                priceError.classList.remove('d-none');
+                priceInput.classList.add('border-danger');
+                return false;
+            } else {
+                priceError.classList.add('d-none');
+                priceInput.classList.remove('border-danger');
+                return true;
+            }
+        }
+
+        function validateSeats() {
+            const val = parseInt(seatInput.value);
+            if (isNaN(val) || val < 1 || val > 100) {
+                seatError.classList.remove('d-none');
+                seatInput.classList.add('border-danger');
+                return false;
+            } else {
+                seatError.classList.add('d-none');
+                seatInput.classList.remove('border-danger');
+                return true;
+            }
+        }
+
+        priceInput.addEventListener('input', validatePrice);
+        seatInput.addEventListener('input', validateSeats);
+
+        // HÌNH ẢNH VÀ DROPDOWN
         function previewImage(event) {
             const file = event.target.files[0];
             if (file) {
@@ -125,14 +158,12 @@
             document.getElementById('imagePreview').src = '';
         }
 
-        // Xử lý logic tìm kiếm Tourist Spot
         const spots = [
             @foreach(var s in ViewBag.TouristSpots)
             {
                 <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)", address: "@Html.Raw(s.Address)" },</text>
             }
         ];
-
         const searchInput = document.getElementById('spotSearchInput');
         const dropdown = document.getElementById('spotDropdown');
         const hiddenId = document.getElementById('hiddenSpotId');
@@ -160,8 +191,12 @@
                     item.onclick = function() {
                         searchInput.value = s.name;
                         hiddenId.value = s.id;
-                        addressText.innerHTML = `<i class="bi bi-geo-alt"></i> ${s.address || 'Address not found'}`;
+                        addressText.innerHTML = `<i class="bi bi-geo-alt me-1"></i> ${s.address || 'Address not found'}`;
+                        addressText.classList.replace('text-danger', 'text-muted');
                         dropdown.classList.remove('show');
+                        
+                        // Xóa cảnh báo đỏ của input spot
+                        searchInput.classList.remove('border-danger');
                     };
                     dropdown.appendChild(item);
                 });
@@ -171,24 +206,31 @@
 
         searchInput.addEventListener('input', function() {
             hiddenId.value = ''; 
-            addressText.innerHTML = '<i class="bi bi-geo-alt"></i> Please select a destination...';
+            addressText.innerHTML = '<i class="bi bi-geo-alt me-1"></i> Please select a destination...';
+            addressText.classList.replace('text-muted', 'text-danger');
             renderDropdown(this.value);
-        });
-        searchInput.addEventListener('focus', function() {
-            renderDropdown(this.value);
-        });
-        document.addEventListener('click', function(e) {
-            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.classList.remove('show');
-            }
         });
 
+        searchInput.addEventListener('focus', function() { renderDropdown(this.value); });
+        document.addEventListener('click', function(e) { if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.remove('show'); });
+
+        // CHẶN SUBMIT NẾU LỖI
         document.getElementById('transportForm').addEventListener('submit', function(e) {
+            const isPriceValid = validatePrice();
+            const isSeatsValid = validateSeats();
+            let isValid = true;
+
             if (!hiddenId.value) {
-                e.preventDefault();
                 alert("Please select a Tourist Spot destination from the dropdown list!");
+                searchInput.classList.add('border-danger');
                 searchInput.focus();
+                isValid = false;
             }
+
+            if (!isPriceValid) { priceInput.focus(); isValid = false; }
+            else if (!isSeatsValid) { seatInput.focus(); isValid = false; }
+
+            if (!isValid) e.preventDefault();
         });
     </script>
 }

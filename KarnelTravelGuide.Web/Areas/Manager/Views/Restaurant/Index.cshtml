@@ -7,15 +7,20 @@
     int displayIndex = isDescending ? totalCount : 1;
 }
 
-<div class="k-card">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <form asp-action="Index" method="get" class="d-flex w-50">
-            <div class="input-group">
-                <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control" style="border-radius: 8px 0 0 8px; border: 1px solid #ced4da; padding: 0.75rem 1rem;" placeholder="Search restaurant name or spot...">
-                <button type="submit" class="btn btn-primary px-4" style="border-radius: 0 8px 8px 0;"><i class="bi bi-search"></i></button>
-            </div>
+<style>
+    .action-btn { width: 32px; height: 32px; padding: 0; line-height: 30px; display: inline-flex; align-items: center; justify-content: center; }
+</style>
+
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3">
+        <form asp-action="Index" method="get" class="d-flex gap-2">
+            <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control bg-light border" style="min-width: 250px; border-radius: 0.5rem;" placeholder="Search restaurant name or location...">
+            <button type="submit" class="btn btn-primary" style="border-radius: 0.5rem; width: 45px;"><i class="bi bi-search"></i></button>
+            @if (!string.IsNullOrEmpty(ViewData["CurrentFilter"]?.ToString())) {
+                <a asp-action="Index" class="btn btn-light border text-muted" style="border-radius: 0.5rem;">Clear</a>
+            }
         </form>
-        <a asp-action="Create" class="k-btn-primary"><i class="bi bi-plus-lg me-2"></i> Add New Restaurant</a>
+        <a asp-action="Create" class="btn btn-primary fw-bold px-4" style="border-radius: 0.5rem;"><i class="bi bi-plus-lg me-2"></i> Add New Restaurant</a>
     </div>
 
     @if (TempData["SuccessMessage"] != null) {
@@ -26,18 +31,18 @@
     }
 
     <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light text-muted small text-uppercase">
+        <table class="table align-middle table-hover table-borderless">
+            <thead class="border-bottom text-dark small fw-bold text-uppercase">
                 <tr>
                     <th style="width: 5%; text-align: center;">
-                        <a asp-action="Index" asp-route-sortOrder="@ViewData["IdSortParm"]" asp-route-searchString="@ViewData["CurrentFilter"]" class="text-decoration-none text-dark" title="Click to sort">
-                            <i class="bi bi-arrow-down-up fs-5 fw-bold text-dark"></i>
+                        <a asp-action="Index" asp-route-sortOrder="@ViewData["IdSortParm"]" asp-route-searchString="@ViewData["CurrentFilter"]" class="text-dark text-decoration-none" title="Click to sort">
+                            <i class="bi bi-arrow-down-up fs-5"></i>
                         </a>
                     </th>
-                    <th style="width: 15%;">Image</th>
-                    <th style="width: 25%;">Restaurant Info</th>
-                    <th style="width: 25%;">Location</th>
-                    <th style="width: 15%;">Rating</th>
+                    <th style="width: 10%;">Image</th>
+                    <th style="width: 25%;">Restaurant Name</th>
+                    <th style="width: 30%;">Location & Address</th>
+                    <th style="width: 15%;">Tables</th>
                     <th class="text-end" style="width: 15%;">Actions</th>
                 </tr>
             </thead>
@@ -46,32 +51,32 @@
                     foreach (var item in Model) {
                         var typeCount = item.RestaurantTables.Select(t => t.TableType).Distinct().Count();
 
-                        <tr>
+                        <tr class="border-bottom">
                             <td class="fw-bold text-secondary fs-6 text-center">@displayIndex</td>
                             <td>
-                                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/img/no-image.jpg" : item.ImageUrl)" class="rounded-3 shadow-sm border" style="width: 70px; height: 50px; object-fit: cover;" />
+                                <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/img/no-image.jpg" : item.ImageUrl)" class="rounded-3 shadow-sm border" style="width: 70px; height: 45px; object-fit: cover;" />
                             </td>
                             <td>
-                                <div class="fw-bold text-dark text-truncate" style="max-width: 200px;" title="@item.RestaurantName">@item.RestaurantName</div>
-                                <div class="small mt-1">
-                                    <span class="text-primary fw-bold"><i class="bi bi-ui-checks-grid me-1"></i> @typeCount Table Types</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="fw-bold text-primary fs-6">@(item.Spot?.SpotName ?? "N/A")</div>
-                                <div class="small text-muted mt-1 text-truncate" style="max-width: 200px;"><i class="bi bi-geo-alt text-danger me-1"></i>@item.Address</div>
-                            </td>
-                            <td>
+                                <div class="fw-bold text-dark text-truncate" style="max-width: 180px;" title="@item.RestaurantName">@item.RestaurantName</div>
                                 @if(item.StarRating != null && item.StarRating > 0) {
-                                    <span class="text-warning">@for(int i=0; i < item.StarRating; i++) { <i class="bi bi-star-fill"></i> }</span>
-                                } else { 
-                                    <span class="text-muted small">No rating</span> 
+                                    <div class="text-warning small mt-1">@for(int i=0; i < item.StarRating; i++) { <i class="bi bi-star-fill"></i> }</div>
+                                } else {
+                                    <div class="text-muted small fst-italic mt-1">No rating yet</div>
                                 }
                             </td>
-                            <td class="text-end text-nowrap">
-                                <a asp-action="Details" asp-route-id="@item.RestaurantId" class="btn btn-sm btn-light text-info fw-bold"><i class="bi bi-eye"></i></a>
-                                <a asp-action="Edit" asp-route-id="@item.RestaurantId" class="btn btn-sm btn-light text-primary fw-bold mx-1"><i class="bi bi-pencil-square"></i></a>
-                                <a asp-action="Delete" asp-route-id="@item.RestaurantId" class="btn btn-sm btn-light text-danger fw-bold"><i class="bi bi-trash"></i></a>
+                            <td>
+                                <div class="fw-bold text-dark fs-6 text-truncate" style="max-width: 250px;" title="@(item.Spot?.SpotName)">@(item.Spot?.SpotName ?? "N/A")</div>
+                                <div class="small text-muted mt-1 text-truncate" style="max-width: 250px;" title="@item.Address"><i class="bi bi-geo-alt text-danger me-1"></i>@item.Address</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-primary"><i class="bi bi-ui-checks-grid me-1"></i> @typeCount Types</div>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a asp-action="Details" asp-route-id="@item.RestaurantId" class="btn btn-outline-info rounded-circle action-btn" title="Details"><i class="bi bi-eye"></i></a>
+                                    <a asp-action="Edit" asp-route-id="@item.RestaurantId" class="btn btn-outline-primary rounded-circle action-btn" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                                    <a asp-action="Delete" asp-route-id="@item.RestaurantId" class="btn btn-outline-danger rounded-circle action-btn" title="Delete"><i class="bi bi-trash"></i></a>
+                                </div>
                             </td>
                         </tr>
                         if (isDescending) { displayIndex--; } else { displayIndex++; }

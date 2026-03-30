@@ -46,16 +46,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return fallbackBranch;
         }
 
-        // 1. GET: Index
         public async Task<IActionResult> Index(string searchString, string sortOrder)
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
             
-            // 1. Lưu lại trạng thái tìm kiếm và sắp xếp hiện tại
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentSort"] = sortOrder;
-            
-            // 2. Nút công tắc (Toggle): Nếu hiện tại đang rỗng (mặc định tăng dần), click vào sẽ thành "id_desc" (giảm dần)
             ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_desc" : "";
 
             var transportations = _context.Transportations
@@ -72,17 +68,10 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     (s.ToSpot != null && s.ToSpot.SpotName!.Contains(searchString)));
             }
 
-            // 3. THỰC THI SẮP XẾP
             switch (sortOrder)
             {
-                case "id_desc":
-                    // Sắp xếp Lớn đến Nhỏ (Mới nhất nằm trên cùng)
-                    transportations = transportations.OrderByDescending(t => t.TransportationId);
-                    break;
-                default:
-                    // Mặc định: Nhỏ đến Lớn (Thêm trước nằm trên, thêm sau số to nằm dưới)
-                    transportations = transportations.OrderBy(t => t.TransportationId);
-                    break;
+                case "id_desc": transportations = transportations.OrderByDescending(t => t.TransportationId); break;
+                default: transportations = transportations.OrderBy(t => t.TransportationId); break;
             }
 
             return View(await transportations.ToListAsync());
@@ -208,14 +197,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            // Bao gồm TicketBookings để kiểm tra ràng buộc
             var transportation = await _context.Transportations
                 .Include(t => t.TicketBookings)
                 .FirstOrDefaultAsync(t => t.TransportationId == id);
 
             if (transportation != null)
             {
-                // KIỂM TRA RÀNG BUỘC
                 if (transportation.TicketBookings != null && transportation.TicketBookings.Any())
                 {
                     TempData["ErrorMessage"] = "Cannot delete! This route has active ticket bookings.";
@@ -231,12 +218,8 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool TransportationExists(int id)
-        {
-            return _context.Transportations.Any(e => e.TransportationId == id);
-        }
+        private bool TransportationExists(int id) => _context.Transportations.Any(e => e.TransportationId == id);
 
-        // --- HELPER METHODS ---
         private async Task<string> UploadFileAsync(IFormFile file)
         {
             string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "transportations");
@@ -260,7 +243,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 string filePath = Path.Combine(_webHostEnvironment.WebRootPath, relativePath.TrimStart('/'));
                 if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
             }
-            catch (Exception) { /* Ignore */ }
+            catch (Exception) { }
         }
     }
 }

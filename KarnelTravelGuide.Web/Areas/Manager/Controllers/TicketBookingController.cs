@@ -19,12 +19,13 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context = context;
         }
 
-        // 1. INDEX (Đã thêm sortOrder)
+        // 1. INDEX: Quản lý danh sách đơn
         public async Task<IActionResult> Index(string searchString, string travelDate, string sortOrder)
         {
             var query = _context.Orders
                 .Include(o => o.Account)
                 .Include(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation!).ThenInclude(t => t.ToSpot)
+                .Include(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation!).ThenInclude(t => t.FromBranch)
                 .Where(o => o.OrderDetails!.Any(od => od.TicketBookingId != null))
                 .AsQueryable();
 
@@ -37,11 +38,10 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (!string.IsNullOrEmpty(travelDate) && DateTime.TryParse(travelDate, out DateTime parsedDate))
             {
-                DateOnly date = DateOnly.FromDateTime(parsedDate);
-                query = query.Where(o => o.OrderDetails!.Any(od => od.TicketBooking!.TravelDate == date));
+                DateOnly dateOnly = DateOnly.FromDateTime(parsedDate);
+                query = query.Where(o => o.OrderDetails!.Any(od => od.TicketBooking!.TravelDate == dateOnly));
             }
 
-            // TRUYỀN DỮ LIỆU ĐỂ GIỮ STATE KHI SẮP XẾP
             ViewData["CurrentSearch"] = searchString;
             ViewData["CurrentDate"] = travelDate;
             ViewData["CurrentSort"] = sortOrder;
@@ -49,12 +49,8 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             switch (sortOrder)
             {
-                case "id_desc":
-                    query = query.OrderByDescending(o => o.OrderId);
-                    break;
-                default:
-                    query = query.OrderBy(o => o.OrderId);
-                    break;
+                case "id_desc": query = query.OrderByDescending(o => o.OrderId); break;
+                default: query = query.OrderBy(o => o.OrderId); break;
             }
 
             return View(await query.ToListAsync());
@@ -72,7 +68,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 if (invoice != null) invoice.PaymentStatus = "Paid"; 
 
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Order confirmed successfully!";
+                TempData["SuccessMessage"] = "Ticket booking confirmed successfully!";
             }
             return RedirectToAction(nameof(Index));
         }
@@ -81,7 +77,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         [HttpPost]
         public async Task<IActionResult> CancelOrder(int orderId)
         {
-            var order = await _context.Orders.Include(o => o.OrderDetails).FirstOrDefaultAsync(o => o.OrderId == orderId);
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
             if (order != null)
             {
                 order.Status = "Canceled"; 
@@ -89,7 +85,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 if (invoice != null) invoice.PaymentStatus = "Canceled"; 
 
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Order canceled successfully! Seats have been automatically released.";
+                TempData["SuccessMessage"] = "Booking canceled! The seats have been automatically released.";
             }
             return RedirectToAction(nameof(Index));
         }
@@ -111,20 +107,16 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         public async Task<IActionResult> Create()
         {
             ViewBag.Customers = await _context.Accounts.Where(a => a.RoleId == 3).ToListAsync();
-            ViewBag.Routes = await _context.Transportations.Include(t => t.FromBranch).Include(t => t.ToSpot).ToListAsync();
             ViewBag.Branches = await _context.Branches.ToListAsync();
             ViewBag.Spots = await _context.TouristSpots.ToListAsync();
+            ViewBag.Routes = await _context.Transportations.Include(t => t.FromBranch).Include(t => t.ToSpot).ToListAsync();
             return View();
         }
 
         // 6. GET: SelectSeat
         public async Task<IActionResult> SelectSeat(int transportationId, string travelDate, string customerType, int? accountId, string walkInName, string walkInPhone)
         {
-            var transport = await _context.Transportations
-                .Include(t => t.FromBranch)
-                .Include(t => t.ToSpot)
-                .FirstOrDefaultAsync(t => t.TransportationId == transportationId);
-
+            var transport = await _context.Transportations.Include(t => t.FromBranch).Include(t => t.ToSpot).FirstOrDefaultAsync(t => t.TransportationId == transportationId);
             if (transport == null) return NotFound();
 
             ViewBag.CustomerType = customerType;
@@ -139,8 +131,14 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         // 7. POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(int? AccountId, string CustomerType, string WalkInName, string WalkInPhone, int TransportationId, DateTime TravelDate, string Seat)
+        public async Task<IActionResult> Create(int? AccountId, string CustomerType, string WalkInName, string WalkInPhone, int TransportationId, string TravelDate, string SelectedSeats)
         {
+            if (string.IsNullOrEmpty(SelectedSeats))
+            {
+                TempData["ErrorMessage"] = "No seats selected. Booking failed.";
+                return RedirectToAction(nameof(Create));
+            }
+
             int finalAccountId = 0;
 
             if (CustomerType == "WalkIn")
@@ -154,7 +152,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 var existingAccount = await _context.Accounts.FirstOrDefaultAsync(a => a.PhoneNumber == WalkInPhone);
                 if (existingAccount != null)
                 {
-                    TempData["ErrorMessage"] = $"Phone number {WalkInPhone} is already registered to '{existingAccount.FullName}'. Please choose 'Existing Member' or use another phone number.";
+                    TempData["ErrorMessage"] = $"Phone number {WalkInPhone} is already registered. Please choose 'Existing Member'.";
                     return RedirectToAction(nameof(Create));
                 }
                 else
@@ -172,29 +170,31 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             }
 
             var transport = await _context.Transportations.FindAsync(TransportationId);
-            if (transport == null || string.IsNullOrEmpty(Seat)) return NotFound();
+            if (transport == null) return NotFound();
 
-            string[] selectedSeats = Seat.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            DateOnly travelDate = DateOnly.FromDateTime(DateTime.Parse(TravelDate));
+            string[] selectedSeats = SelectedSeats.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
+            
             decimal unitPrice = transport.PriceTransport ?? 0;
             decimal totalAmount = unitPrice * selectedSeats.Length;
-            
-            var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Pending" };
+
+            // Đặt trạng thái Pending và Unpaid cho quy trình duyệt chuẩn
+            var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Pending" }; 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            foreach (var seatId in selectedSeats)
+            foreach (var seat in selectedSeats)
             {
-                var ticket = new TicketBooking { TransportationId = TransportationId, TravelDate = DateOnly.FromDateTime(TravelDate), Seat = seatId.Trim(), TotalAmount = unitPrice };
+                var ticket = new TicketBooking { TransportationId = TransportationId, TravelDate = travelDate, Seat = seat, TotalAmount = unitPrice };
                 _context.TicketBookings.Add(ticket);
                 await _context.SaveChangesAsync();
-
                 _context.OrderDetails.Add(new OrderDetail { OrderId = order.OrderId, TicketBookingId = ticket.TicketBookingId, Price = unitPrice, Quantity = 1 });
             }
 
             _context.Invoices.Add(new Invoice { AccountId = finalAccountId, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, FinalTotal = totalAmount, PaymentStatus = "Unpaid" });
             await _context.SaveChangesAsync();
             
-            TempData["SuccessMessage"] = $"Successfully created an order for {selectedSeats.Length} tickets! Please review it on the list.";
+            TempData["SuccessMessage"] = $"Successfully created an order for {selectedSeats.Length} tickets! Please review and confirm it below.";
             return RedirectToAction(nameof(Index));
         }
 

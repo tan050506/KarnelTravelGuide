@@ -1,13 +1,18 @@
 @model KarnelTravelGuide.Web.Models.Entities.Restaurant
 @{ ViewData["Title"] = "Restaurant Details"; }
 
-<div class="k-card mx-auto" style="max-width: 900px;">
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 900px;">
     <div class="d-flex align-items-center border-bottom pb-3 mb-4">
-        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
         <h4 class="fw-bold m-0 text-dark">Restaurant Details</h4>
+        <div class="ms-auto">
+            <span class="badge bg-secondary px-3 py-2 fs-6">
+                🍽️ Restaurant
+            </span>
+        </div>
     </div>
 
-    <div class="row align-items-start">
+    <div class="row align-items-start mb-4">
         <div class="col-md-5 mb-4 mb-md-0">
             @if (!string.IsNullOrEmpty(Model.ImageUrl)) {
                 <img src="@Model.ImageUrl" class="img-fluid rounded-4 shadow-sm border w-100" style="height: 300px; object-fit: cover;" />
@@ -19,21 +24,20 @@
         </div>
         
         <div class="col-md-7 ps-md-4">
-            
-            <div class="p-3 bg-light rounded-4 border mb-4">
-                <div class="mb-3">
+            <div class="p-4 bg-light rounded-4 border mb-4">
+                <div class="mb-3 border-bottom pb-3">
                     <span class="d-block small text-muted text-uppercase fw-bold">Tourist Spot (Location)</span>
-                    <h5 class="fw-bold text-primary mb-0">@(Model.Spot?.SpotName ?? "N/A")</h5>
+                    <h5 class="fw-bold text-primary mb-1">@(Model.Spot?.SpotName ?? "N/A")</h5>
                 </div>
                 <div>
-                    <span class="d-block small text-muted text-uppercase fw-bold">Address</span>
-                    <small class="text-danger fw-bold"><i class="bi bi-geo-alt"></i> @(string.IsNullOrEmpty(Model.Address) ? "No exact address" : Model.Address)</small>
+                    <span class="d-block small text-muted text-uppercase fw-bold">Exact Address</span>
+                    <small class="text-danger fw-bold"><i class="bi bi-geo-alt me-1"></i> @Model.Address</small>
                 </div>
             </div>
 
-            <h4 class="fw-bold text-dark mb-3">@Model.RestaurantName</h4>
+            <h4 class="fw-bold text-dark mb-4">@Model.RestaurantName</h4>
 
-            <div class="mb-4 pb-4 border-bottom">
+            <div class="mb-4">
                 <span class="text-muted small fw-bold me-2">Feedback Rating:</span>
                 @if(Model.StarRating != null && Model.StarRating > 0) {
                     <span class="text-warning fs-5">@for(int i=0; i < Model.StarRating; i++) { <i class="bi bi-star-fill"></i> }</span>
@@ -41,46 +45,42 @@
                     <span class="text-muted fst-italic small">No ratings yet</span>
                 }
             </div>
-
-            <h6 class="label-karnel">Overview Description:</h6>
+            
+            <h6 class="fw-bold text-dark mt-3">Overview Description:</h6>
             <p class="text-dark lh-lg" style="white-space: pre-line;">@(string.IsNullOrEmpty(Model.Description) ? "No description provided." : Model.Description)</p>
-        </div>
-
-        <div class="col-12 mt-5">
-            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-ui-checks-grid text-primary me-2"></i>Available Tables Overview</h5>
-            <div class="table-responsive border rounded-3 shadow-sm">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light text-muted small text-uppercase fw-bold">
-                        <tr>
-                            <th class="ps-3">Table Type</th>
-                            <th>Price / Table</th>
-                            <th>Quantity</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if(Model.RestaurantTables != null && Model.RestaurantTables.Any())
-                        {
-                            foreach(var table in Model.RestaurantTables)
-                            {
-                                <tr>
-                                    <td class="ps-3 fw-bold text-dark">@table.TableType</td>
-                                    <td class="text-success fw-bold">$@((table.PriceRes ?? 0).ToString("0.##"))</td>
-                                    <td><span class="badge bg-secondary">@table.Quantity tables</span></td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr><td colspan="3" class="text-center py-4 text-muted fst-italic">No table types configured yet.</td></tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
         </div>
     </div>
 
-    <div class="mt-5 pt-4 border-top text-end">
-        <a asp-action="Edit" asp-route-id="@Model.RestaurantId" class="k-btn-primary me-2"><i class="bi bi-pencil-square me-2"></i> Edit Restaurant</a>
-        <a asp-action="Delete" asp-route-id="@Model.RestaurantId" class="btn btn-danger fw-bold py-2 px-4 rounded-3"><i class="bi bi-trash me-2"></i> Delete</a>
+    <div class="border rounded-4 bg-light p-4 mb-4">
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-ui-checks-grid text-primary me-2"></i>Table Types Available</h5>
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle mb-0">
+                <thead class="border-bottom bg-white small text-uppercase text-muted fw-bold">
+                    <tr>
+                        <th class="ps-3">Table Type</th>
+                        <th>Price / Table</th>
+                        <th>Total Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if(Model.RestaurantTables != null && Model.RestaurantTables.Any()) {
+                        foreach(var table in Model.RestaurantTables) {
+                            <tr class="bg-white border-bottom">
+                                <td class="fw-bold text-dark ps-3 py-3">@table.TableType</td>
+                                <td class="fw-bold text-success py-3">$@((table.PriceRes ?? 0).ToString("0.##"))</td>
+                                <td class="py-3">@table.Quantity tables</td>
+                            </tr>
+                        }
+                    } else {
+                        <tr><td colspan="3" class="text-center text-muted fst-italic py-4 bg-white">No table types configured.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4 pt-4 border-top text-end">
+        <a asp-action="Edit" asp-route-id="@Model.RestaurantId" class="btn btn-primary px-4 py-2 fw-bold rounded-3 me-2"><i class="bi bi-pencil-square me-2"></i> Edit Restaurant & Tables</a>
+        <a asp-action="Delete" asp-route-id="@Model.RestaurantId" class="btn btn-danger px-4 py-2 fw-bold rounded-3"><i class="bi bi-trash me-2"></i> Delete</a>
     </div>
 </div>

@@ -11,14 +11,14 @@
     .dropdown-item-custom:hover { background-color: #f8f9fa; }
 </style>
 
-<div class="k-card mx-auto" style="max-width: 1000px;">
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 1000px;">
     <div class="d-flex align-items-center border-bottom pb-3 mb-4">
-        <a asp-action="Index" class="btn btn-light rounded-circle me-3"><i class="bi bi-arrow-left"></i></a>
+        <a asp-action="Index" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
         <h4 class="fw-bold m-0 text-dark">Update Stay: <span class="text-primary">@Model.Name</span></h4>
     </div>
 
     @if (TempData["ErrorMessage"] != null) {
-        <div class="alert alert-danger rounded-3 fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]</div>
+        <div class="alert alert-danger rounded-3 fw-bold mb-4"><i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]</div>
     }
 
     <form asp-action="Edit" method="post" enctype="multipart/form-data" id="stayForm">
@@ -28,31 +28,31 @@
 
         <div class="row g-4">
             <div class="col-md-6">
-                <label class="label-karnel">Stay Name <span class="text-danger">*</span></label>
-                <input asp-for="Name" class="k-input" required />
+                <label class="fw-bold text-dark mb-2">Stay Name <span class="text-danger">*</span></label>
+                <input asp-for="Name" class="form-control bg-light border" required />
             </div>
-            
+             
             <div class="col-md-6 position-relative">
-                <label class="label-karnel">Tourist Spot (Location) <span class="text-danger">*</span></label>
+                <label class="fw-bold text-dark mb-2">Tourist Spot (Location) <span class="text-danger">*</span></label>
                 <div class="position-relative">
-                    <input type="text" id="spotSearchInput" class="k-input mb-1" placeholder="Type spot name or address..." autocomplete="off" required>
+                    <input type="text" id="spotSearchInput" class="form-control bg-light border mb-1" placeholder="Type spot name or address..." autocomplete="off" required>
                     <input type="hidden" asp-for="SpotId" id="hiddenSpotId" />
                     <div id="spotDropdown" class="custom-dropdown-menu k-card shadow-lg p-0 border"></div>
                 </div>
-                <small class="text-danger d-block mt-1" id="spotAddressText"><i class="bi bi-geo-alt"></i> Loading address...</small>
+                <small class="text-muted d-block mt-1" id="spotAddressText"><i class="bi bi-geo-alt me-1"></i> Loading address...</small>
             </div>
 
             <div class="col-md-4">
-                <label class="label-karnel">Stay Type <span class="text-danger">*</span></label>
-                <select asp-for="StayType" class="k-input" required>
+                <label class="fw-bold text-dark mb-2">Stay Type <span class="text-danger">*</span></label>
+                <select asp-for="StayType" class="form-select bg-light border" required>
                     <option value="Hotel">🏢 Hotel</option>
                     <option value="Resort">🏖️ Resort</option>
                 </select>
             </div>
 
             <div class="col-md-8">
-                <label class="label-karnel">Exact Address</label>
-                <input asp-for="Address" class="k-input" />
+                <label class="fw-bold text-dark mb-2">Exact Address <span class="text-danger">*</span></label>
+                <input asp-for="Address" class="form-control bg-light border" required />
             </div>
 
             <div class="col-12 mt-4">
@@ -63,8 +63,8 @@
                     </div>
                     
                     <div class="table-responsive">
-                        <table class="table table-bordered align-middle bg-white">
-                            <thead class="table-light">
+                        <table class="table table-borderless align-middle mb-0">
+                            <thead class="border-bottom bg-light small text-uppercase text-muted fw-bold">
                                 <tr>
                                     <th style="width: 40%">Room Type Name</th>
                                     <th style="width: 25%">Price / Night ($)</th>
@@ -75,19 +75,20 @@
                             <tbody id="roomTableBody">
                                 </tbody>
                         </table>
+                        <small class="text-danger mt-2 fw-bold d-none" id="roomErrorMsg"><i class="bi bi-exclamation-triangle-fill me-1"></i> Error: Price must be $1 - $1,000,000,000. Quantity must be 1 - 100.</small>
                     </div>
                 </div>
             </div>
 
             <div class="col-12">
-                <label class="label-karnel">Overview Description</label>
-                <textarea asp-for="Description" class="k-input" rows="4"></textarea>
+                <label class="fw-bold text-dark mb-2">Overview Description</label>
+                <textarea asp-for="Description" class="form-control bg-light border" rows="4"></textarea>
             </div>
 
             <div class="col-12">
                 <div class="p-4 border rounded-4 bg-light text-center">
-                    <label class="label-karnel d-block text-start mb-3"><i class="bi bi-image me-1"></i>Update Image</label>
-                    <input type="file" name="imageFile" id="imageInput" class="form-control w-50 mx-auto" accept="image/*" onchange="previewImage(event)" />
+                    <label class="fw-bold text-primary d-block text-start mb-3"><i class="bi bi-image me-1"></i>Update Image</label>
+                    <input type="file" name="imageFile" id="imageInput" class="form-control w-50 mx-auto bg-white" accept="image/*" onchange="previewImage(event)" />
                     <small class="text-muted d-block mt-2">Leave blank to keep current image.</small>
 
                     <div id="previewContainer" class="mt-4 @(string.IsNullOrEmpty(Model.ImageUrl) ? "d-none" : "")">
@@ -100,7 +101,7 @@
             </div>
 
             <div class="col-12 mt-5 text-end border-top pt-4">
-                <button type="submit" class="k-btn-primary px-5 py-3"><i class="bi bi-check2-circle me-2"></i> Save Changes</button>
+                <button type="submit" class="btn btn-primary px-5 py-3 fw-bold rounded-3"><i class="bi bi-check2-circle me-2"></i> Save Changes</button>
             </div>
         </div>
     </form>
@@ -109,30 +110,41 @@
 @section Scripts {
     <script>
         let roomIndex = 0;
+        const MAX_ROOMS = 10;
 
-        function addRoomRow(roomId = 0, type = 'Standard', price = '', qty = '') {
+        function addRoomRow(roomId = 0, type = 'Standard', price = '', qty = '', isAutoLoad = false) {
             const tbody = document.getElementById('roomTableBody');
+            
+            if (!isAutoLoad && tbody.children.length >= MAX_ROOMS) {
+                alert("You can only add a maximum of " + MAX_ROOMS + " room types.");
+                return;
+            }
+
             const tr = document.createElement('tr');
             
-            let standardSelected = type === 'Standard' ? 'selected' : '';
+            let stdSelected = type === 'Standard' ? 'selected' : '';
+            let supSelected = type === 'Superior' ? 'selected' : '';
+            let delSelected = type === 'Deluxe' ? 'selected' : '';
             let vipSelected = type === 'VIP' ? 'selected' : '';
 
             tr.innerHTML = `
                 <input type="hidden" name="Rooms[${roomIndex}].RoomId" value="${roomId}" />
-                <td>
-                    <select name="Rooms[${roomIndex}].RoomType" class="form-select" required>
-                        <option value="Standard" ${standardSelected}>Standard</option>
+                <td class="py-3">
+                    <select name="Rooms[${roomIndex}].RoomType" class="form-select bg-white border" required>
+                        <option value="Standard" ${stdSelected}>Standard</option>
+                        <option value="Superior" ${supSelected}>Superior</option>
+                        <option value="Deluxe" ${delSelected}>Deluxe</option>
                         <option value="VIP" ${vipSelected}>VIP</option>
                     </select>
                 </td>
-                <td>
-                    <input type="number" name="Rooms[${roomIndex}].PriceRoom" value="${price}" class="form-control" min="0" step="1" required />
+                <td class="py-3">
+                    <input type="number" name="Rooms[${roomIndex}].PriceRoom" value="${price}" class="form-control bg-white border" min="1" max="1000000000" step="any" required />
                 </td>
-                <td>
-                    <input type="number" name="Rooms[${roomIndex}].Quantity" value="${qty}" class="form-control" min="1" max="100" required />
+                <td class="py-3">
+                    <input type="number" name="Rooms[${roomIndex}].Quantity" value="${qty}" class="form-control bg-white border" min="1" max="100" required />
                 </td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-danger fw-bold" onclick="removeRoomRow(this)"><i class="bi bi-trash"></i></button>
+                <td class="text-center py-3">
+                    <button type="button" class="btn btn-sm btn-danger fw-bold rounded-3" onclick="removeRoomRow(this)"><i class="bi bi-trash"></i></button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -152,38 +164,61 @@
                 row.querySelector('input[name$=".Quantity"]').name = `Rooms[${roomIndex}].Quantity`;
                 roomIndex++;
             });
+            validateRoomInputs();
         }
 
-        // LOAD DỮ LIỆU CŨ TỪ SERVER
+        // VALIDATION ĐỘNG
+        function validateRoomInputs() {
+            let isValid = true;
+            
+            document.querySelectorAll('input[name$=".PriceRoom"]').forEach(inp => {
+                let val = parseFloat(inp.value);
+                if (inp.value !== "" && (isNaN(val) || val < 1 || val > 1000000000)) { 
+                    inp.classList.add('border-danger'); isValid = false; 
+                } else { inp.classList.remove('border-danger'); }
+            });
+
+            document.querySelectorAll('input[name$=".Quantity"]').forEach(inp => {
+                let val = parseInt(inp.value);
+                if (inp.value !== "" && (isNaN(val) || val < 1 || val > 100)) { 
+                    inp.classList.add('border-danger'); isValid = false; 
+                } else { inp.classList.remove('border-danger'); }
+            });
+
+            const errorMsg = document.getElementById('roomErrorMsg');
+            if (!isValid) { errorMsg.classList.remove('d-none'); } else { errorMsg.classList.add('d-none'); }
+            
+            return isValid;
+        }
+
+        document.getElementById('roomTableBody').addEventListener('input', validateRoomInputs);
+
         const existingRooms = [
             @if(Model.Rooms != null) {
                 foreach(var r in Model.Rooms) {
-                    <text>{ id: @r.RoomId, type: "@Html.Raw(r.RoomType)", price: "@r.PriceRoom?.ToString("0")", qty: @r.Quantity },</text>
+                    <text>{ id: @r.RoomId, type: "@Html.Raw(r.RoomType)", price: "@r.PriceRoom?.ToString("0.##")", qty: @r.Quantity },</text>
                 }
             }
         ];
 
-        const spots = [
-            @foreach(var s in ViewBag.TouristSpots) { <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)", address: "@Html.Raw(s.Address)" },</text> }
-        ];
-
+        const spots = [ @foreach(var s in ViewBag.TouristSpots) { <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)", address: "@Html.Raw(s.Address)" },</text> } ];
         const searchInput = document.getElementById('spotSearchInput');
         const dropdown = document.getElementById('spotDropdown');
         const hiddenId = document.getElementById('hiddenSpotId');
         const addressText = document.getElementById('spotAddressText');
 
         window.onload = function() {
-            if (existingRooms.length > 0) {
-                existingRooms.forEach(r => addRoomRow(r.id, r.type, r.price, r.qty));
-            } else {
-                addRoomRow();
+            if (existingRooms.length > 0) { 
+                existingRooms.forEach(r => addRoomRow(r.id, r.type, r.price, r.qty, true)); 
+            } else { 
+                addRoomRow(); 
             }
 
             if (hiddenId.value) {
                 const currentSpot = spots.find(s => s.id == hiddenId.value);
                 if (currentSpot) {
                     searchInput.value = currentSpot.name;
-                    addressText.innerHTML = `<i class="bi bi-geo-alt"></i> ${currentSpot.address || 'Address not available'}`;
+                    addressText.innerHTML = `<i class="bi bi-geo-alt me-1"></i> ${currentSpot.address || 'Address not available'}`;
                 }
             }
         };
@@ -192,7 +227,7 @@
             dropdown.innerHTML = '';
             const lowerFilter = filterText.toLowerCase();
             const filtered = spots.filter(s => (s.name && s.name.toLowerCase().includes(lowerFilter)) || (s.address && s.address.toLowerCase().includes(lowerFilter)));
-
+            
             if (filtered.length === 0) {
                 dropdown.innerHTML = '<div class="p-3 text-muted small fst-italic">No spots found.</div>';
             } else {
@@ -203,8 +238,10 @@
                     item.onclick = function() {
                         searchInput.value = s.name;
                         hiddenId.value = s.id;
-                        addressText.innerHTML = `<i class="bi bi-geo-alt"></i> ${s.address || 'Address not available'}`;
+                        addressText.innerHTML = `<i class="bi bi-geo-alt me-1"></i> ${s.address || 'Address not available'}`;
+                        addressText.classList.replace('text-danger', 'text-muted');
                         dropdown.classList.remove('show');
+                        searchInput.classList.remove('border-danger');
                     };
                     dropdown.appendChild(item);
                 });
@@ -212,12 +249,33 @@
             dropdown.classList.add('show');
         }
 
-        searchInput.addEventListener('input', function() { hiddenId.value = ''; addressText.innerHTML = '<i class="bi bi-geo-alt"></i> Please select a tourist spot...'; renderDropdown(this.value); });
+        searchInput.addEventListener('input', function() { 
+            hiddenId.value = ''; 
+            addressText.innerHTML = '<i class="bi bi-geo-alt me-1"></i> Please select a tourist spot...'; 
+            addressText.classList.replace('text-muted', 'text-danger');
+            renderDropdown(this.value); 
+        });
+
         searchInput.addEventListener('focus', function() { renderDropdown(this.value); });
         document.addEventListener('click', function(e) { if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.remove('show'); });
 
         document.getElementById('stayForm').addEventListener('submit', function(e) {
-            if (!hiddenId.value) { e.preventDefault(); alert("Please select a Tourist Spot!"); searchInput.focus(); }
+            if (!hiddenId.value) { 
+                e.preventDefault(); 
+                alert("Please select a Tourist Spot!"); 
+                searchInput.classList.add('border-danger');
+                searchInput.focus(); 
+                return; 
+            }
+            if (document.getElementById('roomTableBody').children.length === 0) { 
+                e.preventDefault(); 
+                alert("You must add at least 1 Room Type!"); 
+                return; 
+            }
+            if (!validateRoomInputs()) {
+                e.preventDefault();
+                alert("Please fix the red highlighted errors before saving!");
+            }
         });
 
         function previewImage(event) {
