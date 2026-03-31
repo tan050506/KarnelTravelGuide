@@ -1,12 +1,12 @@
 @model KarnelTravelGuide.Web.Models.Entities.Account
 
 @{
-    ViewData["Title"] = "Thêm Tài Khoản";
+    ViewData["Title"] = "Add Account";
     Layout = "_AdminLayout";
 }
 
 <div class="container-fluid">
-    <h1 class="h3 mb-2 text-gray-800">Thêm Tài Khoản Mới</h1>
+    <h1 class="h3 mb-2 text-gray-800">Add New Account</h1>
 
     <div class="card shadow mb-4">
         <div class="card-body">
@@ -14,56 +14,56 @@
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="FullName" class="form-label">Họ và Tên</label>
-                        <input asp-for="FullName" class="form-control" placeholder="Nhập họ tên" required />
+                        <label asp-for="FullName" class="form-label">Full Name</label>
+                        <input asp-for="FullName" class="form-control" placeholder="Enter full name" required />
                         <span asp-validation-for="FullName" class="text-danger"></span>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label asp-for="Email" class="form-label">Email</label>
-                        <input asp-for="Email" class="form-control" type="email" placeholder="Nhập email" required />
+                        <input asp-for="Email" class="form-control" type="email" placeholder="Enter email" required />
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="PhoneNumber" class="form-label">Số điện thoại</label>
-                        <input asp-for="PhoneNumber" class="form-control" placeholder="Nhập số điện thoại" required />
+                        <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="Enter phone number" required />
                         <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label asp-for="Password" class="form-label">Mật khẩu</label>
-                        <input asp-for="Password" class="form-control" type="password" placeholder="Nhập mật khẩu" required />
+                        <label asp-for="Password" class="form-label">Password</label>
+                        <input asp-for="Password" class="form-control" type="password" placeholder="Enter password" required />
                         <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Address" class="form-label">Địa chỉ</label>
-                    <input asp-for="Address" class="form-control" placeholder="Nhập địa chỉ" />
+                    <label asp-for="Address" class="form-label">Address</label>
+                    <input asp-for="Address" class="form-control" placeholder="Enter address" />
                     <span asp-validation-for="Address" class="text-danger"></span>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="RoleId" class="form-label">Vai trò</label>
+                        <label asp-for="RoleId" class="form-label">Role</label>
                         <select asp-for="RoleId" class="form-select border" asp-items="ViewBag.RoleId" required>
-                            <option value="">-- Chọn vai trò --</option>
+                            <option value="">-- Select role --</option>
                         </select>
                         <span asp-validation-for="RoleId" class="text-danger"></span>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label asp-for="BranchId" class="form-label">Chi nhánh</label>
+                        <label asp-for="BranchId" class="form-label">Branch</label>
                         <select asp-for="BranchId" class="form-select border" asp-items="ViewBag.BranchId">
-                            <option value="">-- Chọn chi nhánh (Tùy chọn) --</option>
+                            <option value="">-- Select branch (Optional) --</option>
                         </select>
                         <span asp-validation-for="BranchId" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">Lưu Tài Khoản</button>
-                    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+                    <button type="submit" class="btn btn-primary">Save Account</button>
+                    <a asp-action="Index" class="btn btn-secondary">Back</a>
                 </div>
             </form>
         </div>

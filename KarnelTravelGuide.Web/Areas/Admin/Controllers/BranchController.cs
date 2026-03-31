@@ -128,14 +128,14 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
 
             if (isUsed)
             {
-                TempData["Error"] = "Chi nhánh đang được sử dụng, không thể xoá.";
+                TempData["Error"] = "Branch is in use, cannot be deleted.";
                 return RedirectToAction(nameof(Index));
             }
 
             _context.Branches.Remove(branch);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Xoá chi nhánh thành công.";
+            TempData["Success"] = "Branch deleted successfully.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -144,19 +144,19 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             if (_context.Branches.Any(b => b.BranchName == branch.BranchName &&
                 (!isEdit || b.BranchId != branch.BranchId)))
             {
-                ModelState.AddModelError("BranchName", "Tên chi nhánh đã tồn tại.");
+                ModelState.AddModelError("BranchName", "Branch name already exists.");
             }
 
             if (!string.IsNullOrEmpty(branch.PhoneBranch) &&
                 !Regex.IsMatch(branch.PhoneBranch, @"^(0[3|5|7|8|9])[0-9]{8}$"))
             {
-                ModelState.AddModelError("PhoneBranch", "SĐT không hợp lệ.");
+                ModelState.AddModelError("PhoneBranch", "Invalid phone number.");
             }
 
             if (!string.IsNullOrEmpty(branch.EmailBranch) &&
                 !Regex.IsMatch(branch.EmailBranch, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
             {
-                ModelState.AddModelError("EmailBranch", "Email không hợp lệ.");
+                ModelState.AddModelError("EmailBranch", "Invalid email address.");
             }
         }
     }

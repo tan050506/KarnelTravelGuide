@@ -23,16 +23,16 @@
     <div class="col-lg-8 mb-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-                <h6 class="m-0 fw-bold"><i class="bi bi-graph-up-arrow me-2"></i>Biểu Đồ Doanh Thu</h6>
+                <h6 class="m-0 fw-bold"><i class="bi bi-graph-up-arrow me-2"></i>Revenue Chart</h6>
                 
                 <div class="btn-group btn-group-sm" role="group">
                     <a href="@Url.Action("Index", new { filter = "day", detail = currentDetail })" 
                        class="btn @(currentFilter == "day" ? "btn-primary" : "btn-outline-primary")">
-                       Theo Ngày
+                       By Day
                     </a>
                     <a href="@Url.Action("Index", new { filter = "month", detail = currentDetail })" 
                        class="btn @(currentFilter == "month" ? "btn-primary" : "btn-outline-primary")">
-                       Theo Tháng
+                       By Month
                     </a>
                 </div>
             </div>
@@ -49,7 +49,7 @@
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col me-2">
-                        <div class="text-xs fw-bold text-danger text-uppercase mb-1">Tổng Chi Nhánh</div>
+                        <div class="text-xs fw-bold text-danger text-uppercase mb-1">Total Branches</div>
                         <div class="h3 mb-0 fw-bold text-dark">@ViewBag.TotalBranches</div>
                     </div>
                     <div class="col-auto">
@@ -64,7 +64,7 @@
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col me-2">
-                        <div class="text-xs fw-bold text-primary text-uppercase mb-1">Tổng Tài Khoản</div>
+                        <div class="text-xs fw-bold text-primary text-uppercase mb-1">Total Accounts</div>
                         <div class="h3 mb-0 fw-bold text-dark">@ViewBag.TotalAccounts</div>
                     </div>
                     <div class="col-auto">
@@ -79,7 +79,7 @@
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col me-2">
-                        <div class="text-xs fw-bold text-success text-uppercase mb-1">Tổng Hoá Đơn</div>
+                        <div class="text-xs fw-bold text-success text-uppercase mb-1">Total Invoices</div>
                         <div class="h3 mb-0 fw-bold text-dark">@ViewBag.TotalInvoices</div>
                     </div>
                     <div class="col-auto">
@@ -101,14 +101,14 @@
                 @if (currentDetail == "branches" && ViewBag.DetailBranches != null)
                 {
                     <div class="card-header bg-danger text-white border-0 pt-3 pb-3 d-flex justify-content-between">
-                        <h6 class="m-0 fw-bold"><i class="bi bi-diagram-3 me-2"></i>Chi tiết Chi Nhánh</h6>
+                        <h6 class="m-0 fw-bold"><i class="bi bi-diagram-3 me-2"></i>Branch Details</h6>
                         <a href="@Url.Action("Index", new { filter = currentFilter })" class="text-white"><i class="bi bi-x-lg"></i></a>
                     </div>
                     <div class="card-body p-0">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>ID</th><th>Tên Chi Nhánh</th><th>Số Điện Thoại</th><th>Email</th>
+                                    <th>ID</th><th>Branch Name</th><th>Phone Number</th><th>Email</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -130,14 +130,14 @@
                 @if (currentDetail == "accounts" && ViewBag.DetailAccounts != null)
                 {
                     <div class="card-header bg-primary text-white border-0 pt-3 pb-3 d-flex justify-content-between">
-                        <h6 class="m-0 fw-bold"><i class="bi bi-people-fill me-2"></i>Chi tiết Tài Khoản</h6>
+                        <h6 class="m-0 fw-bold"><i class="bi bi-people-fill me-2"></i>Account Details</h6>
                         <a href="@Url.Action("Index", new { filter = currentFilter })" class="text-white"><i class="bi bi-x-lg"></i></a>
                     </div>
                     <div class="card-body p-0">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Họ Tên</th><th>Email</th><th>Vai Trò</th><th>Chi Nhánh</th>
+                                    <th>Full Name</th><th>Email</th><th>Role</th><th>Branch</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -147,7 +147,7 @@
                                         <td class="fw-bold">@item.FullName</td>
                                         <td>@item.Email</td>
                                         <td><span class="badge bg-secondary">@item.Role?.RoleName</span></td>
-                                        <td>@(item.Branch?.BranchName ?? "Không")</td>
+                                        <td>@(item.Branch?.BranchName ?? "None")</td>
                                     </tr>
                                 }
                             </tbody>
@@ -159,14 +159,14 @@
                 @if (currentDetail == "invoices" && ViewBag.DetailInvoices != null)
                 {
                     <div class="card-header bg-success text-white border-0 pt-3 pb-3 d-flex justify-content-between">
-                        <h6 class="m-0 fw-bold"><i class="bi bi-receipt me-2"></i>Chi tiết Hoá Đơn (50 GD Gần Nhất)</h6>
+                        <h6 class="m-0 fw-bold"><i class="bi bi-receipt me-2"></i>Invoice Details (Last 50 Transactions)</h6>
                         <a href="@Url.Action("Index", new { filter = currentFilter })" class="text-white"><i class="bi bi-x-lg"></i></a>
                     </div>
                     <div class="card-body p-0">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Mã HĐ</th><th>Ngày Tạo</th><th>Khách Hàng</th><th>Tổng Tiền</th>
+                                    <th>Invoice ID</th><th>Created Date</th><th>Customer</th><th>Total Amount</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -211,7 +211,7 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: currentFilter === 'day' ? 'Doanh thu theo ngày' : 'Doanh thu theo tháng',
+                    label: currentFilter === 'day' ? 'Daily Revenue' : 'Monthly Revenue',
                     data: dataPoints,
                     borderColor: '#0d6efd',
                     backgroundColor: 'rgba(13, 110, 253, 0.1)',
@@ -235,7 +235,7 @@
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return value.toLocaleString('vi-VN') + ' VNĐ';
+                                return value.toLocaleString('vi-VN') + ' VND';
                             }
                         }
                     }

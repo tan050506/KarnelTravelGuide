@@ -1,7 +1,7 @@
 @model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Branch>
 
 @{
-    ViewData["Title"] = "Quản lý Chi Nhánh";
+    ViewData["Title"] = "Branch Management";
     Layout = "_AdminLayout";
 }
 
@@ -20,8 +20,8 @@
 
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
-        <h6 class="m-0 font-weight-bold">Danh sách Chi Nhánh</h6>
-        <a asp-action="Create" class="btn btn-sm btn-primary shadow-sm"><i class="bi bi-plus"></i> Thêm Mới</a>
+        <h6 class="m-0 font-weight-bold">Branch List</h6>
+        <a asp-action="Create" class="btn btn-sm btn-primary shadow-sm"><i class="bi bi-plus"></i> Add New</a>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -29,11 +29,11 @@
                 <thead class="table-dark">
                     <tr>
                         <th class="ps-3">ID</th>
-                        <th>Tên Chi Nhánh</th>
-                        <th>Địa Chỉ</th>
-                        <th>Số điện thoại</th>
+                        <th>Branch Name</th>
+                        <th>Address</th>
+                        <th>Phone Number</th>
                         <th>Email</th>
-                        <th class="text-center" style="width: 120px;">Hành động</th>
+                        <th class="text-center" style="width: 120px;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,9 +47,9 @@
                             <td class="align-middle">@item.EmailBranch</td>
                             <td class="text-center align-middle">
                                 <div class="d-flex justify-content-center gap-1">
-                                    <a asp-action="Edit" asp-route-id="@item.BranchId" class="btn btn-warning btn-sm py-0 px-2" title="Sửa"><i class="bi bi-pencil-square"></i></a>
-                                    <form asp-action="Delete" asp-route-id="@item.BranchId" method="post" onsubmit="return confirm('Xóa chi nhánh này có thể xóa cả các liên kết liên quan (Tài khoản, Địa điểm du lịch, v.v.). Bạn có chắc chắn muốn xóa?');" style="margin: 0;">
-                                        <button type="submit" class="btn btn-danger btn-sm py-0 px-2" title="Xóa"><i class="bi bi-trash"></i></button>
+                                    <a asp-action="Edit" asp-route-id="@item.BranchId" class="btn btn-warning btn-sm py-0 px-2" title="Edit"><i class="bi bi-pencil-square"></i></a>
+                                    <form asp-action="Delete" asp-route-id="@item.BranchId" method="post" onsubmit="return confirm('Deleting this branch might remove related links (Accounts, Tourist spots, etc.). Are you sure you want to delete?');" style="margin: 0;">
+                                        <button type="submit" class="btn btn-danger btn-sm py-0 px-2" title="Delete"><i class="bi bi-trash"></i></button>
                                     </form>
                                 </div>
                             </td>

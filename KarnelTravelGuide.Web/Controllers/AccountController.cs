@@ -60,7 +60,7 @@ namespace KarnelTravelGuide.Web.Controllers
                     return RedirectToAction("Index", "Home");
                 }
                 
-                ModelState.AddModelError("", "Email hoặc mật khẩu không đúng.");
+                ModelState.AddModelError("", "Incorrect email or password.");
             }
             return View(model);
         }
@@ -78,7 +78,7 @@ namespace KarnelTravelGuide.Web.Controllers
             {
                 if (_context.Accounts.Any(a => a.Email == model.Email))
                 {
-                    ModelState.AddModelError("Email", "Email này đã được sử dụng.");
+                    ModelState.AddModelError("Email", "This email is already in use.");
                     return View(model);
                 }
 
@@ -97,7 +97,7 @@ namespace KarnelTravelGuide.Web.Controllers
                 _context.Accounts.Add(newAccount);
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = "Đăng ký thành công! Hãy đăng nhập.";
+                TempData["SuccessMessage"] = "Registration successful! Please login.";
                 return RedirectToAction("Login");
             }
             return View(model);

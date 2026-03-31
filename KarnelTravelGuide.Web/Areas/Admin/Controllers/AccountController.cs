@@ -89,7 +89,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             {
                 if (currentUserId != id)
                 {
-                    TempData["Error"] = "Bạn không có quyền sửa các Admin khác. Bạn chỉ có thể sửa bản thân.";
+                    TempData["Error"] = "You do not have permission to edit other Admins. You can only edit yourself.";
                     return RedirectToAction(nameof(Index));
                 }
             }
@@ -114,7 +114,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             {
                 if (currentUserId != id)
                 {
-                    TempData["Error"] = "Bạn không có quyền sửa các Admin khác. Bạn chỉ có thể sửa bản thân.";
+                    TempData["Error"] = "You do not have permission to edit other Admins. You can only edit yourself.";
                     return RedirectToAction(nameof(Index));
                 }
             }
@@ -150,13 +150,13 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
 
             if (id == firstAdminId)
             {
-                TempData["Error"] = "Không thể xoá Admin gốc của hệ thống.";
+                TempData["Error"] = "Cannot delete the root Admin of the system.";
                 return RedirectToAction(nameof(Index));
             }
 
             if (id == currentUserId)
             {
-                TempData["Error"] = "Bạn không thể tự xoá chính mình.";
+                TempData["Error"] = "You cannot delete yourself.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -169,19 +169,19 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             {
                 if (account.Orders.Any())
                 {
-                    TempData["Error"] = "Không thể xoá tài khoản này vì đã tồn tại đơn hàng (Order).";
+                    TempData["Error"] = "Cannot delete this account because there are existing orders.";
                     return RedirectToAction(nameof(Index));
                 }
 
                 if (account.Role?.RoleName == "Admin" && currentUserId != firstAdminId)
                 {
-                    TempData["Error"] = "Bạn không có quyền xoá các Admin khác. Chỉ Admin gốc mới được phép.";
+                    TempData["Error"] = "You do not have permission to delete other Admins. Only the root Admin is allowed.";
                     return RedirectToAction(nameof(Index));
                 }
 
                 _context.Remove(account);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Xoá thành công.";
+                TempData["Success"] = "Deleted successfully.";
             }
 
             return RedirectToAction(nameof(Index));
@@ -192,23 +192,23 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             if (_context.Accounts.Any(a => a.Email == account.Email &&
                 (!isEdit || a.AccountId != account.AccountId)))
             {
-                ModelState.AddModelError("Email", "Email đã tồn tại.");
+                ModelState.AddModelError("Email", "Email already exists.");
             }
 
             if (_context.Accounts.Any(a => a.PhoneNumber == account.PhoneNumber &&
                 (!isEdit || a.AccountId != account.AccountId)))
             {
-                ModelState.AddModelError("PhoneNumber", "SĐT đã tồn tại.");
+                ModelState.AddModelError("PhoneNumber", "Phone number already exists.");
             }
 
             if (!Regex.IsMatch(account.PhoneNumber ?? "", @"^(0[3|5|7|8|9])[0-9]{8}$"))
             {
-                ModelState.AddModelError("PhoneNumber", "SĐT không hợp lệ.");
+                ModelState.AddModelError("PhoneNumber", "Invalid phone number.");
             }
 
             if (account.RoleId == 2 && account.BranchId == null)
             {
-                ModelState.AddModelError("BranchId", "Manager phải có chi nhánh.");
+                ModelState.AddModelError("BranchId", "Manager must have a branch.");
             }
         }
 

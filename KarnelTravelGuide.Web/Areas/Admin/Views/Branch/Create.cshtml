@@ -1,12 +1,12 @@
 @model KarnelTravelGuide.Web.Models.Entities.Branch
 
 @{
-    ViewData["Title"] = "Thêm Chi Nhánh";
+    ViewData["Title"] = "Add Branch";
     Layout = "_AdminLayout";
 }
 
 <div class="container-fluid p-0">
-    <h1 class="h3 mb-4 text-gray-800">Thêm Chi Nhánh Mới</h1>
+    <h1 class="h3 mb-4 text-gray-800">Add New Branch</h1>
 
     <div class="card shadow mb-4">
         <div class="card-body">
@@ -15,40 +15,40 @@
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="BranchName" class="form-label">Tên chi nhánh</label>
-                        <input asp-for="BranchName" class="form-control" placeholder="Nhập tên chi nhánh" required />
+                        <label asp-for="BranchName" class="form-label">Branch Name</label>
+                        <input asp-for="BranchName" class="form-control" placeholder="Enter branch name" required />
                         <span asp-validation-for="BranchName" class="text-danger"></span>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label asp-for="Address" class="form-label">Địa chỉ</label>
-                        <input asp-for="Address" class="form-control" placeholder="Nhập địa chỉ" required />
+                        <label asp-for="Address" class="form-label">Address</label>
+                        <input asp-for="Address" class="form-control" placeholder="Enter address" required />
                         <span asp-validation-for="Address" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="PhoneBranch" class="form-label">Số điện thoại</label>
-                        <input asp-for="PhoneBranch" class="form-control" placeholder="Nhập số điện thoại" required />
+                        <label asp-for="PhoneBranch" class="form-label">Phone Number</label>
+                        <input asp-for="PhoneBranch" class="form-control" placeholder="Enter phone number" required />
                         <span asp-validation-for="PhoneBranch" class="text-danger"></span>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label asp-for="EmailBranch" class="form-label">Email</label>
-                        <input asp-for="EmailBranch" class="form-control" type="email" placeholder="Nhập email chi nhánh" required />
+                        <input asp-for="EmailBranch" class="form-control" type="email" placeholder="Enter branch email" required />
                         <span asp-validation-for="EmailBranch" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-12 mb-3">
-                        <label class="form-label">Hình ảnh chi nhánh</label>
+                        <label class="form-label">Branch Image</label>
                         <input type="file" name="imageFile" class="form-control" accept="image/*" />
                     </div>
                 </div>
 
                 <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">Lưu Chi Nhánh</button>
-                    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+                    <button type="submit" class="btn btn-primary">Save Branch</button>
+                    <a asp-action="Index" class="btn btn-secondary">Back</a>
                 </div>
             </form>
         </div>
