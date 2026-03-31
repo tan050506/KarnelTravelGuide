@@ -1,79 +1,96 @@
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Manager Dashboard";
 }
 
 <div class="row mb-4">
     <div class="col-md-12">
         <h3 class="fw-bold text-dark">Workspace Overview</h3>
-        <p class="text-muted">Quick access to your daily operations and bookings.</p>
+        <p class="text-muted">Real-time tracking of your branch operations, room bookings, and restaurant reservations.</p>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-xl-3 col-md-6 mb-4">
+<div class="row g-4">
+    <div class="col-xl-4 col-md-6">
         <div class="card bg-warning text-dark shadow-sm h-100 border-0">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="text-uppercase fw-bold small mb-1">Pending Invoices</div>
-                        <div class="h2 fw-bold mb-0">12</div>
+                        <div class="h2 fw-bold mb-0">@ViewBag.PendingInvoicesCount</div>
                     </div>
                     <i class="bi bi-receipt-cutoff fs-1 opacity-50"></i>
                 </div>
             </div>
             <div class="card-footer bg-warning border-0 text-dark small fw-semibold">
-                <a href="#" class="text-dark text-decoration-none">View Details <i class="bi bi-arrow-right"></i></a>
+                <a asp-controller="Invoice" asp-action="Index" class="text-dark text-decoration-none">Review Payments <i class="bi bi-arrow-right ms-1"></i></a>
             </div>
         </div>
     </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card bg-info text-white shadow-sm h-100 border-0">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="text-uppercase fw-bold small mb-1">Tickets Booked (Today)</div>
-                        <div class="h2 fw-bold mb-0">45</div>
-                    </div>
-                    <i class="bi bi-ticket-detailed fs-1 opacity-50"></i>
-                </div>
-            </div>
-            <div class="card-footer bg-info border-0 text-white small fw-semibold">
-                <a href="#" class="text-white text-decoration-none">View Details <i class="bi bi-arrow-right"></i></a>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-xl-4 col-md-6">
         <div class="card bg-success text-white shadow-sm h-100 border-0">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-uppercase fw-bold small mb-1">Rooms Booked</div>
-                        <div class="h2 fw-bold mb-0">18</div>
+                        <div class="text-uppercase fw-bold small mb-1">Confirmed Stays</div>
+                        <div class="h2 fw-bold mb-0">@ViewBag.RoomsBookedCount</div>
                     </div>
                     <i class="bi bi-door-open fs-1 opacity-50"></i>
                 </div>
             </div>
             <div class="card-footer bg-success border-0 text-white small fw-semibold">
-                <a href="#" class="text-white text-decoration-none">View Details <i class="bi bi-arrow-right"></i></a>
+                <a asp-controller="RoomBooking" asp-action="Index" class="text-white text-decoration-none">View Room Bookings <i class="bi bi-arrow-right ms-1"></i></a>
             </div>
         </div>
     </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
+    <div class="col-xl-4 col-md-6">
+        <div class="card bg-primary text-white shadow-sm h-100 border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-uppercase fw-bold small mb-1">Confirmed Tables</div>
+                        <div class="h2 fw-bold mb-0">@ViewBag.TablesBookedCount</div>
+                    </div>
+                    <i class="bi bi-calendar-check fs-1 opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer bg-primary border-0 text-white small fw-semibold">
+                <a asp-controller="TableBooking" asp-action="Index" class="text-white text-decoration-none">View Table Bookings <i class="bi bi-arrow-right ms-1"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6 col-md-6">
+        <div class="card bg-info text-white shadow-sm h-100 border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-uppercase fw-bold small mb-1">Active Transport Routes</div>
+                        <div class="h2 fw-bold mb-0">@ViewBag.ActiveRoutesCount</div>
+                    </div>
+                    <i class="bi bi-signpost-split fs-1 opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer bg-info border-0 text-white small fw-semibold">
+                <a asp-controller="Transportation" asp-action="Index" class="text-white text-decoration-none">Manage Routes <i class="bi bi-arrow-right ms-1"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6 col-md-6">
         <div class="card bg-secondary text-white shadow-sm h-100 border-0">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-uppercase fw-bold small mb-1">New Feedbacks</div>
-                        <div class="h2 fw-bold mb-0">5</div>
+                        <div class="text-uppercase fw-bold small mb-1">Total Feedbacks</div>
+                        <div class="h2 fw-bold mb-0">@ViewBag.FeedbackCount</div>
                     </div>
                     <i class="bi bi-chat-right-text fs-1 opacity-50"></i>
                 </div>
             </div>
             <div class="card-footer bg-secondary border-0 text-white small fw-semibold">
-                <a href="#" class="text-white text-decoration-none">View Details <i class="bi bi-arrow-right"></i></a>
+                <a asp-controller="Feedback" asp-action="Index" class="text-white text-decoration-none">Read Reviews <i class="bi bi-arrow-right ms-1"></i></a>
             </div>
         </div>
     </div>
