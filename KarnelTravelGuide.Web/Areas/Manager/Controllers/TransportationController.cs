@@ -46,7 +46,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return fallbackBranch;
         }
 
-        public async Task<IActionResult> Index(string searchString, string sortOrder)
+        public async Task<IActionResult> Index(string? searchString, string? sortOrder)
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
             

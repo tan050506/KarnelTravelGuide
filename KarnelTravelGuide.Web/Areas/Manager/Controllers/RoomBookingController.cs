@@ -20,7 +20,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         // 1. INDEX
-        public async Task<IActionResult> Index(string searchString, string checkInDate, string sortOrder)
+        public async Task<IActionResult> Index(string? searchString, string? checkInDate, string? sortOrder)
         {
             var query = _context.Orders
                 .Include(o => o.Account)
@@ -111,7 +111,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         // 6. GET: SelectRoom
-        public async Task<IActionResult> SelectRoom(int stayId, string checkIn, string checkOut, string customerType, int? accountId, string walkInName, string walkInPhone)
+        public async Task<IActionResult> SelectRoom(int stayId, string? checkIn, string? checkOut, string? customerType, int? accountId, string? walkInName, string? walkInPhone)
         {
             var stay = await _context.Stays
                 .Include(s => s.Spot)
@@ -152,7 +152,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         // 7. POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(int? AccountId, string CustomerType, string WalkInName, string WalkInPhone, int StayId, int RoomId, string CheckIn, string CheckOut, int NumberOfRooms)
+        public async Task<IActionResult> Create(int? AccountId, string? CustomerType, string? WalkInName, string? WalkInPhone, int StayId, int RoomId, string? CheckIn, string? CheckOut, int NumberOfRooms)
         {
             int finalAccountId = 0;
 

@@ -17,7 +17,7 @@ namespace KarnelTravelGuide.Web.Controllers
         }
 
         // Hiển thị Giỏ hàng (Pending) và Lịch sử Đặt chỗ (History) của Khách hàng
-        public async Task<IActionResult> MyInvoices(string tab = "pending")
+        public async Task<IActionResult> MyInvoices(string? tab = "pending")
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
             if (accountId == null)

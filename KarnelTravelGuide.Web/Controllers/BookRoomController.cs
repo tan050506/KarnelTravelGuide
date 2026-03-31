@@ -19,7 +19,7 @@ namespace KarnelTravelGuide.Web.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index(int? spotId, string checkIn, string checkOut)
+        public async Task<IActionResult> Index(int? spotId, string? checkIn, string? checkOut)
         {
             ViewBag.Spots = await _context.TouristSpots.ToListAsync();
 
@@ -38,7 +38,7 @@ namespace KarnelTravelGuide.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Booking(int? id, string checkIn, string checkOut)
+        public async Task<IActionResult> Booking(int? id, string? checkIn, string? checkOut)
         {
             if (id == null) return NotFound();
 
@@ -75,7 +75,7 @@ namespace KarnelTravelGuide.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ConfirmBooking(int stayId, int roomId, string checkIn, string checkOut, int numberOfRooms)
+        public async Task<IActionResult> ConfirmBooking(int stayId, int roomId, string? checkIn, string? checkOut, int numberOfRooms)
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
             if (accountId == null)

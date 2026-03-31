@@ -20,7 +20,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         // 1. INDEX: Hiển thị Khách hàng đang có hóa đơn chờ (Pending) và Lịch sử
-        public async Task<IActionResult> Index(string searchString, string tab = "pending")
+        public async Task<IActionResult> Index(string? searchString, string? tab = "pending")
         {
             ViewData["ActiveTab"] = tab;
             ViewData["CurrentSearch"] = searchString;

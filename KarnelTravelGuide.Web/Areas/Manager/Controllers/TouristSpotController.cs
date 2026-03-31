@@ -46,7 +46,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         // 1. GET: Index
-        public async Task<IActionResult> Index(string searchString, string sortOrder)
+        public async Task<IActionResult> Index(string? searchString, string? sortOrder)
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
             
@@ -258,7 +258,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UpdateGalleryImageCaption(int imageId, string caption)
+        public async Task<IActionResult> UpdateGalleryImageCaption(int imageId, string? caption)
         {
             var img = await _context.TouristSpotImages.FindAsync(imageId);
             if (img != null)

@@ -20,7 +20,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         // 1. INDEX: Quản lý danh sách đơn
-        public async Task<IActionResult> Index(string searchString, string travelDate, string sortOrder)
+        public async Task<IActionResult> Index(string? searchString, string? travelDate, string? sortOrder)
         {
             var query = _context.Orders
                 .Include(o => o.Account)
@@ -114,7 +114,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         // 6. GET: SelectSeat
-        public async Task<IActionResult> SelectSeat(int transportationId, string travelDate, string customerType, int? accountId, string walkInName, string walkInPhone)
+        public async Task<IActionResult> SelectSeat(int transportationId, string? travelDate, string? customerType, int? accountId, string? walkInName, string? walkInPhone)
         {
             var transport = await _context.Transportations.Include(t => t.FromBranch).Include(t => t.ToSpot).FirstOrDefaultAsync(t => t.TransportationId == transportationId);
             if (transport == null) return NotFound();
@@ -131,7 +131,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         // 7. POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(int? AccountId, string CustomerType, string WalkInName, string WalkInPhone, int TransportationId, string TravelDate, string SelectedSeats)
+        public async Task<IActionResult> Create(int? AccountId, string? CustomerType, string? WalkInName, string? WalkInPhone, int TransportationId, string? TravelDate, string? SelectedSeats)
         {
             if (string.IsNullOrEmpty(SelectedSeats))
             {
@@ -200,7 +200,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
         // 8. API GET BOOKED SEATS
         [HttpGet]
-        public async Task<IActionResult> GetBookedSeats(int transportationId, string date)
+        public async Task<IActionResult> GetBookedSeats(int transportationId, string? date)
         {
             if (!DateTime.TryParse(date, out DateTime parsedDate)) return Json(new List<string>());
 

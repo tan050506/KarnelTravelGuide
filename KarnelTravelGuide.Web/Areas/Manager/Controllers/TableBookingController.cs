@@ -20,7 +20,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         // 1. INDEX
-        public async Task<IActionResult> Index(string searchString, string resDate, string sortOrder)
+        public async Task<IActionResult> Index(string? searchString, string? resDate, string? sortOrder)
         {
             var query = _context.Orders
                 .Include(o => o.Account)
@@ -110,7 +110,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         // 6. GET: SelectTable
-        public async Task<IActionResult> SelectTable(int restaurantId, string resDate, string resTime, string customerType, int? accountId, string walkInName, string walkInPhone)
+        public async Task<IActionResult> SelectTable(int restaurantId, string? resDate, string? resTime, string? customerType, int? accountId, string? walkInName, string? walkInPhone)
         {
             var restaurant = await _context.Restaurants
                 .Include(r => r.Spot)
@@ -149,7 +149,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         // 7. POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(int? AccountId, string CustomerType, string WalkInName, string WalkInPhone, int RestaurantId, int TableId, string ResDate, string ResTime, int NumberOfTables, int NumberOfGuests, string SpecialRequest)
+        public async Task<IActionResult> Create(int? AccountId, string? CustomerType, string? WalkInName, string? WalkInPhone, int RestaurantId, int TableId, string? ResDate, string? ResTime, int NumberOfTables, int NumberOfGuests, string? SpecialRequest)
         {
             int finalAccountId = 0;
 

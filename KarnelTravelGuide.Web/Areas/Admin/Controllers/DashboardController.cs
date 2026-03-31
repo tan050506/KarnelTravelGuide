@@ -17,7 +17,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index(string filter = "day", string detail = "")
+        public async Task<IActionResult> Index(string? filter = "day", string? detail = "")
         {
             ViewBag.TotalBranches = await _context.Branches.CountAsync();
             ViewBag.TotalAccounts = await _context.Accounts.CountAsync();

@@ -18,7 +18,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         // 1. INDEX: Hiển thị và lọc danh sách đánh giá
-        public async Task<IActionResult> Index(string searchString, string serviceType)
+        public async Task<IActionResult> Index(string? searchString, string? serviceType)
         {
             ViewData["CurrentSearch"] = searchString;
             ViewData["CurrentType"] = serviceType;

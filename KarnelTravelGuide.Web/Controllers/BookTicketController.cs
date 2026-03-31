@@ -20,7 +20,7 @@ namespace KarnelTravelGuide.Web.Controllers
         }
 
         // 1. INDEX: TRANG TÌM KIẾM VÀ DANH SÁCH CHUYẾN XE
-        public async Task<IActionResult> Index(int? fromBranchId, int? toSpotId, string transportType, string travelDate, string travelTime)
+        public async Task<IActionResult> Index(int? fromBranchId, int? toSpotId, string? transportType, string? travelDate, string? travelTime)
         {
             ViewBag.Branches = await _context.Branches.ToListAsync();
             ViewBag.Spots = await _context.TouristSpots.ToListAsync();
@@ -50,7 +50,7 @@ namespace KarnelTravelGuide.Web.Controllers
         }
 
         // 2. BOOKING: TRANG CHỌN GHẾ
-        public async Task<IActionResult> Booking(int id, string date)
+        public async Task<IActionResult> Booking(int id, string? date)
         {
             var transport = await _context.Transportations
                 .Include(t => t.FromBranch)
@@ -67,7 +67,7 @@ namespace KarnelTravelGuide.Web.Controllers
 
         // 3. XÁC NHẬN ĐẶT VÉ
         [HttpPost]
-        public async Task<IActionResult> ConfirmBooking(int transportationId, string travelDate, string selectedSeats)
+        public async Task<IActionResult> ConfirmBooking(int transportationId, string? travelDate, string? selectedSeats)
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
             if (accountId == null)
@@ -121,7 +121,7 @@ namespace KarnelTravelGuide.Web.Controllers
 
         // 4. API LẤY GHẾ ĐÃ ĐẶT
         [HttpGet]
-        public async Task<IActionResult> GetBookedSeats(int transportationId, string date)
+        public async Task<IActionResult> GetBookedSeats(int transportationId, string? date)
         {
             if (!DateTime.TryParse(date, out DateTime parsedDate)) 
                 return Json(new { bookedSeats = new List<string>(), transportName = "", transportType = "" });
