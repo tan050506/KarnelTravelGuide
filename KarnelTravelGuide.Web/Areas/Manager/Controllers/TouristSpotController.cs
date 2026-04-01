@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
@@ -18,6 +19,9 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
+
+        // THÊM Ổ KHÓA CHỐNG SPAM CLICK ĐÚP
+        private static readonly ConcurrentDictionary<string, bool> _inFlightRequests = new();
 
         public TouristSpotController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
@@ -45,14 +49,16 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return fallbackBranch;
         }
 
-        // 1. GET: Index
-        public async Task<IActionResult> Index(string? searchString, string? sortOrder)
+        // 1. GET: Index (ĐÃ THÊM PHÂN TRANG VÀ MẶC ĐỊNH MỚI NHẤT LÊN ĐẦU)
+        public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
             
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentSort"] = sortOrder;
-            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_desc" : "";
+            
+            // Mặc định là hiển thị MỚI NHẤT (desc). Bấm vào link sẽ đổi thành id_asc
+            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
             var spots = _context.TouristSpots
                 .Include(t => t.Branch)
@@ -69,15 +75,33 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             switch (sortOrder)
             {
-                case "id_desc":
-                    spots = spots.OrderByDescending(t => t.SpotId);
+                case "id_asc":
+                    spots = spots.OrderBy(t => t.SpotId);
                     break;
                 default:
-                    spots = spots.OrderBy(t => t.SpotId);
+                    spots = spots.OrderByDescending(t => t.SpotId); // MẶC ĐỊNH LUÔN LÀ DESCENDING
                     break;
             }
 
-            return View(await spots.ToListAsync());
+            var allSpots = await spots.ToListAsync();
+
+            // XỬ LÝ PHÂN TRANG
+            int pageSize = 10;
+            int totalItems = allSpots.Count;
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            var pagedSpots = allSpots.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            // Truyền dữ liệu phân trang ra View
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.PageSize = pageSize;
+
+            return View(pagedSpots);
         }
 
         public async Task<IActionResult> Create()
@@ -96,27 +120,50 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (ModelState.IsValid)
             {
-                if (CoverFile != null && CoverFile.Length > 0)
-                    spot.ImageUrl = await UploadFileAsync(CoverFile);
-
-                _context.TouristSpots.Add(spot);
-                await _context.SaveChangesAsync(); 
-
-                if (GalleryFiles != null && GalleryFiles.Count > 0)
+                // KHÓA YÊU CẦU: Chặn click đúp cùng 1 Tên Địa Điểm
+                string requestKey = $"Spot_{spot.SpotName}_{spot.BranchId}";
+                if (!_inFlightRequests.TryAdd(requestKey, true))
                 {
-                    foreach (var file in GalleryFiles)
-                    {
-                        if (file.Length > 0)
-                        {
-                            var imgUrl = await UploadFileAsync(file);
-                            _context.TouristSpotImages.Add(new TouristSpotImage { SpotId = spot.SpotId, ImageUrl = imgUrl });
-                        }
-                    }
-                    await _context.SaveChangesAsync();
+                    TempData["ErrorMessage"] = "Processing your request... Please avoid double-clicking.";
+                    return RedirectToAction(nameof(Index));
                 }
 
-                TempData["SuccessMessage"] = "Spot created successfully! You can now add captions to your gallery images below.";
-                return RedirectToAction(nameof(Edit), new { id = spot.SpotId });
+                try
+                {
+                    bool isDuplicate = await _context.TouristSpots.AnyAsync(ts => ts.SpotName == spot.SpotName && ts.BranchId == spot.BranchId);
+                    if (isDuplicate)
+                    {
+                        TempData["ErrorMessage"] = "A tourist spot with this name already exists! Please avoid double-clicking.";
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    if (CoverFile != null && CoverFile.Length > 0)
+                        spot.ImageUrl = await UploadFileAsync(CoverFile);
+
+                    _context.TouristSpots.Add(spot);
+                    await _context.SaveChangesAsync(); 
+
+                    if (GalleryFiles != null && GalleryFiles.Count > 0)
+                    {
+                        foreach (var file in GalleryFiles)
+                        {
+                            if (file.Length > 0)
+                            {
+                                var imgUrl = await UploadFileAsync(file);
+                                _context.TouristSpotImages.Add(new TouristSpotImage { SpotId = spot.SpotId, ImageUrl = imgUrl });
+                            }
+                        }
+                        await _context.SaveChangesAsync();
+                    }
+
+                    TempData["SuccessMessage"] = "Spot created successfully! You can now add captions to your gallery images below.";
+                    return RedirectToAction(nameof(Edit), new { id = spot.SpotId });
+                }
+                finally
+                {
+                    // Mở khóa sau khi xử lý xong
+                    _inFlightRequests.TryRemove(requestKey, out _);
+                }
             }
             
             var currentBranch = await GetCurrentManagerBranchAsync();

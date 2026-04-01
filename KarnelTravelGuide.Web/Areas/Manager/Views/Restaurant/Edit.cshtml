@@ -114,8 +114,6 @@
             
             let stdSelected = type === 'Standard' ? 'selected' : '';
             let vipSelected = type === 'VIP' ? 'selected' : '';
-            let privSelected = type === 'Private' ? 'selected' : '';
-            let outSelected = type === 'Outdoor' ? 'selected' : '';
 
             tr.innerHTML = `
                 <td class="d-none"><input type="hidden" name="TableIds" value="${tableId}" /></td>
@@ -123,8 +121,6 @@
                     <select name="TableTypes" class="form-select bg-white border" required>
                         <option value="Standard" ${stdSelected}>Standard</option>
                         <option value="VIP" ${vipSelected}>VIP</option>
-                        <option value="Private" ${privSelected}>Private</option>
-                        <option value="Outdoor" ${outSelected}>Outdoor</option>
                     </select>
                 </td>
                 <td class="py-3">

@@ -73,7 +73,7 @@ namespace KarnelTravelGuide.Web.Controllers
             if (accountId == null)
             {
                 TempData["ErrorMessage"] = "Please log in to book tickets.";
-                return RedirectToAction("Login", "Auth");
+                return RedirectToAction("Login", "Account");
             }
 
             if (string.IsNullOrEmpty(selectedSeats))

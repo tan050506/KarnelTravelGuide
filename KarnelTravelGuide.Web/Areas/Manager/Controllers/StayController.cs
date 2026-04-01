@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
@@ -19,17 +20,23 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
+        // THÊM Ổ KHÓA CHỐNG SPAM CLICK ĐÚP
+        private static readonly ConcurrentDictionary<string, bool> _inFlightRequests = new();
+
         public StayController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
         }
 
-        public async Task<IActionResult> Index(string? searchString, string? sortOrder)
+        // 1. GET: Index (ĐÃ THÊM PHÂN TRANG VÀ MẶC ĐỊNH MỚI NHẤT LÊN ĐẦU)
+        public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentSort"] = sortOrder;
-            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_desc" : "";
+            
+            // Mặc định là hiển thị MỚI NHẤT (desc). Bấm vào link sẽ đổi thành id_asc
+            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
             var stays = _context.Stays.Include(s => s.Spot).Include(s => s.Rooms).AsQueryable();
 
@@ -42,11 +49,33 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             switch (sortOrder)
             {
-                case "id_desc": stays = stays.OrderByDescending(s => s.StayId); break;
-                default: stays = stays.OrderBy(s => s.StayId); break;
+                case "id_asc": 
+                    stays = stays.OrderBy(s => s.StayId); 
+                    break;
+                default: 
+                    stays = stays.OrderByDescending(s => s.StayId); // MẶC ĐỊNH LUÔN LÀ DESCENDING
+                    break;
             }
 
-            return View(await stays.ToListAsync());
+            var allStays = await stays.ToListAsync();
+
+            // XỬ LÝ PHÂN TRANG
+            int pageSize = 10;
+            int totalItems = allStays.Count;
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            var pagedStays = allStays.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            // Truyền dữ liệu phân trang ra View
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.PageSize = pageSize;
+
+            return View(pagedStays);
         }
 
         public async Task<IActionResult> Details(int? id)
@@ -72,13 +101,39 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (ModelState.IsValid)
             {
-                if (imageFile != null && imageFile.Length > 0) stay.ImageUrl = await UploadFileAsync(imageFile);
+                // KHÓA YÊU CẦU: Chặn click đúp cùng 1 Tên Stay
+                string requestKey = $"Stay_{stay.Name}_{stay.SpotId}";
+                if (!_inFlightRequests.TryAdd(requestKey, true))
+                {
+                    TempData["ErrorMessage"] = "Processing your request... Please avoid double-clicking.";
+                    return RedirectToAction(nameof(Index));
+                }
 
-                _context.Add(stay); 
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Stay and room types created successfully!";
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    // Kiểm tra trùng lặp trong Database
+                    bool isDuplicate = await _context.Stays.AnyAsync(s => s.Name == stay.Name && s.SpotId == stay.SpotId);
+                    if (isDuplicate)
+                    {
+                        TempData["ErrorMessage"] = "A stay with this name already exists! Please avoid double-clicking.";
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    if (imageFile != null && imageFile.Length > 0) stay.ImageUrl = await UploadFileAsync(imageFile);
+
+                    _context.Add(stay); 
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Stay and room types created successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                finally
+                {
+                    // Mở khóa sau khi xử lý xong
+                    _inFlightRequests.TryRemove(requestKey, out _);
+                }
             }
+            
+            // Dữ liệu fallback nếu ModelState không hợp lệ
             ViewBag.TouristSpots = await _context.TouristSpots.ToListAsync();
             return View(stay);
         }

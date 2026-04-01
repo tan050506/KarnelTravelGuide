@@ -6,7 +6,6 @@
 }
 
 <div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 900px;">
-    
     <div class="d-flex align-items-center border-bottom pb-3 mb-4">
         <a asp-action="Index" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
         <h4 class="fw-bold m-0 text-dark">Checkout & Payment</h4>
@@ -29,7 +28,7 @@
             <i class="bi bi-stars fs-2 text-success me-3"></i>
             <div>
                 <h6 class="fw-bold text-success mb-1">Multi-Service Discount Unlocked!</h6>
-                <span class="small text-dark">This customer booked 2 or more services at the same time and is eligible for a <strong>10% discount</strong> on the entire bill.</span>
+                <span class="small text-dark">This customer booked <strong>2 or more distinct services</strong> and is eligible for a <strong>10% discount</strong> on the entire bill.</span>
             </div>
         </div>
     }
@@ -41,15 +40,18 @@
             <thead class="bg-light border-bottom text-uppercase small text-muted fw-bold">
                 <tr>
                     <th class="ps-4 py-3" style="width: 45%">Service Type</th>
-                    <th class="py-3" style="width: 30%">Details</th>
+                    <th class="py-3" style="width: 35%">Details</th>
                     <th class="py-3 text-center" style="width: 10%">Qty</th>
-                    <th class="pe-4 py-3 text-end" style="width: 15%">Amount</th>
+                    <th class="pe-4 py-3 text-end" style="width: 10%">Amount</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach(var inv in Model) {
                     if (inv.Order?.OrderDetails != null) {
-                        foreach(var od in inv.Order.OrderDetails) {
+                        // Nhóm các OrderDetails theo loại dịch vụ để gom ghế nếu là Vé xe
+                        var details = inv.Order.OrderDetails.ToList();
+                        
+                        foreach(var od in details) {
                             <tr class="border-bottom border-light">
                                 <td class="ps-4 py-3">
                                     @if(od.RoomBooking != null) {
@@ -85,32 +87,20 @@
     </div>
 
     <div class="row">
-        <div class="col-md-6 offset-md-6">
-            <div class="p-4 bg-light rounded-4 border">
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="fw-bold text-muted">Subtotal:</span>
-                    <span class="fw-bold text-dark fs-5">$@ViewBag.SubTotal.ToString("0.##")</span>
-                </div>
+        <div class="d-flex gap-3 mt-4">
+                <form asp-action="CancelPendingPayment" method="post" class="w-50" onsubmit="return confirm('Cancel all pending services for this customer? This will release all booked tables/rooms/tickets.');">
+                    <input type="hidden" name="accountId" value="@account?.AccountId" />
+                    <button type="submit" class="btn btn-outline-danger w-100 py-3 fw-bold rounded-pill shadow-sm">
+                        <i class="bi bi-x-circle me-2"></i> Cancel
+                    </button>
+                </form>
                 
-                @if (hasDiscount) {
-                    <div class="d-flex justify-content-between mb-3 text-success">
-                        <span class="fw-bold">Discount (10%):</span>
-                        <span class="fw-bold fs-5">-$@ViewBag.DiscountAmount.ToString("0.##")</span>
-                    </div>
-                }
-
-                <div class="border-top pt-3 mt-2 d-flex justify-content-between align-items-center">
-                    <span class="fw-bold text-dark text-uppercase fs-5">Final Total:</span>
-                    <span class="fw-bold text-primary fs-2">$@ViewBag.FinalTotal.ToString("0.##")</span>
-                </div>
+                <form asp-action="ConfirmPayment" method="post" class="w-50" onsubmit="return confirm('Confirm payment? All listed services will be automatically marked as Confirmed.');">
+                    <input type="hidden" name="accountId" value="@account?.AccountId" />
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill shadow-sm">
+                        <i class="bi bi-cash-stack me-2"></i> Confirm
+                    </button>
+                </form>
             </div>
-
-            <form asp-action="ConfirmPayment" method="post" class="mt-4" onsubmit="return confirm('Confirm payment? All listed services will be automatically marked as Confirmed.');">
-                <input type="hidden" name="accountId" value="@account?.AccountId" />
-                <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill fs-5 shadow-sm">
-                    <i class="bi bi-cash-stack me-2"></i> Confirm Payment
-                </button>
-            </form>
-        </div>
     </div>
 </div>

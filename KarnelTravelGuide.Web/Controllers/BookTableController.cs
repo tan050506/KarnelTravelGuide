@@ -79,7 +79,7 @@ namespace KarnelTravelGuide.Web.Controllers
             if (accountId == null)
             {
                 TempData["ErrorMessage"] = "Please log in to book a table.";
-                return RedirectToAction("Login", "Auth");
+                return RedirectToAction("Login", "Account");
             }
 
             var table = await _context.RestaurantTables.FindAsync(tableId);

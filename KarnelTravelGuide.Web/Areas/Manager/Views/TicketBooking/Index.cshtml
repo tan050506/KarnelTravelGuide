@@ -1,9 +1,14 @@
 @model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Order>
 @{ 
     ViewData["Title"] = "Ticket Booking Management";
-    int totalCount = Model?.Count() ?? 0;
-    bool isDescending = ViewData["CurrentSort"]?.ToString() == "id_desc";
-    int displayIndex = isDescending ? totalCount : 1;
+    
+    // TÍNH TOÁN STT DỰA TRÊN PHÂN TRANG VÀ CHIỀU SẮP XẾP
+    bool isDescending = string.IsNullOrEmpty(ViewData["CurrentSort"]?.ToString()) || ViewData["CurrentSort"]?.ToString() == "id_desc";
+    int totalItems = ViewBag.TotalItems ?? 0;
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int pageSize = ViewBag.PageSize ?? 10;
+    
+    int displayIndex = isDescending ? (totalItems - (currentPage - 1) * pageSize) : ((currentPage - 1) * pageSize + 1);
 }
 
 <style>
@@ -29,7 +34,7 @@
         <div class="alert alert-success rounded-3 fw-bold"><i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]</div>
     }
 
-    <div class="table-responsive">
+    <div class="table-responsive mb-2">
         <table class="table align-middle table-hover table-borderless">
             <thead class="border-bottom text-dark small fw-bold text-uppercase">
                 <tr>
@@ -37,10 +42,10 @@
                         <a asp-action="Index" asp-route-sortOrder="@ViewData["IdSortParm"]" class="text-dark text-decoration-none"><i class="bi bi-arrow-down-up"></i></a>
                     </th>
                     <th style="width: 15%;">CUSTOMER</th>
-                    <th style="width: 20%;">ROUTE</th>
-                    <th style="width: 15%;">TRANSPORT</th>
+                    <th style="width: 18%;">ROUTE</th>
+                    <th style="width: 12%;">TRANSPORT</th>
                     <th style="width: 12%;">DATE & TIME</th>
-                    <th style="width: 8%; text-align: center;">SEATS</th>
+                    <th style="width: 13%; text-align: center;">SEATS</th>
                     <th style="width: 10%;">TOTAL</th>
                     <th style="width: 5%;">STATUS</th>
                     <th style="width: 10%; text-align: center;">ACTIONS</th>
@@ -49,11 +54,14 @@
             <tbody>
                 @if (Model != null && Model.Any()) {
                     foreach (var order in Model) {
-                        var firstTicketDetail = order.OrderDetails?.FirstOrDefault(od => od.TicketBooking != null);
-                        var transport = firstTicketDetail?.TicketBooking?.Transportation;
-                        int seatCount = order.OrderDetails?.Count(od => od.TicketBooking != null) ?? 0;
-
+                        var ticketDetails = order.OrderDetails?.Where(od => od.TicketBooking != null).ToList() ?? new List<KarnelTravelGuide.Web.Models.Entities.OrderDetail>();
+                        var transport = ticketDetails.FirstOrDefault()?.TicketBooking?.Transportation;
+                        
                         if (transport == null) continue;
+
+                        var seats = ticketDetails.Select(od => od.TicketBooking?.Seat).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                        string seatString = seats.Any() ? string.Join(", ", seats) : "N/A";
+                        int seatCount = seats.Count;
 
                         <tr class="border-bottom">
                             <td class="fw-bold text-secondary fs-6 text-center">@displayIndex</td>
@@ -69,11 +77,12 @@
                                 <span class="badge bg-light text-dark border px-2 py-1 text-truncate" style="max-width: 130px;" title="@transport.TransportName">@transport.TransportName</span>
                             </td>
                             <td>
-                                <div class="fw-bold text-dark small">@(firstTicketDetail?.TicketBooking?.TravelDate?.ToString("dd/MM/yyyy") ?? "N/A")</div>
+                                <div class="fw-bold text-dark small">@(ticketDetails.First().TicketBooking?.TravelDate?.ToString("dd/MM/yyyy") ?? "N/A")</div>
                                 <div class="small fw-bold text-danger mt-1"><i class="bi bi-clock me-1"></i>@(transport.DepartureTime?.ToString("HH:mm") ?? "N/A")</div>
                             </td>
                             <td class="text-center">
-                                <div class="fw-bold text-primary"><i class="bi bi-person-fill me-1"></i>@seatCount</div>
+                                <div class="fw-bold text-primary"><i class="bi bi-people-fill me-1"></i>@seatCount Seats</div>
+                                <div class="small text-muted mt-1 fw-bold text-truncate mx-auto" style="max-width: 100px;" title="@seatString">@seatString</div>
                             </td>
                             <td>
                                 <div class="fw-bold text-success">$@((order.TotalAmount ?? 0).ToString("0.##"))</div>
@@ -87,14 +96,14 @@
                                 <div class="d-flex justify-content-center gap-2">
                                     <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-outline-info rounded-circle action-btn" title="View Details"><i class="bi bi-eye"></i></a>
                                     
-                                    @if (order.Status == "Pending") {
+                                    @if (order.Status == "Pending" || order.Status == "Submitted") {
                                         <form asp-action="ConfirmBooking" method="post" class="d-inline" onsubmit="return confirm('Confirm this booking?');">
                                             <input type="hidden" name="orderId" value="@order.OrderId" />
                                             <button type="submit" class="btn btn-outline-success rounded-circle action-btn" title="Confirm Booking"><i class="bi bi-check-lg"></i></button>
                                         </form>
                                     }
 
-                                    @if (order.Status == "Pending" || order.Status == "Confirmed") {
+                                    @if (order.Status == "Pending" || order.Status == "Submitted" || order.Status == "Confirmed") {
                                         <form asp-action="CancelOrder" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this booking? Seats will be released.');">
                                             <input type="hidden" name="orderId" value="@order.OrderId" />
                                             <button type="submit" class="btn btn-outline-danger rounded-circle action-btn" title="Cancel Booking"><i class="bi bi-x-lg"></i></button>
@@ -111,4 +120,29 @@
             </tbody>
         </table>
     </div>
+
+    @if (ViewBag.TotalPages > 1) {
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+            <div class="text-muted small fw-bold">
+                Showing @(((currentPage - 1) * pageSize) + 1) to @(Math.Min(currentPage * pageSize, totalItems)) of @totalItems entries
+            </div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link px-3" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-searchString="@ViewData["CurrentSearch"]" asp-route-travelDate="@ViewData["CurrentDate"]" asp-route-sortOrder="@ViewData["CurrentSort"]">Prev</a>
+                    </li>
+                    
+                    @for (int i = 1; i <= ViewBag.TotalPages; i++) {
+                        <li class="page-item @(currentPage == i ? "active" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-searchString="@ViewData["CurrentSearch"]" asp-route-travelDate="@ViewData["CurrentDate"]" asp-route-sortOrder="@ViewData["CurrentSort"]">@i</a>
+                        </li>
+                    }
+                    
+                    <li class="page-item @(currentPage == ViewBag.TotalPages ? "disabled" : "")">
+                        <a class="page-link px-3" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-searchString="@ViewData["CurrentSearch"]" asp-route-travelDate="@ViewData["CurrentDate"]" asp-route-sortOrder="@ViewData["CurrentSort"]">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
 </div>

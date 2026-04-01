@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
@@ -14,13 +15,16 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
     {
         private readonly ApplicationDbContext _context;
 
+        // THÊM Ổ KHÓA CHỐNG SPAM CLICK ĐÚP
+        private static readonly ConcurrentDictionary<string, bool> _inFlightRequests = new();
+
         public TicketBookingController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // 1. INDEX: Quản lý danh sách đơn
-        public async Task<IActionResult> Index(string? searchString, string? travelDate, string? sortOrder)
+        // 1. INDEX: Quản lý danh sách đơn (ĐÃ THÊM PHÂN TRANG)
+        public async Task<IActionResult> Index(string? searchString, string? travelDate, string? sortOrder, int page = 1)
         {
             var query = _context.Orders
                 .Include(o => o.Account)
@@ -45,15 +49,38 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             ViewData["CurrentSearch"] = searchString;
             ViewData["CurrentDate"] = travelDate;
             ViewData["CurrentSort"] = sortOrder;
-            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_desc" : "";
+            
+            // Nếu chưa chọn sort, mặc định là hiển thị MỚI NHẤT (desc). Bấm vào link sẽ đổi thành id_asc
+            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
             switch (sortOrder)
             {
-                case "id_desc": query = query.OrderByDescending(o => o.OrderId); break;
-                default: query = query.OrderBy(o => o.OrderId); break;
+                case "id_asc": query = query.OrderBy(o => o.OrderId); break;
+                default: query = query.OrderByDescending(o => o.OrderId); break; // MẶC ĐỊNH LUÔN LÀ DESCENDING
             }
 
-            return View(await query.ToListAsync());
+            var rawOrders = await query.ToListAsync();
+            
+            // Lọc trùng lặp do 1 đơn có nhiều vé
+            var uniqueOrders = rawOrders.GroupBy(o => o.OrderId).Select(g => g.First()).ToList();
+
+            // XỬ LÝ PHÂN TRANG (PAGINATION)
+            int pageSize = 10; // Giới hạn 10 đơn / 1 trang
+            int totalItems = uniqueOrders.Count;
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            var pagedOrders = uniqueOrders.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            // Truyền dữ liệu phân trang ra View
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.PageSize = pageSize;
+
+            return View(pagedOrders);
         }
 
         // 2. CONFIRM BOOKING
@@ -116,6 +143,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         // 6. GET: SelectSeat
         public async Task<IActionResult> SelectSeat(int transportationId, string? travelDate, string? customerType, int? accountId, string? walkInName, string? walkInPhone)
         {
+            if (string.IsNullOrEmpty(travelDate))
+            {
+                TempData["ErrorMessage"] = "Travel date is required.";
+                return RedirectToAction(nameof(Create));
+            }
+
             var transport = await _context.Transportations.Include(t => t.FromBranch).Include(t => t.ToSpot).FirstOrDefaultAsync(t => t.TransportationId == transportationId);
             if (transport == null) return NotFound();
 
@@ -133,6 +166,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int? AccountId, string? CustomerType, string? WalkInName, string? WalkInPhone, int TransportationId, string? TravelDate, string? SelectedSeats)
         {
+            if (string.IsNullOrEmpty(TravelDate))
+            {
+                TempData["ErrorMessage"] = "Travel date is required.";
+                return RedirectToAction(nameof(Create));
+            }
+
             if (string.IsNullOrEmpty(SelectedSeats))
             {
                 TempData["ErrorMessage"] = "No seats selected. Booking failed.";
@@ -172,30 +211,54 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var transport = await _context.Transportations.FindAsync(TransportationId);
             if (transport == null) return NotFound();
 
-            DateOnly travelDate = DateOnly.FromDateTime(DateTime.Parse(TravelDate));
+            DateOnly tDate = DateOnly.FromDateTime(DateTime.Parse(TravelDate!));
             string[] selectedSeats = SelectedSeats.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
             
             decimal unitPrice = transport.PriceTransport ?? 0;
             decimal totalAmount = unitPrice * selectedSeats.Length;
 
-            // Đặt trạng thái Submitted để quản lý ngay lập tức nhìn thấy đơn vừa tạo
-            var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Submitted" }; 
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
-
-            foreach (var seat in selectedSeats)
+            string requestKey = $"TicketOrder_{finalAccountId}_{TransportationId}_{TravelDate}_{SelectedSeats}";
+            if (!_inFlightRequests.TryAdd(requestKey, true))
             {
-                var ticket = new TicketBooking { TransportationId = TransportationId, TravelDate = travelDate, Seat = seat, TotalAmount = unitPrice };
-                _context.TicketBookings.Add(ticket);
-                await _context.SaveChangesAsync();
-                _context.OrderDetails.Add(new OrderDetail { OrderId = order.OrderId, TicketBookingId = ticket.TicketBookingId, Price = unitPrice, Quantity = 1 });
+                TempData["ErrorMessage"] = "Processing your booking... Please avoid double-clicking.";
+                return RedirectToAction(nameof(Index));
             }
 
-            _context.Invoices.Add(new Invoice { AccountId = finalAccountId, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, FinalTotal = totalAmount, PaymentStatus = "Unpaid" });
-            await _context.SaveChangesAsync();
-            
-            TempData["SuccessMessage"] = $"Successfully created an order for {selectedSeats.Length} tickets! Please review and confirm it below.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                bool isDuplicate = await _context.Orders.AnyAsync(o => 
+                    o.AccountId == finalAccountId && 
+                    o.TotalAmount == totalAmount && 
+                    o.CreateDate >= DateTime.Now.AddSeconds(-30));
+
+                if (isDuplicate)
+                {
+                    TempData["ErrorMessage"] = "This booking was already processed! Please avoid double-clicking.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Submitted" }; 
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+
+                foreach (var seat in selectedSeats)
+                {
+                    var ticket = new TicketBooking { TransportationId = TransportationId, TravelDate = tDate, Seat = seat, TotalAmount = unitPrice };
+                    _context.TicketBookings.Add(ticket);
+                    await _context.SaveChangesAsync();
+                    _context.OrderDetails.Add(new OrderDetail { OrderId = order.OrderId, TicketBookingId = ticket.TicketBookingId, Price = unitPrice, Quantity = 1 });
+                }
+
+                _context.Invoices.Add(new Invoice { AccountId = finalAccountId, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, FinalTotal = totalAmount, PaymentStatus = "Unpaid" });
+                await _context.SaveChangesAsync();
+                
+                TempData["SuccessMessage"] = $"Successfully booked {selectedSeats.Length} tickets! Please review and confirm it below.";
+                return RedirectToAction(nameof(Index));
+            }
+            finally
+            {
+                _inFlightRequests.TryRemove(requestKey, out _);
+            }
         }
 
         // 8. API GET BOOKED SEATS

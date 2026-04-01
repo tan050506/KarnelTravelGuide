@@ -22,6 +22,10 @@
         <p class="text-muted">Manage your pending reservations and booking history.</p>
     </div>
 
+    @if (TempData["SuccessMessage"] != null) {
+        <div class="alert alert-success rounded-3 fw-bold mb-4 shadow-sm"><i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]</div>
+    }
+
     <div class="bill-card p-0 overflow-hidden">
         <ul class="nav nav-tabs px-4 pt-3 border-bottom bg-light">
             <li class="nav-item">
@@ -33,7 +37,7 @@
         </ul>
 
         <div class="p-4">
-            @if (activeTab == "pending") {
+             @if (activeTab == "pending") {
                 if (!Model.Any()) {
                     <div class="text-center py-5">
                         <i class="bi bi-cart-x text-muted mb-3" style="font-size: 4rem;"></i>
@@ -53,8 +57,8 @@
                         <div class="alert alert-success border-success border-opacity-25 rounded-4 p-3 mb-4 d-flex align-items-center shadow-sm">
                             <i class="bi bi-stars fs-2 text-success me-3"></i>
                             <div>
-                                <h6 class="fw-bold text-success mb-1">10% Discount Applied!</h6>
-                                <span class="small text-dark">Awesome! Because you booked 2 or more services, a 10% discount has been applied to your final total.</span>
+                                <h6 class="fw-bold text-success mb-1">10% Combo Discount Applied!</h6>
+                                <span class="small text-dark">Awesome! Because you booked <strong>2 or more distinct services</strong>, a 10% discount has been applied to your final total.</span>
                             </div>
                         </div>
                     } else {
@@ -62,7 +66,7 @@
                             <i class="bi bi-info-circle fs-3 text-info me-3"></i>
                             <div>
                                 <h6 class="fw-bold text-dark mb-1">Want a 10% discount?</h6>
-                                <span class="small text-muted">Book at least <strong>1 more service</strong> (Hotel, Ticket, or Dining) to unlock a 10% discount on your entire bill!</span>
+                                <span class="small text-muted">Book at least <strong>1 more distinct service</strong> (Hotel, Ticket, or Dining) to unlock a 10% discount on your entire bill!</span>
                             </div>
                         </div>
                     }
@@ -124,7 +128,12 @@
 
                                 <div class="border-top pt-3 mt-2 d-flex justify-content-between align-items-center">
                                     <span class="fw-bold text-dark text-uppercase fs-5">Total to pay:</span>
-                                    <span class="fw-bold text-primary fs-2">$@ViewBag.FinalTotal.ToString("0.##")</span>
+                                    <div class="text-end">
+                                        @if (hasDiscount) {
+                                            <span class="text-muted text-decoration-line-through me-2 fs-5">$@ViewBag.SubTotal.ToString("0.##")</span>
+                                        }
+                                        <span class="fw-bold text-primary fs-2">$@ViewBag.FinalTotal.ToString("0.##")</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -133,13 +142,13 @@
                     <div class="row mt-4 mb-3">
                         <div class="col-md-8 offset-md-4 d-flex gap-3 justify-content-end">
                             <form asp-action="CancelAllInvoices" method="post" id="cancelAllForm" class="w-50" onsubmit="return confirm('Are you sure you want to cancel all pending bookings? This action cannot be undone.');">
-                                <button type="submit" class="btn btn-outline-danger btn-lg fw-bold w-100 rounded-pill py-3">
+                                <button type="submit" class="btn btn-outline-danger btn-lg fw-bold w-100 rounded-pill py-3 shadow-sm">
                                     <i class="bi bi-trash-fill me-2"></i> Cancel All Drafts
                                 </button>
                             </form>
                             <form asp-action="ConfirmAllInvoices" method="post" id="submitAllForm" class="w-50">
                                 <button type="submit" class="btn btn-primary btn-lg shadow fw-bold w-100 rounded-pill py-3" id="submitAllBtn">
-                                    <i class="bi bi-send-fill me-2"></i> Confirm & Send To Manager
+                                    <i class="bi bi-send-fill me-2"></i> Confirm & Send
                                 </button>
                             </form>
                         </div>
@@ -170,8 +179,15 @@
                                         <td class="ps-4 py-3"><strong class="text-dark">INV-@inv.InvoiceId.ToString("D5")</strong></td>
                                         <td class="py-3"><div class="small fw-bold text-muted">@(inv.CreatedDate?.ToString("dd/MM/yyyy HH:mm"))</div></td>
                                         <td class="py-3 text-center">
-                                            @if(inv.PaymentStatus == "Paid") { <span class="badge bg-success rounded-pill px-3 py-2">Paid</span> }
-                                            else { <span class="badge bg-danger rounded-pill px-3 py-2">Canceled</span> }
+                                            @if(inv.PaymentStatus == "Paid") { 
+                                                <span class="badge bg-success rounded-pill px-3 py-2 shadow-sm">Paid</span> 
+                                            }
+                                            else if(inv.Order?.Status == "Submitted") { 
+                                                <span class="badge bg-info text-dark rounded-pill px-3 py-2 shadow-sm">Processing</span> 
+                                            }
+                                            else { 
+                                                <span class="badge bg-danger rounded-pill px-3 py-2 shadow-sm">Canceled</span> 
+                                            }
                                         </td>
                                         <td class="pe-4 py-3 text-end fw-bold text-success fs-6">$@((inv.FinalTotal ?? 0).ToString("0.##"))</td>
                                     </tr>

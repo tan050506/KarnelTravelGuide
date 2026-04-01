@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
@@ -14,13 +15,16 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
     {
         private readonly ApplicationDbContext _context;
 
+        // THÊM Ổ KHÓA CHỐNG SPAM CLICK ĐÚP
+        private static readonly ConcurrentDictionary<string, bool> _inFlightRequests = new();
+
         public TableBookingController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // 1. INDEX
-        public async Task<IActionResult> Index(string? searchString, string? resDate, string? sortOrder)
+        // 1. INDEX (ĐÃ THÊM PHÂN TRANG)
+        public async Task<IActionResult> Index(string? searchString, string? resDate, string? sortOrder, int page = 1)
         {
             var query = _context.Orders
                 .Include(o => o.Account)
@@ -43,15 +47,38 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             ViewData["CurrentSearch"] = searchString;
             ViewData["CurrentDate"] = resDate;
             ViewData["CurrentSort"] = sortOrder;
-            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_desc" : "";
+            
+            // Mặc định là hiển thị MỚI NHẤT (desc). Bấm vào link sẽ đổi thành id_asc
+            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
             switch (sortOrder)
             {
-                case "id_desc": query = query.OrderByDescending(o => o.OrderId); break;
-                default: query = query.OrderBy(o => o.OrderId); break;
+                case "id_asc": query = query.OrderBy(o => o.OrderId); break;
+                default: query = query.OrderByDescending(o => o.OrderId); break; // MẶC ĐỊNH LUÔN LÀ DESCENDING
             }
 
-            return View(await query.ToListAsync());
+            var rawOrders = await query.ToListAsync();
+            
+            // Lọc trùng lặp
+            var uniqueOrders = rawOrders.GroupBy(o => o.OrderId).Select(g => g.First()).ToList();
+
+            // XỬ LÝ PHÂN TRANG
+            int pageSize = 10;
+            int totalItems = uniqueOrders.Count;
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            var pagedOrders = uniqueOrders.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            // Truyền dữ liệu phân trang ra View
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.PageSize = pageSize;
+
+            return View(pagedOrders);
         }
 
         // 2. CONFIRM BOOKING
@@ -112,6 +139,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         // 6. GET: SelectTable
         public async Task<IActionResult> SelectTable(int restaurantId, string? resDate, string? resTime, string? customerType, int? accountId, string? walkInName, string? walkInPhone)
         {
+            if (string.IsNullOrEmpty(resDate) || string.IsNullOrEmpty(resTime))
+            {
+                TempData["ErrorMessage"] = "Reservation date and time are required.";
+                return RedirectToAction(nameof(Create));
+            }
+
             var restaurant = await _context.Restaurants
                 .Include(r => r.Spot)
                 .Include(r => r.RestaurantTables)
@@ -151,6 +184,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int? AccountId, string? CustomerType, string? WalkInName, string? WalkInPhone, int RestaurantId, int TableId, string? ResDate, string? ResTime, int NumberOfTables, int NumberOfGuests, string? SpecialRequest)
         {
+            if (string.IsNullOrEmpty(ResDate) || string.IsNullOrEmpty(ResTime))
+            {
+                TempData["ErrorMessage"] = "Reservation date and time are required.";
+                return RedirectToAction(nameof(Create));
+            }
+
             int finalAccountId = 0;
 
             if (CustomerType == "WalkIn")
@@ -187,21 +226,46 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             DateTime resDateTime = DateTime.Parse($"{ResDate} {ResTime}");
             decimal totalAmount = (table.PriceRes ?? 0) * NumberOfTables;
 
-            var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Submitted" }; 
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
+            string requestKey = $"TableOrder_{finalAccountId}_{TableId}_{ResDate}_{ResTime}";
+            if (!_inFlightRequests.TryAdd(requestKey, true))
+            {
+                TempData["ErrorMessage"] = "Processing your booking... Please avoid double-clicking.";
+                return RedirectToAction(nameof(Index));
+            }
 
-            var resBooking = new RestaurantBooking { TableId = TableId, ReservationDateTime = resDateTime, NumberOfGuests = NumberOfGuests, SpecialRequest = SpecialRequest, TotalAmount = totalAmount };
-            _context.RestaurantBookings.Add(resBooking);
-            await _context.SaveChangesAsync();
+            try
+            {
+                bool isDuplicate = await _context.Orders.AnyAsync(o => 
+                    o.AccountId == finalAccountId && 
+                    o.TotalAmount == totalAmount && 
+                    o.CreateDate >= DateTime.Now.AddSeconds(-30));
 
-            _context.OrderDetails.Add(new OrderDetail { OrderId = order.OrderId, ResBookingId = resBooking.ResBookingId, Price = totalAmount, Quantity = NumberOfTables });
-            _context.Invoices.Add(new Invoice { AccountId = finalAccountId, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, FinalTotal = totalAmount, PaymentStatus = "Unpaid" }); 
-            
-            await _context.SaveChangesAsync();
+                if (isDuplicate)
+                {
+                    TempData["ErrorMessage"] = "This booking was already processed! Please avoid double-clicking.";
+                    return RedirectToAction(nameof(Index));
+                }
 
-            TempData["SuccessMessage"] = $"Successfully booked {NumberOfTables} tables! Please review and confirm it below.";
-            return RedirectToAction(nameof(Index));
+                var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Submitted" }; 
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+
+                var resBooking = new RestaurantBooking { TableId = TableId, ReservationDateTime = resDateTime, NumberOfGuests = NumberOfGuests, SpecialRequest = SpecialRequest, TotalAmount = totalAmount };
+                _context.RestaurantBookings.Add(resBooking);
+                await _context.SaveChangesAsync();
+
+                _context.OrderDetails.Add(new OrderDetail { OrderId = order.OrderId, ResBookingId = resBooking.ResBookingId, Price = totalAmount, Quantity = NumberOfTables });
+                _context.Invoices.Add(new Invoice { AccountId = finalAccountId, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, FinalTotal = totalAmount, PaymentStatus = "Unpaid" }); 
+                
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"Successfully booked {NumberOfTables} tables! Please review and confirm it below.";
+                return RedirectToAction(nameof(Index));
+            }
+            finally
+            {
+                _inFlightRequests.TryRemove(requestKey, out _);
+            }
         }
     }
 }

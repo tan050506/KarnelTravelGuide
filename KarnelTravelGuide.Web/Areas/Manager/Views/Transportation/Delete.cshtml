@@ -1,6 +1,6 @@
 @model KarnelTravelGuide.Web.Models.Entities.Transportation
 @{
-    ViewData["Title"] = "Delete Route";
+    ViewData["Title"] = "Delete Transportation";
 }
 
 <div class="k-card p-4 bg-white shadow-sm mx-auto" style="max-width: 600px; border-radius: 1rem; border: 2px solid #dc3545 !important;">
@@ -8,7 +8,7 @@
         <div class="mb-4">
             <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 4rem;"></i>
         </div>
-        <h3 class="fw-bold text-dark mb-2">Delete this route?</h3>
+        <h3 class="fw-bold text-dark mb-2">Delete this transportation?</h3>
         <p class="text-muted mb-4">You are about to delete the transportation route from <strong>@Model.FromBranch?.BranchName</strong> to <strong>@Model.ToSpot?.SpotName</strong>. This action cannot be undone, and the associated image file will be permanently removed.</p>
 
         <div class="bg-light p-4 rounded-4 text-start mb-5 border">

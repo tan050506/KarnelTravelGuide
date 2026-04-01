@@ -6,7 +6,7 @@
 <div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 900px;">
     <div class="d-flex align-items-center border-bottom pb-3 mb-4">
         <a asp-action="Index" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
-        <h4 class="fw-bold m-0 text-dark">Route Details</h4>
+        <h4 class="fw-bold m-0 text-dark">Transportation Details</h4>
         <div class="ms-auto">
             @if (Model.TransportType == "Air") { <span class="badge bg-primary fs-6 px-3 py-2"><i class="bi bi-airplane me-1"></i> Air</span> }
             else if (Model.TransportType == "Land") { <span class="badge bg-success fs-6 px-3 py-2"><i class="bi bi-car-front me-1"></i> Land</span> }
@@ -64,7 +64,7 @@
     </div>
 
     <div class="mt-5 pt-4 border-top text-end">
-        <a asp-action="Edit" asp-route-id="@Model.TransportationId" class="btn btn-primary px-4 py-2 fw-bold rounded-3 me-2"><i class="bi bi-pencil-square me-2"></i> Edit Route</a>
+        <a asp-action="Edit" asp-route-id="@Model.TransportationId" class="btn btn-primary px-4 py-2 fw-bold rounded-3 me-2"><i class="bi bi-pencil-square me-2"></i> Edit Transportation</a>
         <a asp-action="Delete" asp-route-id="@Model.TransportationId" class="btn btn-danger px-4 py-2 fw-bold rounded-3"><i class="bi bi-trash me-2"></i> Delete</a>
     </div>
 </div>

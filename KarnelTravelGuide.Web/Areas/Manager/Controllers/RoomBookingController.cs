@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
@@ -14,13 +15,16 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
     {
         private readonly ApplicationDbContext _context;
 
+        // THÊM Ổ KHÓA CHỐNG SPAM CLICK ĐÚP
+        private static readonly ConcurrentDictionary<string, bool> _inFlightRequests = new();
+
         public RoomBookingController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // 1. INDEX
-        public async Task<IActionResult> Index(string? searchString, string? checkInDate, string? sortOrder)
+        // 1. INDEX (ĐÃ THÊM PHÂN TRANG)
+        public async Task<IActionResult> Index(string? searchString, string? checkInDate, string? sortOrder, int page = 1)
         {
             var query = _context.Orders
                 .Include(o => o.Account)
@@ -44,15 +48,38 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             ViewData["CurrentSearch"] = searchString;
             ViewData["CurrentDate"] = checkInDate;
             ViewData["CurrentSort"] = sortOrder;
-            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_desc" : "";
+            
+            // Mặc định là hiển thị MỚI NHẤT (desc). Bấm vào link sẽ đổi thành id_asc
+            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
             switch (sortOrder)
             {
-                case "id_desc": query = query.OrderByDescending(o => o.OrderId); break;
-                default: query = query.OrderBy(o => o.OrderId); break;
+                case "id_asc": query = query.OrderBy(o => o.OrderId); break;
+                default: query = query.OrderByDescending(o => o.OrderId); break; // MẶC ĐỊNH LUÔN LÀ DESCENDING
             }
 
-            return View(await query.ToListAsync());
+            var rawOrders = await query.ToListAsync();
+            
+            // Lọc trùng lặp
+            var uniqueOrders = rawOrders.GroupBy(o => o.OrderId).Select(g => g.First()).ToList();
+
+            // XỬ LÝ PHÂN TRANG
+            int pageSize = 10;
+            int totalItems = uniqueOrders.Count;
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            var pagedOrders = uniqueOrders.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            // Truyền dữ liệu phân trang ra View
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.PageSize = pageSize;
+
+            return View(pagedOrders);
         }
 
         // 2. CONFIRM BOOKING
@@ -113,6 +140,13 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         // 6. GET: SelectRoom
         public async Task<IActionResult> SelectRoom(int stayId, string? checkIn, string? checkOut, string? customerType, int? accountId, string? walkInName, string? walkInPhone)
         {
+            // FIX CẢNH BÁO NULL REFERENCE: Bắt buộc CheckIn và CheckOut phải có giá trị
+            if (string.IsNullOrEmpty(checkIn) || string.IsNullOrEmpty(checkOut))
+            {
+                TempData["ErrorMessage"] = "Check-in and Check-out dates are required.";
+                return RedirectToAction(nameof(Create));
+            }
+
             var stay = await _context.Stays
                 .Include(s => s.Spot)
                 .Include(s => s.Rooms)
@@ -120,8 +154,9 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (stay == null) return NotFound();
 
-            DateOnly dateIn = DateOnly.FromDateTime(DateTime.Parse(checkIn));
-            DateOnly dateOut = DateOnly.FromDateTime(DateTime.Parse(checkOut));
+            // Thêm dấu '!' báo cho compiler biết biến chắc chắn không null
+            DateOnly dateIn = DateOnly.FromDateTime(DateTime.Parse(checkIn!));
+            DateOnly dateOut = DateOnly.FromDateTime(DateTime.Parse(checkOut!));
 
             var availableRoomsDict = new Dictionary<int, int>();
             foreach (var room in stay.Rooms)
@@ -154,6 +189,13 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int? AccountId, string? CustomerType, string? WalkInName, string? WalkInPhone, int StayId, int RoomId, string? CheckIn, string? CheckOut, int NumberOfRooms)
         {
+            // FIX CẢNH BÁO NULL REFERENCE
+            if (string.IsNullOrEmpty(CheckIn) || string.IsNullOrEmpty(CheckOut))
+            {
+                TempData["ErrorMessage"] = "Check-in and Check-out dates are required.";
+                return RedirectToAction(nameof(Create));
+            }
+
             int finalAccountId = 0;
 
             if (CustomerType == "WalkIn")
@@ -187,26 +229,53 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var room = await _context.Rooms.FirstOrDefaultAsync(r => r.RoomId == RoomId);
             if (room == null || NumberOfRooms <= 0) return NotFound();
 
-            DateOnly dateIn = DateOnly.FromDateTime(DateTime.Parse(CheckIn));
-            DateOnly dateOut = DateOnly.FromDateTime(DateTime.Parse(CheckOut));
+            DateOnly dateIn = DateOnly.FromDateTime(DateTime.Parse(CheckIn!));
+            DateOnly dateOut = DateOnly.FromDateTime(DateTime.Parse(CheckOut!));
             int totalNights = dateOut.DayNumber - dateIn.DayNumber;
             decimal totalAmount = (room.PriceRoom ?? 0) * NumberOfRooms * totalNights;
 
-            var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Submitted" }; 
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
+            // KHÓA YÊU CẦU: Chặn click đúp khi tạo đơn hàng
+            string requestKey = $"RoomOrder_{finalAccountId}_{RoomId}_{CheckIn}_{CheckOut}";
+            if (!_inFlightRequests.TryAdd(requestKey, true))
+            {
+                TempData["ErrorMessage"] = "Processing your booking... Please avoid double-clicking.";
+                return RedirectToAction(nameof(Index));
+            }
 
-            var roomBooking = new RoomBooking { RoomId = RoomId, CheckInDate = dateIn, CheckOutDate = dateOut, NumberOfRooms = NumberOfRooms, TotalAmount = totalAmount };
-            _context.RoomBookings.Add(roomBooking);
-            await _context.SaveChangesAsync();
+            try
+            {
+                // CHỐNG SPAM / DOUBLE-CLICK ở tầng Database (Khoảng thời gian 30s)
+                bool isDuplicate = await _context.Orders.AnyAsync(o => 
+                    o.AccountId == finalAccountId && 
+                    o.TotalAmount == totalAmount && 
+                    o.CreateDate >= DateTime.Now.AddSeconds(-30));
 
-            _context.OrderDetails.Add(new OrderDetail { OrderId = order.OrderId, RoomBookingId = roomBooking.RoomBookingId, Price = totalAmount, Quantity = 1 });
-            _context.Invoices.Add(new Invoice { AccountId = finalAccountId, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, FinalTotal = totalAmount, PaymentStatus = "Unpaid" }); 
-            
-            await _context.SaveChangesAsync();
+                if (isDuplicate)
+                {
+                    TempData["ErrorMessage"] = "This booking was already processed! Please avoid double-clicking.";
+                    return RedirectToAction(nameof(Index));
+                }
 
-            TempData["SuccessMessage"] = $"Successfully created an order for {NumberOfRooms} rooms! Please review and confirm it below.";
-            return RedirectToAction(nameof(Index));
+                var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Submitted" }; 
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+
+                var roomBooking = new RoomBooking { RoomId = RoomId, CheckInDate = dateIn, CheckOutDate = dateOut, NumberOfRooms = NumberOfRooms, TotalAmount = totalAmount };
+                _context.RoomBookings.Add(roomBooking);
+                await _context.SaveChangesAsync();
+
+                _context.OrderDetails.Add(new OrderDetail { OrderId = order.OrderId, RoomBookingId = roomBooking.RoomBookingId, Price = totalAmount, Quantity = 1 });
+                _context.Invoices.Add(new Invoice { AccountId = finalAccountId, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, FinalTotal = totalAmount, PaymentStatus = "Unpaid" }); 
+                
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = $"Successfully created an order for {NumberOfRooms} rooms! Please review and confirm it below.";
+                return RedirectToAction(nameof(Index));
+            }
+            finally
+            {
+                _inFlightRequests.TryRemove(requestKey, out _);
+            }
         }
     }
 }

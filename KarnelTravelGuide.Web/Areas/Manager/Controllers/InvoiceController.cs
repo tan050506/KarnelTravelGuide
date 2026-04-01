@@ -19,80 +19,132 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context = context;
         }
 
-        // 1. INDEX: Hiển thị Khách hàng đang có hóa đơn chờ (Pending) và Lịch sử
-        public async Task<IActionResult> Index(string? searchString, string? tab = "pending")
+        // 1. TRANG PENDING PAYMENTS (ĐÃ THÊM PHÂN TRANG)
+        public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
-            ViewData["ActiveTab"] = tab;
             ViewData["CurrentSearch"] = searchString;
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "date_asc" : "";
 
-            if (tab == "pending")
+            var query = _context.Invoices
+                .Include(i => i.Account)
+                .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!)
+                .Where(i => i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted");
+
+            if (!string.IsNullOrEmpty(searchString))
             {
-                // Thêm dấu ! để báo với C# rằng Order và OrderDetails sẽ không null ở đây
-                var query = _context.Invoices
-                    .Include(i => i.Account)
-                    .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!)
-                    .Where(i => i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted");
-
-                if (!string.IsNullOrEmpty(searchString))
-                {
-                    // Kiểm tra i.Account != null trước khi .FullName để tránh CS8602
-                    query = query.Where(i => 
-                        i.Account != null && (
-                            (i.Account.FullName != null && i.Account.FullName.Contains(searchString)) ||
-                            (i.Account.PhoneNumber != null && i.Account.PhoneNumber.Contains(searchString))
-                        ));
-                }
-
-                var unpaidInvoices = await query.ToListAsync();
-
-                var grouped = unpaidInvoices
-                    .GroupBy(i => i.Account)
-                    .Select(g => new PendingBillViewModel
-                    {
-                        Account = g.Key,
-                        TotalInvoices = g.Count(),
-                        // Dùng ?. và ?? 0 để đảm bảo an toàn tuyệt đối
-                        TotalServices = g.Sum(i => i.Order?.OrderDetails?.Sum(od => od.Quantity ?? 1) ?? 0),
-                        SubTotal = g.Sum(i => i.SubTotal ?? 0)
-                    }).ToList();
-
-                ViewBag.PendingGroups = grouped;
-                return View();
+                query = query.Where(i => 
+                    i.Account != null && (
+                        (i.Account.FullName != null && i.Account.FullName.Contains(searchString)) ||
+                        (i.Account.PhoneNumber != null && i.Account.PhoneNumber.Contains(searchString))
+                    ));
             }
-            else
-            {
-                var query = _context.Invoices
-                    .Include(i => i.Account)
-                    .Include(i => i.Order)
-                    .Where(i => i.PaymentStatus != "Unpaid" || (i.Order != null && i.Order.Status == "Canceled"))
-                    .OrderByDescending(i => i.CreatedDate)
-                    .AsQueryable();
 
-                if (!string.IsNullOrEmpty(searchString))
+            var rawInvoices = await query.ToListAsync();
+            var uniqueInvoices = rawInvoices.GroupBy(i => i.InvoiceId).Select(g => g.First()).ToList();
+
+            var grouped = uniqueInvoices
+                .GroupBy(i => i.Account)
+                .Select(g => new PendingBillViewModel
                 {
-                    query = query.Where(i => 
-                        (i.Account != null && i.Account.FullName != null && i.Account.FullName.Contains(searchString)) ||
-                        (i.Account != null && i.Account.PhoneNumber != null && i.Account.PhoneNumber.Contains(searchString)) ||
-                        i.InvoiceId.ToString() == searchString);
-                }
+                    Account = g.Key,
+                    TotalServices = g.Count(), 
+                    SubTotal = g.Sum(i => i.SubTotal ?? 0),
+                    OrderDate = g.Min(i => i.CreatedDate)
+                });
 
-                ViewBag.HistoryInvoices = await query.ToListAsync();
-                return View();
-            }
+            if (sortOrder == "date_asc") grouped = grouped.OrderBy(g => g.OrderDate);
+            else grouped = grouped.OrderByDescending(g => g.OrderDate);
+
+            var sortedGroups = grouped.ToList();
+
+            // PHÂN TRANG
+            int pageSize = 10;
+            int totalItems = sortedGroups.Count;
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            var pagedPending = sortedGroups.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.PageSize = pageSize;
+
+            return View(pagedPending);
         }
 
-        // 2. CUSTOMER BILL: Xem chi tiết hóa đơn tổng hợp của 1 khách
+        // 2. TRANG PAYMENT HISTORY
+        public async Task<IActionResult> History(string? searchString, string? sortOrder, int page = 1)
+        {
+            ViewData["CurrentSearch"] = searchString;
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "date_asc" : "";
+
+            var query = _context.Invoices
+                .Include(i => i.Account)
+                .Include(i => i.Order)
+                .Where(i => i.CreatedDate.HasValue && (i.PaymentStatus != "Unpaid" || (i.Order != null && i.Order.Status == "Canceled")))
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(i => 
+                    i.Account != null && (
+                        (i.Account.FullName != null && i.Account.FullName.Contains(searchString)) ||
+                        (i.Account.PhoneNumber != null && i.Account.PhoneNumber.Contains(searchString))
+                    ));
+            }
+
+            var rawHistory = await query.ToListAsync();
+            var uniqueHistory = rawHistory.GroupBy(i => i.InvoiceId).Select(g => g.First()).ToList();
+
+            var historyGroups = uniqueHistory
+                .GroupBy(i => i.CreatedDate!.Value.Date)
+                .Select(g => new HistoryGroupViewModel
+                {
+                    Date = g.Key,
+                    TotalCustomers = g.Select(i => i.AccountId).Distinct().Count(),
+                    TotalInvoices = g.Count(),
+                    TotalRevenue = g.Where(i => i.PaymentStatus == "Paid").Sum(i => i.FinalTotal ?? 0)
+                });
+
+            if (sortOrder == "date_asc") historyGroups = historyGroups.OrderBy(g => g.Date);
+            else historyGroups = historyGroups.OrderByDescending(g => g.Date);
+
+            var sortedGroups = historyGroups.ToList();
+
+            int pageSize = 10;
+            int totalItems = sortedGroups.Count;
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            var pagedHistory = sortedGroups.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.PageSize = pageSize;
+
+            return View(pagedHistory);
+        }
+
+        // 3. THANH TOÁN (CUSTOMER BILL)
         public async Task<IActionResult> CustomerBill(int accountId)
         {
             var account = await _context.Accounts.FindAsync(accountId);
             if (account == null) return NotFound();
 
-            var invoices = await _context.Invoices
+            var rawInvoices = await _context.Invoices
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.RoomBooking!).ThenInclude(rb => rb.Room!).ThenInclude(r => r.Stay)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.ResBooking!).ThenInclude(rb => rb.RestaurantTable!).ThenInclude(rt => rt.Restaurant)
                 .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted")
                 .ToListAsync();
+
+            var invoices = rawInvoices.GroupBy(i => i.InvoiceId).Select(g => g.First()).ToList();
 
             if (!invoices.Any())
             {
@@ -100,38 +152,36 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Dùng toán tử an toàn ?. để đếm tổng dịch vụ
-            int totalServices = invoices.Sum(i => i.Order?.OrderDetails?.Sum(od => od.Quantity ?? 1) ?? 0);
+            int distinctServices = invoices.Count;
             decimal subTotal = invoices.Sum(i => i.SubTotal ?? 0);
             
-            // LOGIC: >= 2 dịch vụ thì giảm 10%
-            decimal discountPercent = totalServices >= 2 ? 0.1m : 0m;
+            decimal discountPercent = distinctServices >= 2 ? 0.1m : 0m;
             decimal discountAmount = subTotal * discountPercent;
             decimal finalTotal = subTotal - discountAmount;
 
             ViewBag.Account = account;
-            ViewBag.TotalServices = totalServices;
+            ViewBag.TotalServices = distinctServices;
             ViewBag.SubTotal = subTotal;
             ViewBag.DiscountAmount = discountAmount;
             ViewBag.FinalTotal = finalTotal;
-            ViewBag.HasDiscount = totalServices >= 2;
+            ViewBag.HasDiscount = distinctServices >= 2;
 
             return View(invoices);
         }
 
-        // 3. XÁC NHẬN THANH TOÁN (TỰ ĐỘNG CONFIRM TẤT CẢ)
         [HttpPost]
         public async Task<IActionResult> ConfirmPayment(int accountId)
         {
-            var invoices = await _context.Invoices
+            var rawInvoices = await _context.Invoices
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails)
                 .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted")
                 .ToListAsync();
 
+            var invoices = rawInvoices.GroupBy(i => i.InvoiceId).Select(g => g.First()).ToList();
             if (!invoices.Any()) return RedirectToAction(nameof(Index));
 
-            int totalServices = invoices.Sum(i => i.Order?.OrderDetails?.Sum(od => od.Quantity ?? 1) ?? 0);
-            bool applyDiscount = totalServices >= 2;
+            int distinctServices = invoices.Count;
+            bool applyDiscount = distinctServices >= 2;
 
             foreach (var inv in invoices)
             {
@@ -147,40 +197,165 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 }
 
                 inv.PaymentStatus = "Paid";
-                
-                // TỰ ĐỘNG XÁC NHẬN CÁC DỊCH VỤ KIA NGAY LẬP TỨC
-                if (inv.Order != null)
-                {
-                    inv.Order.Status = "Confirmed";
-                }
+                if (inv.Order != null) inv.Order.Status = "Confirmed";
             }
 
             await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = $"Payment successful! {(applyDiscount ? "A 10% multi-service discount was applied. " : "")}All associated services have been automatically confirmed.";
-            return RedirectToAction(nameof(Index), new { tab = "history" });
+            TempData["SuccessMessage"] = $"Payment successful! {(applyDiscount ? "10% multi-service discount applied." : "")}";
+            return RedirectToAction(nameof(History));
         }
 
-        // 4. DETAILS: Lịch sử 1 hóa đơn
-        public async Task<IActionResult> Details(int id)
+        // TÍNH NĂNG MỚI: HỦY ĐƠN CHỜ THANH TOÁN (Tại trang Checkout)
+        [HttpPost]
+        public async Task<IActionResult> CancelPendingPayment(int accountId)
         {
-            var invoice = await _context.Invoices
+            var rawInvoices = await _context.Invoices
+                .Include(i => i.Order)
+                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted")
+                .ToListAsync();
+
+            if (rawInvoices.Any())
+            {
+                foreach (var inv in rawInvoices)
+                {
+                    inv.PaymentStatus = "Canceled";
+                    if (inv.Order != null) inv.Order.Status = "Canceled";
+                }
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Pending payment canceled successfully! All services have been released.";
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+
+        // 4. CHI TIẾT NGÀY (DAILY DETAILS)
+        public async Task<IActionResult> DailyDetails(string dateStr, string? searchString, string? sortOrder, int page = 1)
+        {
+            if (!DateTime.TryParse(dateStr, out DateTime date)) return RedirectToAction(nameof(History));
+
+            ViewData["CurrentSearch"] = searchString;
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+
+            var rawInvoices = _context.Invoices
                 .Include(i => i.Account)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.RoomBooking!).ThenInclude(rb => rb.Room!).ThenInclude(r => r.Stay)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.ResBooking!).ThenInclude(rb => rb.RestaurantTable!).ThenInclude(rt => rt.Restaurant)
-                .FirstOrDefaultAsync(i => i.InvoiceId == id);
+                .Where(i => i.CreatedDate.HasValue && i.CreatedDate.Value.Date == date.Date && (i.PaymentStatus != "Unpaid" || (i.Order != null && i.Order.Status == "Canceled")))
+                .AsQueryable();
 
-            if (invoice == null) return NotFound();
-            return View(invoice);
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                rawInvoices = rawInvoices.Where(i => 
+                    (i.Account != null && i.Account.FullName != null && i.Account.FullName.Contains(searchString)) ||
+                    (i.Account != null && i.Account.PhoneNumber != null && i.Account.PhoneNumber.Contains(searchString)));
+            }
+
+            var invoicesList = await rawInvoices.ToListAsync();
+            var uniqueInvoices = invoicesList.GroupBy(i => i.InvoiceId).Select(g => g.First());
+
+            var customerGroups = uniqueInvoices
+                .GroupBy(i => new { i.AccountId, i.PaymentStatus })
+                .Select(g => new DailyCustomerInvoiceViewModel
+                {
+                    Account = g.First().Account,
+                    PaymentStatus = g.Key.PaymentStatus ?? "",
+                    Invoices = g.ToList(),
+                    FinalTotal = g.Sum(i => i.FinalTotal ?? 0),
+                    TotalItems = g.Count()
+                });
+
+            if (sortOrder == "name_desc") customerGroups = customerGroups.OrderByDescending(g => g.Account?.FullName);
+            else customerGroups = customerGroups.OrderBy(g => g.Account?.FullName);
+
+            var sortedGroups = customerGroups.ToList();
+
+            int pageSize = 10;
+            int totalItems = sortedGroups.Count;
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            var pagedGroups = sortedGroups.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            ViewBag.SelectedDate = date;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.PageSize = pageSize;
+
+            return View(pagedGroups);
+        }
+
+        // 5. TRANG CHI TIẾT CỦA 1 KHÁCH (INVOICE RECEIPT)
+        public async Task<IActionResult> CustomerDailyInvoice(int accountId, string dateStr)
+        {
+            if (!DateTime.TryParse(dateStr, out DateTime date)) return RedirectToAction(nameof(History));
+
+            var account = await _context.Accounts.FindAsync(accountId);
+            if (account == null) return NotFound();
+
+            var rawInvoices = await _context.Invoices
+                .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.RoomBooking!).ThenInclude(rb => rb.Room!).ThenInclude(r => r.Stay)
+                .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation)
+                .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.ResBooking!).ThenInclude(rb => rb.RestaurantTable!).ThenInclude(rt => rt.Restaurant)
+                .Where(i => i.AccountId == accountId && i.CreatedDate.HasValue && i.CreatedDate.Value.Date == date.Date && (i.PaymentStatus != "Unpaid" || (i.Order != null && i.Order.Status == "Canceled")))
+                .ToListAsync();
+
+            var uniqueInvoices = rawInvoices.GroupBy(i => i.InvoiceId).Select(g => g.First()).ToList();
+
+            ViewBag.Account = account;
+            ViewBag.SelectedDate = date;
+            return View(uniqueInvoices);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CancelCustomerInvoices(int accountId, string dateStr)
+        {
+            if (!DateTime.TryParse(dateStr, out DateTime date)) return RedirectToAction(nameof(History));
+
+            var invoices = await _context.Invoices.Include(i => i.Order)
+                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Paid" && i.CreatedDate.HasValue && i.CreatedDate.Value.Date == date.Date)
+                .ToListAsync();
+
+            if (invoices.Any())
+            {
+                foreach (var inv in invoices)
+                {
+                    inv.PaymentStatus = "Canceled";
+                    if (inv.Order != null) inv.Order.Status = "Canceled";
+                }
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "All invoices for this customer have been canceled and services released.";
+            }
+            
+            return RedirectToAction(nameof(DailyDetails), new { dateStr = dateStr });
         }
     }
 
     public class PendingBillViewModel
     {
         public Account? Account { get; set; }
-        public int TotalInvoices { get; set; }
         public int TotalServices { get; set; }
         public decimal SubTotal { get; set; }
+        public DateTime? OrderDate { get; set; }
+    }
+
+    public class HistoryGroupViewModel
+    {
+        public DateTime Date { get; set; }
+        public int TotalCustomers { get; set; }
+        public int TotalInvoices { get; set; }
+        public decimal TotalRevenue { get; set; }
+    }
+
+    public class DailyCustomerInvoiceViewModel
+    {
+        public Account? Account { get; set; }
+        public string PaymentStatus { get; set; } = string.Empty;
+        public List<Invoice> Invoices { get; set; } = new();
+        public decimal FinalTotal { get; set; }
+        public int TotalItems { get; set; }
     }
 }

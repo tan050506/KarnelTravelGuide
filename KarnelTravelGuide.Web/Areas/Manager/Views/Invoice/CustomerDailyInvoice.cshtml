@@ -1,0 +1,83 @@
+@model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Invoice>
+@{ 
+    ViewData["Title"] = "Customer Invoice Details"; 
+    DateTime selectedDate = ViewBag.SelectedDate;
+    var account = ViewBag.Account as KarnelTravelGuide.Web.Models.Entities.Account;
+    
+    decimal totalOriginal = Model.Sum(i => i.SubTotal ?? 0);
+    decimal totalPaid = Model.Sum(i => i.FinalTotal ?? 0);
+    string globalStatus = Model.FirstOrDefault()?.PaymentStatus ?? "Unknown";
+}
+
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 900px;">
+    
+    <div class="d-flex align-items-center border-bottom pb-3 mb-4">
+        <a asp-action="DailyDetails" asp-route-dateStr="@selectedDate.ToString("yyyy-MM-dd")" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
+        <div>
+            <h4 class="fw-bold m-0 text-dark">Invoice Receipt</h4>
+            <span class="small text-muted">Date: @selectedDate.ToString("dd/MM/yyyy")</span>
+        </div>
+    </div>
+
+    <div class="bg-light p-4 rounded-4 border mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="fw-bold text-secondary text-uppercase mb-2"><i class="bi bi-person-circle me-2"></i>Customer</h6>
+            <h5 class="fw-bold text-dark mb-1">@account?.FullName</h5>
+            <div class="text-primary fw-bold"><i class="bi bi-telephone-fill me-1"></i>@account?.PhoneNumber</div>
+        </div>
+        <div class="text-end">
+            @if(globalStatus == "Paid") { <span class="badge bg-success px-4 py-2 rounded-pill fs-6 mb-2">Paid</span> } 
+            else { <span class="badge bg-danger px-4 py-2 rounded-pill fs-6 mb-2">Canceled</span> }
+            
+            <div class="fw-bold text-dark fs-4 mt-1">
+                Total: 
+                @if (totalOriginal > totalPaid) {
+                    <span class="text-muted text-decoration-line-through me-2 fs-5">$@totalOriginal.ToString("0.##")</span>
+                }
+                <span class="text-success">$@totalPaid.ToString("0.##")</span>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-list-check text-primary me-2"></i>Detailed Services</h5>
+
+    <div class="table-responsive border rounded-4 mb-4">
+        <table class="table table-borderless bg-white align-middle mb-0">
+            <thead class="bg-light border-bottom text-uppercase small text-muted fw-bold">
+                <tr>
+                    <th class="ps-4 py-3" style="width: 15%">Invoice #</th>
+                    <th class="py-3" style="width: 45%">Service Type</th>
+                    <th class="py-3 text-center" style="width: 15%">Qty</th>
+                    <th class="pe-4 py-3 text-end" style="width: 25%">Final Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var inv in Model) {
+                    if (inv.Order?.OrderDetails != null) {
+                        foreach(var od in inv.Order.OrderDetails) {
+                            <tr class="border-bottom border-light">
+                                <td class="ps-4 py-3 fw-bold text-secondary">#@inv.InvoiceId</td>
+                                <td class="py-3">
+                                    @if(od.RoomBooking != null) {
+                                        <div class="fw-bold text-dark"><i class="bi bi-door-open-fill text-primary me-2"></i>@od.RoomBooking.Room?.Stay?.Name</div>
+                                        <div class="small text-muted mt-1 ps-4">Room: @od.RoomBooking.Room?.RoomType</div>
+                                    } 
+                                    else if(od.TicketBooking != null) {
+                                        <div class="fw-bold text-dark"><i class="bi bi-ticket-detailed-fill text-info me-2"></i>@od.TicketBooking.Transportation?.TransportName</div>
+                                        <div class="small text-danger mt-1 ps-4 fw-bold">Seat: @od.TicketBooking.Seat</div>
+                                    }
+                                    else if(od.ResBooking != null) {
+                                        <div class="fw-bold text-dark"><i class="bi bi-ui-checks-grid text-success me-2"></i>@od.ResBooking.RestaurantTable?.Restaurant?.RestaurantName</div>
+                                        <div class="small text-muted mt-1 ps-4">Table: @od.ResBooking.RestaurantTable?.TableType</div>
+                                    }
+                                </td>
+                                <td class="py-3 text-center fw-bold text-secondary">x @(od.Quantity ?? 1)</td>
+                                <td class="pe-4 py-3 text-end fw-bold text-dark">$@((inv.FinalTotal ?? 0).ToString("0.##"))</td>
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

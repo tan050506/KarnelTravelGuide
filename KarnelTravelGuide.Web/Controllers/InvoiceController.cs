@@ -4,6 +4,8 @@ using KarnelTravelGuide.Web.Data;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
 using System.Threading.Tasks;
+using KarnelTravelGuide.Web.Models.Entities;
+using System.Collections.Generic;
 
 namespace KarnelTravelGuide.Web.Controllers
 {
@@ -23,7 +25,7 @@ namespace KarnelTravelGuide.Web.Controllers
             if (accountId == null)
             {
                 TempData["ErrorMessage"] = "Please log in to view your bookings.";
-                return RedirectToAction("Login", "Auth");
+                return RedirectToAction("Login", "Account");
             }
 
             ViewData["ActiveTab"] = tab;
@@ -41,24 +43,25 @@ namespace KarnelTravelGuide.Web.Controllers
                     .Where(i => i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Pending")
                     .ToListAsync();
 
-                int totalServices = pendingInvoices.Sum(i => i.Order?.OrderDetails?.Sum(od => od.Quantity ?? 1) ?? 0);
+                // LOGIC MỚI: Đếm số loại dịch vụ khác nhau thay vì tổng số lượng
+                int distinctServices = pendingInvoices.SelectMany(i => i.Order?.OrderDetails ?? new List<OrderDetail>()).Count();
                 decimal subTotal = pendingInvoices.Sum(i => i.SubTotal ?? 0);
                 
-                // Logic giảm 10% nếu >= 2 dịch vụ
-                decimal discountAmount = totalServices >= 2 ? subTotal * 0.1m : 0m;
+                // Logic giảm 10% nếu >= 2 dịch vụ khác nhau
+                decimal discountAmount = distinctServices >= 2 ? subTotal * 0.1m : 0m;
                 decimal finalTotal = subTotal - discountAmount;
 
-                ViewBag.TotalServices = totalServices;
+                ViewBag.TotalServices = distinctServices;
                 ViewBag.SubTotal = subTotal;
                 ViewBag.DiscountAmount = discountAmount;
                 ViewBag.FinalTotal = finalTotal;
-                ViewBag.HasDiscount = totalServices >= 2;
+                ViewBag.HasDiscount = distinctServices >= 2;
 
                 return View(pendingInvoices);
             }
             else
             {
-                // Tab 2: Lịch sử dịch vụ đã thanh toán hoặc đã hủy
+                // Tab 2: Lịch sử dịch vụ đã thanh toán, đã hủy, hoặc đang chờ Manager duyệt (Submitted)
                 var historyInvoices = await query
                     .Where(i => i.PaymentStatus != "Unpaid" || (i.Order != null && (i.Order.Status == "Canceled" || i.Order.Status == "Submitted")))
                     .OrderByDescending(i => i.CreatedDate)
@@ -72,7 +75,7 @@ namespace KarnelTravelGuide.Web.Controllers
         public async Task<IActionResult> ConfirmAllInvoices()
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
-            if (accountId == null) return RedirectToAction("Login", "Auth");
+            if (accountId == null) return RedirectToAction("Login", "Account");
 
             var pendingInvoices = await _context.Invoices
                 .Include(i => i.Order)
@@ -98,7 +101,7 @@ namespace KarnelTravelGuide.Web.Controllers
         public async Task<IActionResult> CancelAllInvoices()
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
-            if (accountId == null) return RedirectToAction("Login", "Auth");
+            if (accountId == null) return RedirectToAction("Login", "Account");
 
             var pendingInvoices = await _context.Invoices
                 .Include(i => i.Order)

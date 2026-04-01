@@ -123,8 +123,6 @@
             const tr = document.createElement('tr');
             
             let stdSelected = type === 'Standard' ? 'selected' : '';
-            let supSelected = type === 'Superior' ? 'selected' : '';
-            let delSelected = type === 'Deluxe' ? 'selected' : '';
             let vipSelected = type === 'VIP' ? 'selected' : '';
 
             tr.innerHTML = `
@@ -132,8 +130,6 @@
                 <td class="py-3">
                     <select name="Rooms[${roomIndex}].RoomType" class="form-select bg-white border" required>
                         <option value="Standard" ${stdSelected}>Standard</option>
-                        <option value="Superior" ${supSelected}>Superior</option>
-                        <option value="Deluxe" ${delSelected}>Deluxe</option>
                         <option value="VIP" ${vipSelected}>VIP</option>
                     </select>
                 </td>

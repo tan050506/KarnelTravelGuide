@@ -1,233 +1,901 @@
 ﻿@model IEnumerable<KarnelTravelGuide.Web.Models.Entities.TouristSpot>
 @{
-    ViewData["Title"] = "Home - KarnelTravelGuide";
+    ViewData["Title"] = "KarnelTravel — Discover Your Next Journey";
+    ViewData["HeroPage"] = true;
 }
 
 <style>
-    :root {
-        --kt-primary: #0d6efd;
-        --kt-primary-hover: #0b5ed7;
-    }
+/* ================================================================
+   KARNEL TRAVEL — INDEX PAGE
+   Clean, warm, editorial travel aesthetic
+   ================================================================ */
 
-    body {
-        background-color: #f8fafc;
-        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    }
+/* ── shared helpers ── */
+.label-tag {
+    display: inline-block;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--g1);
+    margin-bottom: .65rem;
+}
 
-    /* 1. Khu vực ảnh bìa */
-    .hero-banner {
-        background: linear-gradient(rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.7)), 
-                    url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop') no-repeat center center;
-        background-size: cover;
-        height: 75vh;
-        min-height: 550px;
-        display: flex;
-        align-items: center;
-        border-radius: 0 0 2.5rem 2.5rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
+.sec-h {
+    font-family: var(--ff-d);
+    font-size: clamp(1.9rem, 3.8vw, 2.75rem);
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.18;
+    margin-bottom: .5rem;
+}
 
-    /* 2. Khung tìm kiếm */
-    .search-glass {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(12px);
-        border-radius: 1.25rem;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-        transform: translateY(50%);
-        z-index: 10;
-        border: 1px solid rgba(255,255,255,0.5);
-    }
+.sec-p {
+    font-size: .95rem;
+    color: var(--muted);
+    line-height: 1.75;
+}
 
-    .form-control-custom {
-        background-color: #f1f5f9;
-        border: 1px solid transparent;
-        border-radius: 0.75rem;
-        padding: 0.75rem 1rem;
-        transition: all 0.2s;
-    }
-    .form-control-custom:focus {
-        background-color: #fff;
-        border-color: var(--kt-primary);
-        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
-    }
+/* ================================================================
+   1. HERO
+   ================================================================ */
+.hero {
+    position: relative;
+    height: 100vh;
+    min-height: 680px;
+    max-height: 960px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
 
-    /* 3. Thẻ Dịch vụ */
-    .service-card {
-        border: none;
-        border-radius: 1.25rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: #fff;
-        height: 100%;
-    }
-    .service-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.06);
-    }
-    .icon-box {
-        width: 64px; height: 64px;
-        border-radius: 1rem;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.75rem;
-        margin-bottom: 1.25rem;
-    }
+.hero__bg {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(180deg,
+            rgba(8,20,14,.48) 0%,
+            rgba(8,20,14,.22) 38%,
+            rgba(8,20,14,.72) 100%),
+        url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop')
+        center / cover no-repeat;
+    animation: heroScale 22s ease-out both;
+    transform-origin: center;
+}
+@@keyframes heroScale {
+    from { transform: scale(1.07); }
+    to   { transform: scale(1.0); }
+}
 
-    /* 4. Thẻ Địa điểm */
-    .dest-card {
-        border-radius: 1.25rem;
-        overflow: hidden;
-        border: none;
-        position: relative;
-        cursor: pointer;
-    }
-    .dest-card img {
-        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        height: 350px;
-        object-fit: cover;
-    }
-    .dest-card:hover img {
-        transform: scale(1.08);
-    }
-    .dest-overlay {
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
-        padding: 2rem 1.5rem 1.5rem;
-        color: white;
-    }
-    
-    .section-title {
-        font-weight: 800;
-        color: #1e293b;
-        margin-bottom: 1rem;
-    }
+.hero__content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 0 1.5rem;
+    max-width: 760px;
+    margin: 0 auto;
+    animation: fadeUp .8s .1s both;
+}
+
+@@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.hero__kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: .9rem;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.6);
+    margin-bottom: 1.5rem;
+}
+.hero__kicker::before,
+.hero__kicker::after {
+    content: '';
+    width: 32px;
+    height: 1px;
+    background: rgba(255,255,255,.3);
+}
+
+.hero__title {
+    font-family: var(--ff-d);
+    font-size: clamp(3.2rem, 8vw, 5.8rem);
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.07;
+    letter-spacing: -.02em;
+    margin-bottom: 1.2rem;
+}
+.hero__title em {
+    font-style: italic;
+    color: #7dd9c6;
+}
+
+.hero__sub {
+    font-size: 1rem;
+    color: rgba(255,255,255,.62);
+    line-height: 1.8;
+    max-width: 460px;
+    margin: 0 auto 2.5rem;
+    font-weight: 300;
+}
+
+.hero__cta {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-solid {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .82rem 2rem;
+    border-radius: 50px;
+    font-size: .9rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--g1), var(--g2));
+    color: #fff;
+    box-shadow: 0 8px 28px rgba(42,157,143,.4);
+    transition: transform .18s, box-shadow .18s;
+}
+.btn-solid:hover { transform: translateY(-2px); box-shadow: 0 14px 38px rgba(42,157,143,.5); color: #fff; }
+
+.btn-outline-w {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .82rem 2rem;
+    border-radius: 50px;
+    font-size: .9rem;
+    font-weight: 700;
+    color: rgba(255,255,255,.88);
+    border: 1.5px solid rgba(255,255,255,.32);
+    backdrop-filter: blur(6px);
+    transition: background .18s, border-color .18s;
+}
+.btn-outline-w:hover { background: rgba(255,255,255,.13); border-color: rgba(255,255,255,.65); color: #fff; }
+
+/* scroll cue */
+.hero__scroll {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .4rem;
+    color: rgba(255,255,255,.35);
+    font-size: .65rem;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    animation: scrollBounce 2.4s ease-in-out infinite;
+}
+.hero__scroll span {
+    display: block;
+    width: 1px;
+    height: 32px;
+    background: linear-gradient(to bottom, rgba(255,255,255,.35), transparent);
+}
+@@keyframes scrollBounce {
+    0%,100% { opacity: .4; transform: translateX(-50%) translateY(0); }
+    50%      { opacity: .8; transform: translateX(-50%) translateY(6px); }
+}
+
+/* ================================================================
+   2. SEARCH BAR — fixed, always full-width, never cut off
+   ================================================================ */
+.search-section {
+    background: var(--white);
+    padding: 0;
+    position: relative;
+    z-index: 10;
+    margin-top: -1px; /* seamless from hero */
+}
+
+.search-card {
+    background: var(--white);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 6px 32px rgba(0,0,0,.07);
+}
+
+.search-form {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    min-height: 72px;
+}
+
+.sf-field {
+    flex: 1;
+    min-width: 0;
+    padding: 1rem 1.5rem;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: .28rem;
+    position: relative;
+}
+.sf-field:last-of-type { border-right: none; }
+
+.sf-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    line-height: 1;
+}
+.sf-label i { color: var(--g2); font-size: .72rem; }
+
+.sf-input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: var(--ff-b);
+    font-size: .925rem;
+    font-weight: 500;
+    color: var(--ink);
+    padding: 0;
+    line-height: 1.4;
+}
+.sf-input::placeholder { color: var(--line); font-weight: 400; }
+.sf-input option { font-weight: 400; color: var(--ink); }
+
+/* The search button cell */
+.sf-btn-cell {
+    padding: .85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    border-left: 1px solid var(--line);
+}
+
+.sf-btn {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .72rem 1.8rem;
+    background: linear-gradient(135deg, var(--g1), var(--g2));
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--ff-b);
+    font-size: .9rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(42,157,143,.28);
+    transition: opacity .17s, transform .15s;
+}
+.sf-btn:hover { opacity: .9; transform: translateY(-1px); }
+
+/* Mobile search stacks */
+@@media (max-width: 767px) {
+    .search-form { flex-direction: column; }
+    .sf-field { border-right: none; border-bottom: 1px solid var(--line); }
+    .sf-btn-cell { border-left: none; border-top: 1px solid var(--line); padding: 1rem 1.5rem; }
+    .sf-btn { width: 100%; justify-content: center; border-radius: 8px; }
+}
+
+/* ================================================================
+   3. FEATURES
+   ================================================================ */
+.features-sec {
+    padding: 6rem 0 5rem;
+    background: var(--bg);
+}
+
+.feat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+@@media (max-width: 991px) { .feat-grid { grid-template-columns: repeat(2, 1fr); } }
+@@media (max-width: 575px)  { .feat-grid { grid-template-columns: 1fr; } }
+
+.feat-item {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    padding: 2rem 1.75rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: .1rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform .26s, box-shadow .26s;
+}
+.feat-item::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--g1), var(--g2));
+    opacity: 0;
+    transition: opacity .26s;
+}
+.feat-item:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(26,60,45,.1); }
+.feat-item:hover::after { opacity: 1; }
+
+.feat-icon {
+    width: 52px; height: 52px;
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 1.15rem;
+}
+.fi-green { background: var(--g-lt); color: var(--g1); }
+.fi-teal  { background: var(--t-lt); color: var(--g2); }
+.fi-blue  { background: #ebf1fb; color: #3b72d4; }
+.fi-amber { background: #fdf4e3; color: #b87d1a; }
+
+.feat-title { font-size: 1rem; font-weight: 700; color: var(--ink); margin-bottom: .45rem; }
+.feat-desc  { font-size: .85rem; color: var(--muted); line-height: 1.65; flex: 1; }
+.feat-more  {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .8rem; font-weight: 700; color: var(--g1);
+    margin-top: 1rem;
+    transition: gap .18s;
+}
+.feat-more:hover { gap: .55rem; }
+
+/* ================================================================
+   4. DESTINATIONS
+   ================================================================ */
+.dest-sec {
+    padding: 6rem 0;
+    background: var(--white);
+}
+
+.dest-sec .sec-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.btn-border-green {
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-size: .845rem; font-weight: 700;
+    color: var(--g1);
+    border: 1.5px solid var(--g1);
+    border-radius: 50px;
+    padding: .52rem 1.35rem;
+    transition: background .18s, color .18s;
+}
+.btn-border-green:hover { background: var(--g1); color: #fff; }
+
+/* dest card */
+.dcard {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    display: block;
+    width: 100%;
+}
+.dcard img {
+    width: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .6s cubic-bezier(.4,0,.2,1);
+}
+.dcard:hover img { transform: scale(1.06); }
+
+.dcard__veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top,
+        rgba(6,18,12,.88) 0%,
+        rgba(6,18,12,.18) 50%,
+        transparent 100%);
+}
+
+.dcard__body {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 1.5rem 1.5rem 1.4rem;
+    z-index: 2;
+}
+
+.dcard__badge {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .68rem; font-weight: 700;
+    letter-spacing: .07em; text-transform: uppercase;
+    color: #fff;
+    background: rgba(42,157,143,.75);
+    border-radius: 50px;
+    padding: .25rem .75rem;
+    margin-bottom: .6rem;
+    backdrop-filter: blur(4px);
+}
+
+.dcard__name {
+    font-family: var(--ff-d);
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: .4rem;
+}
+.dcard__name.big { font-size: 2rem; }
+.dcard__name.sm  { font-size: 1.45rem; }
+
+.dcard__meta {
+    display: flex; align-items: center; gap: 1rem;
+    font-size: .78rem; color: rgba(255,255,255,.58);
+    flex-wrap: wrap;
+}
+.dcard__meta span { display: flex; align-items: center; gap: .28rem; }
+
+.dcard__btn {
+    display: inline-flex; align-items: center; gap: .35rem;
+    font-size: .78rem; font-weight: 700; color: #fff;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 50px;
+    padding: .35rem 1rem;
+    margin-top: .8rem;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .22s, transform .22s;
+    backdrop-filter: blur(4px);
+}
+.dcard:hover .dcard__btn { opacity: 1; transform: translateY(0); }
+
+/* heights */
+.dcard-tall  img { height: 520px; }
+.dcard-short img { height: 248px; }
+@@media (max-width: 767px) {
+    .dcard-tall  img,
+    .dcard-short img { height: 280px; }
+}
+
+/* empty state */
+.dest-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--g-lt);
+    border-radius: 16px;
+    border: 1.5px dashed var(--line);
+}
+.dest-empty-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: var(--white);
+    color: var(--g1);
+    font-size: 1.6rem;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.1rem;
+    box-shadow: 0 4px 16px rgba(26,60,45,.08);
+}
+
+/* ================================================================
+   5. WHY US
+   ================================================================ */
+.why-sec {
+    padding: 6rem 0;
+    background: var(--bg);
+}
+
+.why-img-wrap { position: relative; }
+.why-img {
+    width: 100%;
+    height: 440px;
+    object-fit: cover;
+    border-radius: 18px;
+    display: block;
+    box-shadow: 0 24px 64px rgba(8,24,16,.18);
+}
+.why-float {
+    position: absolute;
+    bottom: 2rem;
+    left: -1.25rem;
+    background: var(--white);
+    border-radius: 14px;
+    padding: 1rem 1.35rem;
+    box-shadow: 0 12px 36px rgba(8,24,16,.14);
+    display: flex; align-items: center; gap: .8rem;
+}
+.why-float__num {
+    font-family: var(--ff-d);
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--g1);
+    line-height: 1;
+}
+.why-float__lbl { font-size: .78rem; color: var(--muted); line-height: 1.45; font-weight: 600; }
+
+@@media (max-width: 767px) {
+    .why-img { height: 280px; }
+    .why-float { left: 0; bottom: -1rem; }
+}
+
+.stat-cards { display: flex; flex-direction: column; gap: 1rem; margin-top: 2.25rem; }
+.stat-card {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1.1rem 1.35rem;
+    background: var(--white);
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    transition: box-shadow .22s;
+}
+.stat-card:hover { box-shadow: 0 8px 28px rgba(26,60,45,.08); }
+.stat-card__icon {
+    width: 44px; height: 44px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.sic-green { background: var(--g-lt); color: var(--g1); }
+.sic-teal  { background: var(--t-lt); color: var(--g2); }
+.sic-gold  { background: #fdf4e3; color: #b87d1a; }
+.stat-card__num { font-family: var(--ff-d); font-size: 1.45rem; font-weight: 600; color: var(--ink); line-height: 1; }
+.stat-card__lbl { font-size: .82rem; color: var(--muted); line-height: 1.5; }
+
+/* ================================================================
+   6. TRUST BAR — 4 items always equal row, never wrap
+   ================================================================ */
+.trust-sec {
+    background: linear-gradient(135deg, #1f5c43 0%, #1a8a7a 100%);
+    padding: 3.25rem 0;
+}
+
+.trust-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    align-items: center;
+}
+
+.trust-item {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    padding: 0 2rem;
+    border-right: 1px solid rgba(255,255,255,.13);
+    color: rgba(255,255,255,.88);
+}
+.trust-item:last-child { border-right: none; }
+
+.trust-icon {
+    width: 44px; height: 44px;
+    border-radius: 11px;
+    background: rgba(255,255,255,.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+.trust-num {
+    font-family: var(--ff-d);
+    font-size: 1.55rem;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1;
+}
+.trust-lbl { font-size: .78rem; color: rgba(255,255,255,.55); margin-top: .1rem; }
+
+@@media (max-width: 767px) {
+    .trust-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+    .trust-item { border-right: none; padding: 0 1rem; }
+}
 </style>
 
-<section class="hero-banner position-relative mb-5">
-    <div class="container h-100 pb-5">
-        <div class="row h-100 align-items-center">
-            <div class="col-lg-8 mx-auto text-center text-white">
-                <span class="badge bg-white text-dark px-3 py-2 rounded-pill mb-3 shadow-sm fw-bold">🚀 The Leading Travel Platform</span>
-                <h1 class="display-3 fw-bold mb-4" style="letter-spacing: -1px;">Explore the World with KarnelTravel</h1>
-                <p class="lead mb-0 opacity-75 fs-5">Experience the perfect journey with our premium booking system for transportation, unforgettable stays, and local dining.</p>
-            </div>
+<!-- ══════════════════════════════════════
+     HERO
+     ══════════════════════════════════════ -->
+<section class="hero">
+    <div class="hero__bg"></div>
+
+    <div class="hero__content">
+        <div class="hero__kicker">Explore · Discover · Experience</div>
+        <h1 class="hero__title">
+            Your World Awaits,<br>
+            <em>Start Exploring</em>
+        </h1>
+        <p class="hero__sub">
+            Hand-crafted journeys across Vietnam's most stunning landscapes — seamless bookings for transport, stays &amp; dining.
+        </p>
+        <div class="hero__cta">
+            <a asp-controller="Destination" asp-action="Index" class="btn-solid">
+                <i class="bi bi-compass"></i> Browse Destinations
+            </a>
+            <a asp-controller="Home" asp-action="About" class="btn-outline-w">
+                <i class="bi bi-play-circle"></i> Our Story
+            </a>
         </div>
     </div>
 
-    <div class="position-absolute start-0 w-100" style="bottom: 0;">
-        <div class="container">
-            <div class="search-glass p-4 mx-auto" style="max-width: 1000px;">
-                <form class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold text-secondary small mb-1"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Where to?</label>
-                        <input type="text" class="form-control form-control-custom" placeholder="City, destination...">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold text-secondary small mb-1"><i class="bi bi-calendar-event-fill text-primary me-1"></i> Date</label>
-                        <input type="date" class="form-control form-control-custom">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold text-secondary small mb-1"><i class="bi bi-grid-fill text-success me-1"></i> Service</label>
-                        <select class="form-select form-control-custom">
-                            <option>Transport Ticket</option>
-                            <option>Hotel & Stay</option>
-                            <option>Dining / Restaurant</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm" style="padding: 0.75rem 1rem; border-radius: 0.75rem;">
-                            Search
-                        </button>
-                    </div>
-                </form>
+    <div class="hero__scroll"><span></span>Scroll</div>
+</section>
+
+<!-- ══════════════════════════════════════
+     SEARCH — full-width bar, no overflow
+     ══════════════════════════════════════ -->
+<section class="search-section">
+    <div class="search-card">
+        <div class="container-fluid px-0">
+            <form class="search-form" action="#" method="get">
+                <div class="sf-field">
+                    <div class="sf-label"><i class="bi bi-geo-alt-fill"></i> Where to?</div>
+                    <input type="text" class="sf-input" placeholder="City, landmark, region…">
+                </div>
+
+                <div class="sf-field">
+                    <div class="sf-label"><i class="bi bi-calendar3"></i> Date</div>
+                    <input type="date" class="sf-input">
+                </div>
+
+                <div class="sf-field">
+                    <div class="sf-label"><i class="bi bi-grid-fill"></i> Service</div>
+                    <select class="sf-input">
+                        <option value="">All Services</option>
+                        <option>Transport Ticket</option>
+                        <option>Hotel &amp; Stay</option>
+                        <option>Dining / Restaurant</option>
+                    </select>
+                </div>
+
+                <div class="sf-btn-cell">
+                    <button type="submit" class="sf-btn">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     FEATURES
+     ══════════════════════════════════════ -->
+<section class="features-sec">
+    <div class="container">
+        <div class="text-center mb-5">
+            <div class="label-tag">What We Offer</div>
+            <h2 class="sec-h">All-In-One Travel Platform</h2>
+            <p class="sec-p" style="max-width:440px;margin:0 auto;">Everything you need for a perfect trip, seamlessly packed into one place.</p>
+        </div>
+
+        <div class="feat-grid">
+            <div class="feat-item">
+                <div class="feat-icon fi-green"><i class="bi bi-geo-alt-fill"></i></div>
+                <div class="feat-title">Destinations</div>
+                <div class="feat-desc">Discover handpicked tourist spots across Vietnam and beyond.</div>
+                <a asp-controller="Destination" asp-action="Index" class="feat-more">Explore <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="feat-item">
+                <div class="feat-icon fi-teal"><i class="bi bi-bus-front-fill"></i></div>
+                <div class="feat-title">Transport Tickets</div>
+                <div class="feat-desc">Book buses, trains &amp; ferries quickly with secure payment.</div>
+                <a asp-controller="BookTicket" asp-action="Index" class="feat-more">Book Now <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="feat-item">
+                <div class="feat-icon fi-blue"><i class="bi bi-building-fill"></i></div>
+                <div class="feat-title">Luxury Stays</div>
+                <div class="feat-desc">From cozy homestays to 5-star resorts — find your perfect room.</div>
+                <a asp-controller="BookRoom" asp-action="Index" class="feat-more">Browse <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="feat-item">
+                <div class="feat-icon fi-amber"><i class="bi bi-shop"></i></div>
+                <div class="feat-title">Local Dining</div>
+                <div class="feat-desc">Reserve a table at top-rated local restaurants near your destination.</div>
+                <a asp-controller="BookTable" asp-action="Index" class="feat-more">Reserve <i class="bi bi-arrow-right"></i></a>
             </div>
         </div>
     </div>
 </section>
 
-<div style="height: 80px;"></div>
-
-<section class="container py-5 my-4">
-    <div class="text-center mb-5">
-        <h2 class="section-title">Our Premium Services</h2>
-        <p class="text-muted fs-6">Everything you need for a perfect, seamless trip.</p>
-    </div>
-
-    <div class="row g-4">
-        <div class="col-md-6 col-lg-3">
-            <div class="card service-card p-4 text-center shadow-sm">
-                <div class="icon-box bg-danger bg-opacity-10 text-danger mx-auto">
-                    <i class="bi bi-geo-alt-fill"></i>
-                </div>
-                <h5 class="fw-bold text-dark">Destinations</h5>
-                <p class="text-muted small mb-0 mt-2">Discover popular tourist attractions and breathtaking views.</p>
+<!-- ══════════════════════════════════════
+     DESTINATIONS
+     ══════════════════════════════════════ -->
+<section class="dest-sec">
+    <div class="container">
+        <div class="sec-header">
+            <div>
+                <div class="label-tag">Top Picks</div>
+                <h2 class="sec-h mb-0">Trending Destinations</h2>
+                <p class="sec-p mt-1 mb-0">Places our travelers are loving right now.</p>
             </div>
+            <a asp-controller="Destination" asp-action="Index" class="btn-border-green">
+                View All <i class="bi bi-arrow-right"></i>
+            </a>
         </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card service-card p-4 text-center shadow-sm">
-                <div class="icon-box bg-primary bg-opacity-10 text-primary mx-auto">
-                    <i class="bi bi-bus-front-fill"></i>
-                </div>
-                <h5 class="fw-bold text-dark">Transport Tickets</h5>
-                <p class="text-muted small mb-0 mt-2">Book buses, flights, and ferries quickly and securely.</p>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card service-card p-4 text-center shadow-sm">
-                <div class="icon-box bg-success bg-opacity-10 text-success mx-auto">
-                    <i class="bi bi-building-fill"></i>
-                </div>
-                <h5 class="fw-bold text-dark">Luxury Stays</h5>
-                <p class="text-muted small mb-0 mt-2">Diverse accommodation system tailored to your comfort.</p>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card service-card p-4 text-center shadow-sm">
-                <div class="icon-box bg-warning bg-opacity-10 text-warning mx-auto">
-                    <i class="bi bi-shop"></i>
-                </div>
-                <h5 class="fw-bold text-dark">Local Dining</h5>
-                <p class="text-muted small mb-0 mt-2">Taste the essence of local cuisine at top-rated restaurants.</p>
-            </div>
-        </div>
-    </div>
-</section>
 
-<section class="container py-5 mb-5">
-    <div class="d-flex justify-content-between align-items-end mb-4">
-        <div>
-            <h2 class="section-title mb-1">Top Destinations</h2>
-            <p class="text-muted mb-0">Discover places travelers love the most.</p>
-        </div>
-        <a href="#" class="btn btn-outline-primary rounded-pill fw-bold px-4">View All <i class="bi bi-arrow-right ms-1"></i></a>
-    </div>
+        @{
+            var spots = Model?.ToList() ?? new List<KarnelTravelGuide.Web.Models.Entities.TouristSpot>();
+        }
 
-    <div class="row g-4">
-        @if (Model != null && Model.Any())
+        @if (!spots.Any())
         {
-            foreach (var spot in Model)
-            {
-                <div class="col-md-4">
-                    <div class="card dest-card shadow-sm">
-                        <img src="@(string.IsNullOrEmpty(spot.ImageUrl) ? "/img/no-image.jpg" : spot.ImageUrl)" class="w-100" alt="@spot.SpotName">
-                        <div class="dest-overlay">
-                            <span class="badge bg-primary mb-2 px-2 py-1">Trending</span>
-                            <h4 class="fw-bold mb-1 text-truncate">@spot.SpotName</h4>
-                            <p class="small mb-0 opacity-75 text-truncate">
-                                <i class="bi bi-camera me-1"></i> @spot.TouristSpotImages.Count Photos • 
-                                <i class="bi bi-geo-alt ms-1"></i> @spot.Address
-                            </p>
-                        </div>
+            <div class="dest-empty">
+                <div class="dest-empty-icon"><i class="bi bi-map"></i></div>
+                <h5 style="font-family:var(--ff-d);font-size:1.5rem;font-weight:600;color:var(--ink)">No Destinations Yet</h5>
+                <p class="sec-p mb-0">New tourist spots will appear here once added by the team.</p>
+            </div>
+        }
+        else if (spots.Count == 1)
+        {
+            <a asp-controller="Destination" asp-action="Detail" asp-route-id="@spots[0].SpotId" class="dcard dcard-tall">
+                <img src="@(string.IsNullOrEmpty(spots[0].ImageUrl) ? "/img/no-image.jpg" : spots[0].ImageUrl)" alt="@spots[0].SpotName">
+                <div class="dcard__veil"></div>
+                <div class="dcard__body">
+                    <div class="dcard__badge">Featured</div>
+                    <div class="dcard__name big">@spots[0].SpotName</div>
+                    <div class="dcard__meta">
+                        <span><i class="bi bi-camera"></i> @spots[0].TouristSpotImages.Count photos</span>
+                        <span><i class="bi bi-geo-alt"></i> @spots[0].Address</span>
                     </div>
+                    <div class="dcard__btn">Explore <i class="bi bi-arrow-right"></i></div>
                 </div>
-            }
+            </a>
+        }
+        else if (spots.Count == 2)
+        {
+            <div class="row g-4">
+                @foreach (var s in spots)
+                {
+                    <div class="col-md-6">
+                        <a asp-controller="Destination" asp-action="Detail" asp-route-id="@s.SpotId" class="dcard dcard-tall">
+                            <img src="@(string.IsNullOrEmpty(s.ImageUrl) ? "/img/no-image.jpg" : s.ImageUrl)" alt="@s.SpotName">
+                            <div class="dcard__veil"></div>
+                            <div class="dcard__body">
+                                <div class="dcard__badge">Trending</div>
+                                <div class="dcard__name sm">@s.SpotName</div>
+                                <div class="dcard__meta">
+                                    <span><i class="bi bi-camera"></i> @s.TouristSpotImages.Count</span>
+                                    <span><i class="bi bi-geo-alt"></i> @(s.Address?.Length > 24 ? s.Address[..24] + "…" : s.Address)</span>
+                                </div>
+                                <div class="dcard__btn">Explore <i class="bi bi-arrow-right"></i></div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
         }
         else
         {
-            <div class="col-12 text-center py-5 bg-light rounded-4 border text-muted">
-                <i class="bi bi-image fs-1 d-block mb-3"></i>
-                <h5>No destinations available</h5>
-                <p>New tourist spots added by managers will appear here.</p>
+            <!-- 3+ : large left + two stacked right -->
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <a asp-controller="Destination" asp-action="Detail" asp-route-id="@spots[0].SpotId" class="dcard dcard-tall">
+                        <img src="@(string.IsNullOrEmpty(spots[0].ImageUrl) ? "/img/no-image.jpg" : spots[0].ImageUrl)" alt="@spots[0].SpotName">
+                        <div class="dcard__veil"></div>
+                        <div class="dcard__body">
+                            <div class="dcard__badge">Featured</div>
+                            <div class="dcard__name big">@spots[0].SpotName</div>
+                            <div class="dcard__meta">
+                                <span><i class="bi bi-camera"></i> @spots[0].TouristSpotImages.Count photos</span>
+                                <span><i class="bi bi-geo-alt"></i> @spots[0].Address</span>
+                            </div>
+                            <div class="dcard__btn">Explore <i class="bi bi-arrow-right"></i></div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-lg-5 d-flex flex-column gap-4">
+                    @for (int i = 1; i < spots.Count && i <= 2; i++)
+                    {
+                        var s = spots[i];
+                        <a asp-controller="Destination" asp-action="Detail" asp-route-id="@s.SpotId"
+                           class="dcard dcard-short" style="flex:1">
+                            <img src="@(string.IsNullOrEmpty(s.ImageUrl) ? "/img/no-image.jpg" : s.ImageUrl)" alt="@s.SpotName">
+                            <div class="dcard__veil"></div>
+                            <div class="dcard__body">
+                                <div class="dcard__badge">Trending</div>
+                                <div class="dcard__name sm">@s.SpotName</div>
+                                <div class="dcard__meta">
+                                    <span><i class="bi bi-camera"></i> @s.TouristSpotImages.Count</span>
+                                    <span><i class="bi bi-geo-alt"></i> @(s.Address?.Length > 22 ? s.Address[..22] + "…" : s.Address)</span>
+                                </div>
+                                <div class="dcard__btn">Explore <i class="bi bi-arrow-right"></i></div>
+                            </div>
+                        </a>
+                    }
+                </div>
             </div>
         }
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     WHY US
+     ══════════════════════════════════════ -->
+<section class="why-sec">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-5">
+                <div class="why-img-wrap">
+                    <img class="why-img"
+                         src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=987&auto=format&fit=crop"
+                         alt="Happy travelers">
+                    <div class="why-float">
+                        <div class="why-float__num">12K+</div>
+                        <div class="why-float__lbl">Happy Travelers<br>Served</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="label-tag">Why Choose Us</div>
+                <h2 class="sec-h">We Make Every Journey<br>Unforgettable</h2>
+                <p class="sec-p mt-2" style="max-width:420px;">From the moment you land on our platform to the day you return home — every detail is taken care of.</p>
+                <div class="stat-cards">
+                    <div class="stat-card">
+                        <div class="stat-card__icon sic-green"><i class="bi bi-shield-check-fill"></i></div>
+                        <div>
+                            <div class="stat-card__num">100%</div>
+                            <div class="stat-card__lbl">Secure &amp; verified bookings with instant confirmation</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card__icon sic-teal"><i class="bi bi-headset"></i></div>
+                        <div>
+                            <div class="stat-card__num">24/7</div>
+                            <div class="stat-card__lbl">Round-the-clock customer support whenever you need us</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card__icon sic-gold"><i class="bi bi-star-fill"></i></div>
+                        <div>
+                            <div class="stat-card__num">4.9 ★</div>
+                            <div class="stat-card__lbl">Average rating from over 12,000 traveler reviews</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     TRUST BAR — 4 equal columns, never wraps
+     ══════════════════════════════════════ -->
+<section class="trust-sec">
+    <div class="container">
+        <div class="trust-grid">
+            <div class="trust-item">
+                <div class="trust-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                <div>
+                    <div class="trust-num">500+</div>
+                    <div class="trust-lbl">Destinations</div>
+                </div>
+            </div>
+            <div class="trust-item">
+                <div class="trust-icon"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <div class="trust-num">12K+</div>
+                    <div class="trust-lbl">Happy Travelers</div>
+                </div>
+            </div>
+            <div class="trust-item">
+                <div class="trust-icon"><i class="bi bi-tag-fill"></i></div>
+                <div>
+                    <div class="trust-num">Best</div>
+                    <div class="trust-lbl">Price Guarantee</div>
+                </div>
+            </div>
+            <div class="trust-item">
+                <div class="trust-icon"><i class="bi bi-award-fill"></i></div>
+                <div>
+                    <div class="trust-num">Top</div>
+                    <div class="trust-lbl">Rated Platform</div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>

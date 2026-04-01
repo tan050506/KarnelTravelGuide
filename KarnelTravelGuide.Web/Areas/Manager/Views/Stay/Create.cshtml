@@ -21,7 +21,7 @@
         <div class="row g-4">
             <div class="col-md-6">
                 <label class="fw-bold text-dark mb-2">Stay Name <span class="text-danger">*</span></label>
-                <input asp-for="Name" class="form-control bg-light border" placeholder="e.g. Vinpearl Resort..." required />
+                <input asp-for="Name" class="form-control bg-light border" placeholder="" required />
             </div>
             
             <div class="col-md-6 position-relative">
@@ -116,16 +116,14 @@
                 <td class="py-3">
                     <select name="Rooms[${roomIndex}].RoomType" class="form-select bg-white border" required>
                         <option value="Standard">Standard</option>
-                        <option value="Superior">Superior</option>
-                        <option value="Deluxe">Deluxe</option>
                         <option value="VIP">VIP</option>
                     </select>
                 </td>
                 <td class="py-3">
-                    <input type="number" name="Rooms[${roomIndex}].PriceRoom" class="form-control bg-white border" min="1" max="1000000000" step="any" placeholder="e.g. 50" required />
+                    <input type="number" name="Rooms[${roomIndex}].PriceRoom" class="form-control bg-white border" min="1" max="1000000000" step="any" placeholder="" required />
                 </td>
                 <td class="py-3">
-                    <input type="number" name="Rooms[${roomIndex}].Quantity" class="form-control bg-white border" min="1" max="100" placeholder="e.g. 10" required />
+                    <input type="number" name="Rooms[${roomIndex}].Quantity" class="form-control bg-white border" min="1" max="100" placeholder="" required />
                 </td>
                 <td class="text-center py-3">
                     <button type="button" class="btn btn-sm btn-danger fw-bold rounded-3" onclick="removeRoomRow(this)"><i class="bi bi-trash"></i></button>

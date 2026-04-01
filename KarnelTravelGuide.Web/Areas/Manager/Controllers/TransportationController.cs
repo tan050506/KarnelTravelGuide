@@ -9,6 +9,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using System.Collections.Concurrent;
 
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
@@ -17,6 +18,9 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
+
+        // THÊM Ổ KHÓA CHỐNG SPAM CLICK ĐÚP
+        private static readonly ConcurrentDictionary<string, bool> _inFlightRequests = new();
 
         public TransportationController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
@@ -46,13 +50,16 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return fallbackBranch;
         }
 
-        public async Task<IActionResult> Index(string? searchString, string? sortOrder)
+        // 1. GET: Index (ĐÃ THÊM PHÂN TRANG VÀ MẶC ĐỊNH MỚI NHẤT LÊN ĐẦU)
+        public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
             
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentSort"] = sortOrder;
-            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_desc" : "";
+            
+            // Mặc định là hiển thị MỚI NHẤT (desc). Bấm vào link sẽ đổi thành id_asc
+            ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
             var transportations = _context.Transportations
                 .Include(t => t.FromBranch)
@@ -70,11 +77,33 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             switch (sortOrder)
             {
-                case "id_desc": transportations = transportations.OrderByDescending(t => t.TransportationId); break;
-                default: transportations = transportations.OrderBy(t => t.TransportationId); break;
+                case "id_asc": 
+                    transportations = transportations.OrderBy(t => t.TransportationId); 
+                    break;
+                default: 
+                    transportations = transportations.OrderByDescending(t => t.TransportationId); // MẶC ĐỊNH LUÔN LÀ DESCENDING
+                    break;
             }
 
-            return View(await transportations.ToListAsync());
+            var allTransportations = await transportations.ToListAsync();
+
+            // XỬ LÝ PHÂN TRANG
+            int pageSize = 10;
+            int totalItems = allTransportations.Count;
+            int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            var pagedTransportations = allTransportations.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            // Truyền dữ liệu phân trang ra View
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalItems = totalItems;
+            ViewBag.PageSize = pageSize;
+
+            return View(pagedTransportations);
         }
 
         public async Task<IActionResult> Create()
@@ -100,12 +129,36 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (ModelState.IsValid)
             {
-                transportation.ImageUrl = await UploadFileAsync(imageFile!);
-                
-                _context.Add(transportation);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Transportation route created successfully!";
-                return RedirectToAction(nameof(Index));
+                // KHÓA YÊU CẦU: Chặn click đúp cùng 1 Tuyến Xe
+                string requestKey = $"Trans_{transportation.TransportName}_{transportation.FromBranchId}_{transportation.ToSpotId}";
+                if (!_inFlightRequests.TryAdd(requestKey, true))
+                {
+                    TempData["ErrorMessage"] = "Processing your request... Please avoid double-clicking.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                try
+                {
+                    // Kiểm tra trùng lặp trong DB
+                    bool isDuplicate = await _context.Transportations.AnyAsync(t => t.TransportName == transportation.TransportName && t.FromBranchId == transportation.FromBranchId && t.ToSpotId == transportation.ToSpotId);
+                    if (isDuplicate)
+                    {
+                        TempData["ErrorMessage"] = "A route with this name already exists! Please avoid double-clicking.";
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    transportation.ImageUrl = await UploadFileAsync(imageFile!);
+                    
+                    _context.Add(transportation);
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Transportation route created successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                finally
+                {
+                    // Mở khóa sau khi xử lý xong
+                    _inFlightRequests.TryRemove(requestKey, out _);
+                }
             }
 
             var currentBranch = await GetCurrentManagerBranchAsync();

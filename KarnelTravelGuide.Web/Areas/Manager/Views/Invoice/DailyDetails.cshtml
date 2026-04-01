@@ -1,0 +1,111 @@
+@model IEnumerable<KarnelTravelGuide.Web.Areas.Manager.Controllers.DailyCustomerInvoiceViewModel>
+@{ 
+    ViewData["Title"] = "Daily Invoices Summary"; 
+    DateTime selectedDate = ViewBag.SelectedDate;
+    
+    int totalItems = ViewBag.TotalItems ?? 0;
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int pageSize = ViewBag.PageSize ?? 10;
+}
+
+<style>
+    .sort-icon { cursor: pointer; color: #6c757d; transition: 0.2s; }
+    .sort-icon:hover { color: #0d6efd; }
+    .action-btn { width: 32px; height: 32px; padding: 0; line-height: 30px; display: inline-flex; align-items: center; justify-content: center; }
+</style>
+
+<div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 1000px;">
+    
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+        <div class="d-flex align-items-center">
+            <a asp-action="History" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
+            <div>
+                <h4 class="fw-bold m-0 text-dark">Invoices for @selectedDate.ToString("dd/MM/yyyy")</h4>
+                <span class="small text-muted">Grouped by customer. Click action buttons to view detailed services.</span>
+            </div>
+        </div>
+        
+        <form asp-action="DailyDetails" method="get" class="d-flex gap-2">
+            <input type="hidden" name="dateStr" value="@selectedDate.ToString("yyyy-MM-dd")" />
+            <input type="text" name="searchString" value="@ViewData["CurrentSearch"]" class="form-control bg-light border" style="min-width: 250px; border-radius: 0.5rem;" placeholder="Search customer...">
+            <button type="submit" class="btn btn-primary" style="border-radius: 0.5rem;"><i class="bi bi-search"></i></button>
+            @if (!string.IsNullOrEmpty(ViewData["CurrentSearch"]?.ToString())) {
+                <a asp-action="DailyDetails" asp-route-dateStr="@selectedDate.ToString("yyyy-MM-dd")" class="btn btn-light border text-muted" style="border-radius: 0.5rem;">Clear</a>
+            }
+        </form>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null) {
+        <div class="alert alert-success rounded-3 fw-bold mb-4"><i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]</div>
+    }
+
+    <div class="table-responsive mb-2 border rounded-4">
+        <table class="table align-middle table-hover table-borderless mb-0">
+            <thead class="bg-light border-bottom text-dark small fw-bold text-uppercase">
+                <tr>
+                    <th style="width: 5%; text-align: center;">
+                        <a asp-action="DailyDetails" asp-route-dateStr="@selectedDate.ToString("yyyy-MM-dd")" asp-route-sortOrder="@ViewData["IdSortParm"]" asp-route-searchString="@ViewData["CurrentSearch"]" class="text-dark text-decoration-none">
+                            <i class="bi bi-arrow-down-up fs-5 sort-icon" title="Sort by Name"></i>
+                        </a>
+                    </th>
+                    <th style="width: 30%;">Customer</th>
+                    <th style="width: 20%; text-align: center;">Booked Items</th>
+                    <th style="width: 20%; text-align: end;">Group Total</th>
+                    <th style="width: 10%; text-align: center;">Status</th>
+                    <th style="width: 15%; text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any()) {
+                    int idx = (currentPage - 1) * pageSize + 1;
+                    foreach (var group in Model) {
+                        <tr class="border-bottom">
+                            <td class="text-center fw-bold text-secondary">@idx</td>
+                            <td>
+                                <div class="fw-bold text-dark fs-6">@group.Account?.FullName</div>
+                                <div class="small text-muted"><i class="bi bi-telephone me-1"></i>@group.Account?.PhoneNumber</div>
+                            </td>
+                            <td class="text-center"><span class="badge bg-info text-dark rounded-pill px-3 py-2">@group.TotalItems Services</span></td>
+                            <td class="text-end fw-bold text-success fs-5">$@group.FinalTotal.ToString("0.##")</td>
+                            <td class="text-center">
+                                @if(group.PaymentStatus == "Paid") { <span class="badge bg-success rounded-pill px-2 py-1">Paid</span> } 
+                                else { <span class="badge bg-danger rounded-pill px-2 py-1">Canceled</span> }
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a asp-action="CustomerDailyInvoice" asp-route-accountId="@group.Account?.AccountId" asp-route-dateStr="@selectedDate.ToString("yyyy-MM-dd")" class="btn btn-outline-info rounded-circle action-btn" title="View Details"><i class="bi bi-eye"></i></a>
+                                    
+                                    @if(group.PaymentStatus == "Paid") {
+                                        <form asp-action="CancelCustomerInvoices" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel all invoices for this customer?');">
+                                            <input type="hidden" name="accountId" value="@group.Account?.AccountId" />
+                                            <input type="hidden" name="dateStr" value="@selectedDate.ToString("yyyy-MM-dd")" />
+                                            <button type="submit" class="btn btn-outline-danger rounded-circle action-btn" title="Cancel All"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                        idx++;
+                    }
+                } else {
+                    <tr><td colspan="6" class="text-center py-5 text-muted fst-italic"><i class="bi bi-journal-x fs-1 d-block mb-2"></i>No invoices match your search criteria.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (ViewBag.TotalPages > 1) {
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-3">
+            <div class="text-muted small fw-bold">Showing @(((currentPage - 1) * pageSize) + 1) to @(Math.Min(currentPage * pageSize, totalItems)) of @totalItems entries</div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")"><a class="page-link px-3" asp-action="DailyDetails" asp-route-dateStr="@selectedDate.ToString("yyyy-MM-dd")" asp-route-page="@(currentPage - 1)" asp-route-searchString="@ViewData["CurrentSearch"]" asp-route-sortOrder="@ViewData["CurrentSort"]">Prev</a></li>
+                    @for (int i = 1; i <= ViewBag.TotalPages; i++) {
+                        <li class="page-item @(currentPage == i ? "active" : "")"><a class="page-link" asp-action="DailyDetails" asp-route-dateStr="@selectedDate.ToString("yyyy-MM-dd")" asp-route-page="@i" asp-route-searchString="@ViewData["CurrentSearch"]" asp-route-sortOrder="@ViewData["CurrentSort"]">@i</a></li>
+                    }
+                    <li class="page-item @(currentPage == ViewBag.TotalPages ? "disabled" : "")"><a class="page-link px-3" asp-action="DailyDetails" asp-route-dateStr="@selectedDate.ToString("yyyy-MM-dd")" asp-route-page="@(currentPage + 1)" asp-route-searchString="@ViewData["CurrentSearch"]" asp-route-sortOrder="@ViewData["CurrentSort"]">Next</a></li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>

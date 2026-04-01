@@ -81,7 +81,7 @@ namespace KarnelTravelGuide.Web.Controllers
             if (accountId == null)
             {
                 TempData["ErrorMessage"] = "Please log in to book a room.";
-                return RedirectToAction("Login", "Auth");
+                return RedirectToAction("Login", "Account");
             }
 
             var room = await _context.Rooms.Include(r => r.Stay).FirstOrDefaultAsync(r => r.RoomId == roomId);
