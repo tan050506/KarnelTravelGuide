@@ -114,12 +114,13 @@
                     <span class="text-muted fw-bold d-block mb-1">Selected Table:</span>
                     <div class="fw-bold text-dark fs-5 lh-base" id="tableLabel">None</div>
                 </div>
-                <div class="col-md-4 text-center border-start border-end">
+                <div class="col-md-3 text-center border-start border-end">
                     <span class="text-muted fw-bold d-block mb-1">Total Amount:</span>
                     <span class="fs-3 fw-bold text-primary lh-1" id="priceLabel">$0</span>
                 </div>
-                <div class="col-md-3 text-end pe-0 ps-4">
-                    <button type="submit" class="btn btn-primary py-3 w-100 fw-bold rounded-3 shadow-sm" id="submitBtn" disabled>Confirm Booking</button>
+                <div class="col-md-4 text-end pe-0 ps-4 d-flex justify-content-end gap-2">
+                    <a href="/Invoice/MyInvoices?tab=pending" class="btn btn-outline-secondary py-3 fw-bold rounded-3">Skip</a>
+                    <button type="submit" class="btn btn-primary py-3 w-100 fw-bold rounded-3 shadow-sm" id="submitBtn" disabled>Book & Next <i class="bi bi-arrow-right ms-1"></i></button>
                 </div>
             </div>
         </div>

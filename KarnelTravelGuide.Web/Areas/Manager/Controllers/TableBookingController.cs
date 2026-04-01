@@ -25,7 +25,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var query = _context.Orders
                 .Include(o => o.Account)
                 .Include(o => o.OrderDetails!).ThenInclude(od => od.ResBooking!).ThenInclude(rb => rb.RestaurantTable!).ThenInclude(rt => rt.Restaurant)
-                .Where(o => o.OrderDetails!.Any(od => od.ResBookingId != null))
+                .Where(o => o.OrderDetails!.Any(od => od.ResBookingId != null) && o.Status != "Pending")
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
@@ -187,7 +187,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             DateTime resDateTime = DateTime.Parse($"{ResDate} {ResTime}");
             decimal totalAmount = (table.PriceRes ?? 0) * NumberOfTables;
 
-            var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Pending" }; 
+            var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Submitted" }; 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 

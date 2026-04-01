@@ -21,9 +21,12 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
         {
             ViewBag.TotalBranches = await _context.Branches.CountAsync();
             ViewBag.TotalAccounts = await _context.Accounts.CountAsync();
-            ViewBag.TotalInvoices = await _context.Invoices.CountAsync();
+            var invoices = await _context.Invoices
+                .Include(i => i.Order)
+                .Where(i => i.CreatedDate != null && i.Order != null && i.Order.Status != "Pending")
+                .ToListAsync();
 
-            var invoices = await _context.Invoices.Where(i => i.CreatedDate != null).ToListAsync();
+            ViewBag.TotalInvoices = invoices.Count;
             List<string> labels = new List<string>();
             List<decimal> dataPoints = new List<decimal>();
 
@@ -74,6 +77,8 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             {
                 ViewBag.DetailInvoices = await _context.Invoices
                     .Include(i => i.Account)
+                    .Include(i => i.Order)
+                    .Where(i => i.Order != null && i.Order.Status != "Pending")
                     .OrderByDescending(i => i.CreatedDate)
                     .Take(50)
                     .ToListAsync();

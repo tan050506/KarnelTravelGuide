@@ -117,8 +117,8 @@ namespace KarnelTravelGuide.Web.Controllers
 
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = $"Successfully booked {numberOfTables} tables ({table.TableType})! You can review your bookings in your profile.";
-                return RedirectToAction("Index"); 
+                TempData["SuccessMessage"] = $"Successfully booked {numberOfTables} tables! Let's review your invoice.";
+                return RedirectToAction("MyInvoices", "Invoice", new { tab = "pending" }); 
             }
             catch (Exception)
             {

@@ -100,6 +100,15 @@
             <p class="text-muted">Try modifying your search criteria.</p>
         </div>
     }
+
+    <div class="mt-5 d-flex justify-content-between px-4 py-4 bg-white rounded-3 shadow-sm border">
+        <a href="/BookRoom/Index?spotId=@ViewBag.CurrentSpot" class="btn btn-outline-secondary fw-bold px-4 py-2 rounded-pill">
+            <i class="bi bi-arrow-left me-2"></i> Back to Room Booking
+        </a>
+        <a href="/Invoice/MyInvoices?tab=pending" class="btn btn-primary fw-bold px-5 py-2 rounded-pill shadow-sm">
+            Skip & Go to Invoice <i class="bi bi-arrow-right ms-2"></i>
+        </a>
+    </div>
 </div>
 
 @section Scripts {

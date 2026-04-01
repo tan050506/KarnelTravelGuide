@@ -128,6 +128,13 @@
             <p class="text-muted">Try adjusting your filters (date, origin, destination).</p>
         </div>
     }
+
+    <div class="mt-5 text-center px-4 py-4 bg-white rounded-3 shadow-sm border">
+        <p class="mb-3 text-muted fw-bold">Already have a ticket or don't need one?</p>
+        <a href="/BookRoom/Index?spotId=@ViewBag.CurrentTo" class="btn btn-outline-secondary fw-bold px-5 py-2 rounded-pill">
+            Skip & Go to Room Booking <i class="bi bi-arrow-right ms-2"></i>
+        </a>
+    </div>
 </div>
 
 @section Scripts {

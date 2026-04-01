@@ -109,8 +109,8 @@ namespace KarnelTravelGuide.Web.Controllers
                 _context.Invoices.Add(new Invoice { AccountId = accountId.Value, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, FinalTotal = totalAmount, PaymentStatus = "Unpaid" }); 
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = $"Successfully booked {seats.Length} tickets! You can review your bookings in your profile.";
-                return RedirectToAction("Index"); 
+                TempData["SuccessMessage"] = $"Successfully booked {seats.Length} tickets! Let's find you a room.";
+                return RedirectToAction("Index", "BookRoom", new { spotId = transport.ToSpotId }); 
             }
             catch (Exception)
             {

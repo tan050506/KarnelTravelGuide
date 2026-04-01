@@ -58,7 +58,6 @@
                                     } 
                                     else if(od.TicketBooking != null) {
                                         <div class="fw-bold text-dark"><i class="bi bi-ticket-detailed-fill text-info me-2"></i>Ticket: @od.TicketBooking.Transportation?.TransportName</div>
-                                        <div class="small text-muted mt-1 ps-4">Route: @od.TicketBooking.Transportation?.FromBranch?.BranchName &rarr; @od.TicketBooking.Transportation?.ToSpot?.SpotName</div>
                                     }
                                     else if(od.ResBooking != null) {
                                         <div class="fw-bold text-dark"><i class="bi bi-ui-checks-grid text-success me-2"></i>Table: @od.ResBooking.RestaurantTable?.Restaurant?.RestaurantName</div>

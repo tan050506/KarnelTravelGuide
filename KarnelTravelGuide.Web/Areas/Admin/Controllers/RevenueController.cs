@@ -23,10 +23,11 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             var invoices = await _context.Invoices
                 .Include(i => i.Account)
                 .Include(i => i.Order)
+                .Where(i => i.Order != null && i.Order.Status != "Pending")
                 .OrderByDescending(i => i.CreatedDate)
                 .ToListAsync();
 
-            decimal totalRevenue = invoices.Sum(i => i.FinalTotal ?? 0);
+            decimal totalRevenue = invoices.Where(i => i.PaymentStatus == "Paid").Sum(i => i.FinalTotal ?? 0);
             int totalOrders = invoices.Count;
 
             ViewBag.TotalRevenue = totalRevenue;

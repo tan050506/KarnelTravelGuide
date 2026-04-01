@@ -26,7 +26,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 .Include(o => o.Account)
                 .Include(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation!).ThenInclude(t => t.ToSpot)
                 .Include(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation!).ThenInclude(t => t.FromBranch)
-                .Where(o => o.OrderDetails!.Any(od => od.TicketBookingId != null))
+                .Where(o => o.OrderDetails!.Any(od => od.TicketBookingId != null) && o.Status != "Pending")
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
@@ -178,8 +178,8 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             decimal unitPrice = transport.PriceTransport ?? 0;
             decimal totalAmount = unitPrice * selectedSeats.Length;
 
-            // Đặt trạng thái Pending và Unpaid cho quy trình duyệt chuẩn
-            var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Pending" }; 
+            // Đặt trạng thái Submitted để quản lý ngay lập tức nhìn thấy đơn vừa tạo
+            var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Submitted" }; 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 

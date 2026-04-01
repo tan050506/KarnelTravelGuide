@@ -84,7 +84,7 @@ namespace KarnelTravelGuide.Web.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
-            var room = await _context.Rooms.FindAsync(roomId);
+            var room = await _context.Rooms.Include(r => r.Stay).FirstOrDefaultAsync(r => r.RoomId == roomId);
             if (room == null || numberOfRooms <= 0)
             {
                 TempData["ErrorMessage"] = "Invalid room selection.";
@@ -121,8 +121,8 @@ namespace KarnelTravelGuide.Web.Controllers
 
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = $"Successfully booked {numberOfRooms} rooms ({room.RoomType}) for {totalNights} nights! You can review your bookings in your profile.";
-                return RedirectToAction("Index"); 
+                TempData["SuccessMessage"] = $"Successfully booked {numberOfRooms} rooms! Let's find you a table.";
+                return RedirectToAction("Index", "BookTable", new { spotId = room.Stay?.SpotId }); 
             }
             catch (Exception)
             {

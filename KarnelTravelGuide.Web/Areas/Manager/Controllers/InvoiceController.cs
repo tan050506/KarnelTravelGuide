@@ -31,7 +31,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 var query = _context.Invoices
                     .Include(i => i.Account)
                     .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!)
-                    .Where(i => i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Pending");
+                    .Where(i => i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted");
 
                 if (!string.IsNullOrEmpty(searchString))
                 {
@@ -91,7 +91,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.RoomBooking!).ThenInclude(rb => rb.Room!).ThenInclude(r => r.Stay)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.ResBooking!).ThenInclude(rb => rb.RestaurantTable!).ThenInclude(rt => rt.Restaurant)
-                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Pending")
+                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted")
                 .ToListAsync();
 
             if (!invoices.Any())
@@ -125,7 +125,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         {
             var invoices = await _context.Invoices
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails)
-                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Pending")
+                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted")
                 .ToListAsync();
 
             if (!invoices.Any()) return RedirectToAction(nameof(Index));

@@ -44,9 +44,9 @@
                 } 
                 else {
                     <div class="instruction-box mb-4">
-                        <i class="bi bi-qr-code-scan fs-1 text-primary d-block mb-2"></i>
-                        <h5 class="fw-bold text-dark">Ready to confirm your trip?</h5>
-                        <p class="text-muted mb-0">Please provide your <strong>Phone Number</strong> at the branch counter to pay and confirm these services instantly.</p>
+                        <i class="bi bi-ui-checks fs-1 text-primary d-block mb-2"></i>
+                        <h5 class="fw-bold text-dark">Ready to finalize your trip?</h5>
+                        <p class="text-muted mb-0">Review your selected services below and click <strong>Confirm & Send To Manager</strong> to submit your booking.</p>
                     </div>
 
                     @if (hasDiscount) {
@@ -129,6 +129,21 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="row mt-4 mb-3">
+                        <div class="col-md-8 offset-md-4 d-flex gap-3 justify-content-end">
+                            <form asp-action="CancelAllInvoices" method="post" id="cancelAllForm" class="w-50" onsubmit="return confirm('Are you sure you want to cancel all pending bookings? This action cannot be undone.');">
+                                <button type="submit" class="btn btn-outline-danger btn-lg fw-bold w-100 rounded-pill py-3">
+                                    <i class="bi bi-trash-fill me-2"></i> Cancel All Drafts
+                                </button>
+                            </form>
+                            <form asp-action="ConfirmAllInvoices" method="post" id="submitAllForm" class="w-50">
+                                <button type="submit" class="btn btn-primary btn-lg shadow fw-bold w-100 rounded-pill py-3" id="submitAllBtn">
+                                    <i class="bi bi-send-fill me-2"></i> Confirm & Send To Manager
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 }
             } 
             else {
@@ -169,3 +184,16 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        const form = document.getElementById("submitAllForm");
+        if(form) {
+            form.addEventListener("submit", function() {
+                const btn = document.getElementById("submitAllBtn");
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Submitting...';
+                btn.classList.add("disabled");
+            });
+        }
+    </script>
+}

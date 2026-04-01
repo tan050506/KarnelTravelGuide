@@ -25,7 +25,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var query = _context.Orders
                 .Include(o => o.Account)
                 .Include(o => o.OrderDetails!).ThenInclude(od => od.RoomBooking!).ThenInclude(rb => rb.Room!).ThenInclude(r => r.Stay)
-                .Where(o => o.OrderDetails!.Any(od => od.RoomBookingId != null))
+                .Where(o => o.OrderDetails!.Any(od => od.RoomBookingId != null) && o.Status != "Pending")
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
@@ -192,7 +192,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             int totalNights = dateOut.DayNumber - dateIn.DayNumber;
             decimal totalAmount = (room.PriceRoom ?? 0) * NumberOfRooms * totalNights;
 
-            var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Pending" }; 
+            var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Submitted" }; 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 

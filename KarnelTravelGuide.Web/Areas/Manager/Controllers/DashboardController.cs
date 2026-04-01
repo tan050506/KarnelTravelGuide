@@ -18,9 +18,10 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // 1. Đếm hóa đơn chưa thanh toán (Unpaid)
+            // 1. Đếm hóa đơn chờ duyệt (Submitted & Unpaid)
             ViewBag.PendingInvoicesCount = await _context.Invoices
-                .CountAsync(i => i.PaymentStatus == "Unpaid");
+                .Include(i => i.Order)
+                .CountAsync(i => i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted");
 
             // 2. Đếm tổng số tuyến đường/phương tiện (Transportation)
             ViewBag.ActiveRoutesCount = await _context.Transportations.CountAsync();

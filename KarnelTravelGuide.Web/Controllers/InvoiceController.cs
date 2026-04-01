@@ -30,8 +30,7 @@ namespace KarnelTravelGuide.Web.Controllers
 
             var query = _context.Invoices
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.RoomBooking!).ThenInclude(rb => rb.Room!).ThenInclude(r => r.Stay)
-                .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation!).ThenInclude(t => t.FromBranch)
-                .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation!).ThenInclude(t => t.ToSpot)
+                .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.ResBooking!).ThenInclude(rb => rb.RestaurantTable!).ThenInclude(rt => rt.Restaurant)
                 .Where(i => i.AccountId == accountId);
 
@@ -61,12 +60,65 @@ namespace KarnelTravelGuide.Web.Controllers
             {
                 // Tab 2: Lịch sử dịch vụ đã thanh toán hoặc đã hủy
                 var historyInvoices = await query
-                    .Where(i => i.PaymentStatus != "Unpaid" || (i.Order != null && i.Order.Status == "Canceled"))
+                    .Where(i => i.PaymentStatus != "Unpaid" || (i.Order != null && (i.Order.Status == "Canceled" || i.Order.Status == "Submitted")))
                     .OrderByDescending(i => i.CreatedDate)
                     .ToListAsync();
 
                 return View(historyInvoices);
             }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ConfirmAllInvoices()
+        {
+            int? accountId = HttpContext.Session.GetInt32("AccountId");
+            if (accountId == null) return RedirectToAction("Login", "Auth");
+
+            var pendingInvoices = await _context.Invoices
+                .Include(i => i.Order)
+                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Pending")
+                .ToListAsync();
+
+            if (!pendingInvoices.Any()) return RedirectToAction(nameof(MyInvoices));
+
+            foreach (var inv in pendingInvoices)
+            {
+                if (inv.Order != null)
+                {
+                    inv.Order.Status = "Submitted";
+                }
+            }
+            await _context.SaveChangesAsync();
+            
+            TempData["SuccessMessage"] = "Your booking has been successfully submitted to the branch manager! Please visit the counter to confirm and pay.";
+            return RedirectToAction(nameof(MyInvoices), new { tab = "history" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CancelAllInvoices()
+        {
+            int? accountId = HttpContext.Session.GetInt32("AccountId");
+            if (accountId == null) return RedirectToAction("Login", "Auth");
+
+            var pendingInvoices = await _context.Invoices
+                .Include(i => i.Order)
+                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Pending")
+                .ToListAsync();
+
+            if (!pendingInvoices.Any()) return RedirectToAction(nameof(MyInvoices));
+
+            foreach (var inv in pendingInvoices)
+            {
+                inv.PaymentStatus = "Canceled";
+                if (inv.Order != null)
+                {
+                    inv.Order.Status = "Canceled";
+                }
+            }
+            await _context.SaveChangesAsync();
+            
+            TempData["SuccessMessage"] = "Successfully canceled all pending bookings. Cart cleared.";
+            return RedirectToAction(nameof(MyInvoices));
         }
     }
 }
