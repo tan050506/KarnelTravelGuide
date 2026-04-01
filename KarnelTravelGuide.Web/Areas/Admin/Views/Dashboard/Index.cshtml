@@ -228,6 +228,20 @@
                     legend: {
                         display: true, 
                         position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += '$' + context.parsed.y.toLocaleString('en-US');
+                                }
+                                return label;
+                            }
+                        }
                     }
                 },
                 scales: {
@@ -235,7 +249,7 @@
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return value.toLocaleString('vi-VN') + ' VND';
+                                return '$' + value.toLocaleString('en-US');
                             }
                         }
                     }
