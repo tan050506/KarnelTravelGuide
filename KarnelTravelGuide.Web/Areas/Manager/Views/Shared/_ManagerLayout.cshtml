@@ -4,32 +4,84 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Manager Portal | Karnel Travel</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    
     <style>
-        /* NEW DASHBOARD LAYOUT */
-        body { background-color: var(--k-bg-light); overflow-x: hidden; }
+        :root {
+            --k-bg-light: #f8fafc;
+            --k-sidebar-bg: #0f172a;
+            --k-sidebar-hover: #1e293b;
+            --k-primary: #0d6efd;
+            --k-border: #e2e8f0;
+            --k-ink: #0f172a;
+            --k-soft: #64748b;
+            --ff-b: 'Jost', system-ui, sans-serif;
+        }
+
+        body { 
+            background-color: var(--k-bg-light); 
+            overflow-x: hidden; 
+            font-family: var(--ff-b);
+        }
         
-        .k-sidebar { width: 260px; height: 100vh; position: fixed; top: 0; left: 0; background-color: var(--k-sidebar-bg); color: #94a3b8; z-index: 1050; overflow-y: auto; transition: transform 0.3s ease; }
+        /* ─── SIDEBAR ─── */
+        .k-sidebar { 
+            width: 270px; height: 100vh; position: fixed; top: 0; left: 0; 
+            background-color: var(--k-sidebar-bg); color: #94a3b8; 
+            z-index: 1050; overflow-y: auto; transition: transform 0.3s ease; 
+        }
         
-        .k-sidebar-brand { padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 16px; }
+        .k-sidebar-brand { 
+            padding: 1.8rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); 
+            margin-bottom: 1rem; 
+        }
         .k-sidebar-brand h5 { color: #ffffff; font-weight: 800; letter-spacing: 1px; }
         
-        .k-sidebar-nav { padding: 0 16px; display: flex; flex-direction: column; gap: 4px; }
-        .k-sidebar-nav a { color: #94a3b8; text-decoration: none; padding: 12px 16px; border-radius: 10px; display: flex; align-items: center; font-weight: 500; transition: 0.2s; }
+        .k-sidebar-nav { padding: 0 1rem; display: flex; flex-direction: column; gap: 0.25rem; }
+        .k-sidebar-nav a { 
+            color: #94a3b8; text-decoration: none; padding: 0.75rem 1rem; 
+            border-radius: 0.75rem; display: flex; align-items: center; 
+            font-weight: 500; transition: all 0.2s; font-size: 0.95rem;
+        }
         .k-sidebar-nav a:hover { background-color: var(--k-sidebar-hover); color: #ffffff; }
-        .k-sidebar-nav a.active { background-color: var(--k-primary); color: #ffffff; box-shadow: 0 4px 12px rgba(0, 97, 230, 0.3); }
-        .k-sidebar-nav a i { font-size: 1.2rem; margin-right: 12px; }
+        .k-sidebar-nav a.active { 
+            background-color: var(--k-primary); color: #ffffff; 
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.35); 
+        }
+        .k-sidebar-nav a i { font-size: 1.25rem; margin-right: 0.75rem; width: 24px; text-align: center; }
         
-        .k-section-title { font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 8px 16px; }
+        .k-section-title { 
+            font-size: 0.7rem; font-weight: 700; color: #475569; 
+            text-transform: uppercase; letter-spacing: 0.1em; 
+            margin: 1.5rem 0 0.5rem 1.2rem; 
+        }
 
-        .k-main-wrapper { margin-left: 260px; min-height: 100vh; display: flex; flex-direction: column; transition: margin-left 0.3s ease; }
-        .k-topbar { background-color: #ffffff; height: 80px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--k-border); position: sticky; top: 0; z-index: 999; }
-        .k-content { padding: 32px; flex-grow: 1; max-width: 1400px; width: 100%; margin: 0 auto; }
+        /* ─── MAIN WRAPPER ─── */
+        .k-main-wrapper { 
+            margin-left: 270px; min-height: 100vh; display: flex; flex-direction: column; 
+            transition: margin-left 0.3s ease; 
+        }
+        
+        .k-topbar { 
+            background-color: #ffffff; height: 75px; padding: 0 2rem; 
+            display: flex; align-items: center; justify-content: space-between; 
+            border-bottom: 1px solid var(--k-border); position: sticky; top: 0; z-index: 999; 
+            box-shadow: 0 2px 15px rgba(0,0,0,0.02);
+        }
+        
+        .k-content { padding: 2rem; flex-grow: 1; max-width: 1400px; width: 100%; margin: 0 auto; }
 
         .sidebar-overlay { 
-            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 1040; opacity: 0; transition: opacity 0.3s ease; 
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); 
+            z-index: 1040; opacity: 0; transition: opacity 0.3s ease; 
         }
         .sidebar-overlay.show { display: block; opacity: 1; }
 
@@ -47,26 +99,29 @@
     <aside class="k-sidebar" id="kSidebar">
         <div class="k-sidebar-brand text-center">
             <h5 class="m-0"><i class="bi bi-briefcase-fill text-primary me-2"></i>MANAGER</h5>
-            <small>Karnel Travel System</small>
+            <small class="text-muted fw-bold" style="letter-spacing: 0.05em;">Karnel Travel System</small>
         </div>
         
         <nav class="k-sidebar-nav pb-4">
             <a asp-area="Manager" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
             
+            <div class="k-section-title">Directory</div>
             <a asp-area="Manager" asp-controller="TouristSpot" asp-action="Index"><i class="bi bi-geo-alt-fill"></i> Tourist Spot</a>
             <a asp-area="Manager" asp-controller="Transportation" asp-action="Index"><i class="bi bi-bus-front-fill"></i> Transportation</a>
             <a asp-area="Manager" asp-controller="Stay" asp-action="Index"><i class="bi bi-buildings-fill"></i> Stay</a>
             <a asp-area="Manager" asp-controller="Restaurant" asp-action="Index"><i class="bi bi-shop-window"></i> Restaurant</a>
 
+            <div class="k-section-title">Bookings</div>
             <a asp-area="Manager" asp-controller="RoomBooking" asp-action="Index"><i class="bi bi-door-open-fill"></i> Room Booking</a>
             <a asp-area="Manager" asp-controller="TableBooking" asp-action="Index"><i class="bi bi-cup-hot-fill"></i> Table Booking</a>
             <a asp-area="Manager" asp-controller="TicketBooking" asp-action="Index"><i class="bi bi-ticket-detailed-fill"></i> Ticket Booking</a>
 
+            <div class="k-section-title">Business</div>
             <a asp-area="Manager" asp-controller="Invoice" asp-action="Index"><i class="bi bi-receipt-cutoff text-warning"></i> Invoice</a>
-            <a asp-area="Manager" asp-controller="Feedback" asp-action="Index"><i class="bi bi-chat-right-text-fill"></i> Feedback</a>
+            <a asp-area="Manager" asp-controller="Feedback" asp-action="Index"><i class="bi bi-chat-right-text-fill text-info"></i> Feedback / Inbox</a>
             
             <div class="mt-4 border-top pt-3" style="border-color: rgba(255,255,255,0.05) !important;">
-                <a href="/Account/Logout" class="text-danger"><i class="bi bi-box-arrow-left"></i> Logout</a>
+                <a href="/Account/Logout" class="text-danger fw-bold"><i class="bi bi-box-arrow-left"></i> Logout</a>
             </div>
         </nav>
     </aside>
@@ -74,15 +129,16 @@
     <div class="k-main-wrapper">
         <header class="k-topbar">
             <div class="d-flex align-items-center gap-2">
-                <button id="sidebarToggle" class="btn btn-light d-lg-none shadow-sm border-0 me-2" style="padding: 6px 12px;">
+                <button id="sidebarToggle" class="btn btn-light d-lg-none shadow-sm border-0 me-2" style="padding: 6px 12px; border-radius: 0.5rem;">
                     <i class="bi bi-list fs-4"></i>
                 </button>
-                <h4 class="m-0 fw-bold text-dark d-none d-sm-block">@ViewData["Title"]</h4>
+                <h4 class="m-0 fw-bold text-dark d-none d-sm-block" style="letter-spacing: -0.02em;">@ViewData["Title"]</h4>
             </div>
             <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill fw-bold">
-                    <i class="bi bi-circle-fill small me-2"></i>@(Context.Session.GetString("UserName") ?? "Manager Online")
-                </span>
+                <div class="bg-light border px-3 py-2 rounded-pill fw-bold text-dark d-flex align-items-center shadow-sm">
+                    <span class="bg-success rounded-circle me-2" style="width: 8px; height: 8px;"></span>
+                    <span style="font-size: 0.9rem;">@(Context.Session.GetString("UserName") ?? "Manager Online")</span>
+                </div>
             </div>
         </header>
         
@@ -90,7 +146,7 @@
             @RenderBody()
         </main>
         
-        <footer class="text-center py-4 text-muted small mt-auto border-top">
+        <footer class="text-center py-4 small mt-auto border-top fw-bold" style="color: var(--k-soft);">
             &copy; 2026 Karnel Travel Manager Portal
         </footer>
     </div>
@@ -107,6 +163,15 @@
             $('#sidebarOverlay').on('click', function() {
                 $('#kSidebar').removeClass('show');
                 $('#sidebarOverlay').removeClass('show');
+            });
+
+            // Tự động highlight menu đang active
+            var currentPath = window.location.pathname.toLowerCase();
+            $('.k-sidebar-nav a').each(function() {
+                var href = $(this).attr('href').toLowerCase();
+                if (currentPath.includes(href) && href !== '/') {
+                    $(this).addClass('active');
+                }
             });
         });
     </script>

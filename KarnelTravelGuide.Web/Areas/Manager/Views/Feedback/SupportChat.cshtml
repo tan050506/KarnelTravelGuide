@@ -1,6 +1,6 @@
 @model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Feedback>
 @{ 
-    ViewData["Title"] = "Zalo Workspace"; 
+    ViewData["Title"] = "Chat Support"; 
     int? activeUserId = ViewBag.ActiveUserId;
     int myId = ViewBag.MyId ?? 0;
     var staffs = ViewBag.Staffs as List<KarnelTravelGuide.Web.Models.Entities.Account>;
@@ -104,7 +104,7 @@
                 </div>
 
                 <div class="chat-footer">
-                    <form asp-action="SendZaloMessage" method="post" class="d-flex gap-2">
+                    <form asp-action="SendMessage" method="post" class="d-flex gap-2">
                         <input type="hidden" name="activeUserId" value="@activeUserId" />
                         <input type="text" name="messageContent" class="form-control bg-light border-0 px-4" style="border-radius: 2rem;" placeholder="Type a message..." required autocomplete="off">
                         <button type="submit" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px; flex-shrink: 0;"><i class="bi bi-send-fill"></i></button>

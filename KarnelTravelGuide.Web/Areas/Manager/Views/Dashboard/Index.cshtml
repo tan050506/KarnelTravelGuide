@@ -2,95 +2,158 @@
     ViewData["Title"] = "Manager Dashboard";
 }
 
-<div class="row mb-4">
-    <div class="col-md-12">
-        <h3 class="fw-bold text-dark">Workspace Overview</h3>
-        <p class="text-muted">Real-time tracking of your branch operations, room bookings, and restaurant reservations.</p>
+<style>
+    .k-stat-card {
+        border-radius: 1.25rem;
+        transition: all 0.3s ease;
+        background: #ffffff;
+    }
+    .k-stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.06) !important;
+    }
+    
+    .k-icon-box {
+        width: 60px; height: 60px;
+        border-radius: 1rem;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem;
+    }
+    
+    .card-title-sm {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--k-soft);
+        margin-bottom: 0.5rem;
+    }
+    
+    .card-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: var(--k-ink);
+        line-height: 1;
+        margin: 0;
+    }
+
+    .k-link-footer {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+</style>
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+        <h3 class="fw-bold" style="color: var(--k-ink); letter-spacing: -0.02em;">Workspace Overview</h3>
+        <p class="mb-0" style="color: var(--k-soft);">Real-time tracking of your branch operations, bookings, and customer feedback.</p>
     </div>
 </div>
 
 <div class="row g-4">
     <div class="col-xl-4 col-md-6">
-        <div class="card bg-warning text-dark shadow-sm h-100 border-0">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
+        <div class="card k-stat-card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                        <div class="text-uppercase fw-bold small mb-1">Pending Invoices</div>
-                        <div class="h2 fw-bold mb-0">@ViewBag.PendingInvoicesCount</div>
+                        <div class="card-title-sm">Pending Invoices</div>
+                        <div class="card-value">@ViewBag.PendingInvoicesCount</div>
                     </div>
-                    <i class="bi bi-receipt-cutoff fs-1 opacity-50"></i>
+                    <div class="k-icon-box" style="background-color: #fff8e1; color: #f59e0b;">
+                        <i class="bi bi-receipt-cutoff"></i>
+                    </div>
                 </div>
-            </div>
-            <div class="card-footer bg-warning border-0 text-dark small fw-semibold">
-                <a asp-controller="Invoice" asp-action="Index" class="text-dark text-decoration-none">Review Payments <i class="bi bi-arrow-right ms-1"></i></a>
+                <div class="mt-4 pt-3 border-top">
+                    <a asp-controller="Invoice" asp-action="Index" class="k-link-footer d-flex align-items-center" style="color: #f59e0b;">
+                        Review Payments <i class="bi bi-arrow-right ms-auto fs-6"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="col-xl-4 col-md-6">
-        <div class="card bg-success text-white shadow-sm h-100 border-0">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
+        <div class="card k-stat-card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                        <div class="text-uppercase fw-bold small mb-1">Confirmed Stays</div>
-                        <div class="h2 fw-bold mb-0">@ViewBag.RoomsBookedCount</div>
+                        <div class="card-title-sm">Confirmed Stays</div>
+                        <div class="card-value">@ViewBag.RoomsBookedCount</div>
                     </div>
-                    <i class="bi bi-door-open fs-1 opacity-50"></i>
+                    <div class="k-icon-box" style="background-color: #e0f2fe; color: #0ea5e9;">
+                        <i class="bi bi-door-open-fill"></i>
+                    </div>
                 </div>
-            </div>
-            <div class="card-footer bg-success border-0 text-white small fw-semibold">
-                <a asp-controller="RoomBooking" asp-action="Index" class="text-white text-decoration-none">View Room Bookings <i class="bi bi-arrow-right ms-1"></i></a>
+                <div class="mt-4 pt-3 border-top">
+                    <a asp-controller="RoomBooking" asp-action="Index" class="k-link-footer d-flex align-items-center" style="color: #0ea5e9;">
+                        View Room Bookings <i class="bi bi-arrow-right ms-auto fs-6"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="col-xl-4 col-md-6">
-        <div class="card bg-primary text-white shadow-sm h-100 border-0">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
+        <div class="card k-stat-card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                        <div class="text-uppercase fw-bold small mb-1">Confirmed Tables</div>
-                        <div class="h2 fw-bold mb-0">@ViewBag.TablesBookedCount</div>
+                        <div class="card-title-sm">Confirmed Tables</div>
+                        <div class="card-value">@ViewBag.TablesBookedCount</div>
                     </div>
-                    <i class="bi bi-calendar-check fs-1 opacity-50"></i>
+                    <div class="k-icon-box" style="background-color: #dcfce7; color: #10b981;">
+                        <i class="bi bi-shop-window"></i>
+                    </div>
                 </div>
-            </div>
-            <div class="card-footer bg-primary border-0 text-white small fw-semibold">
-                <a asp-controller="TableBooking" asp-action="Index" class="text-white text-decoration-none">View Table Bookings <i class="bi bi-arrow-right ms-1"></i></a>
+                <div class="mt-4 pt-3 border-top">
+                    <a asp-controller="TableBooking" asp-action="Index" class="k-link-footer d-flex align-items-center" style="color: #10b981;">
+                        View Table Bookings <i class="bi bi-arrow-right ms-auto fs-6"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="col-xl-6 col-md-6">
-        <div class="card bg-info text-white shadow-sm h-100 border-0">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
+        <div class="card k-stat-card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <div class="text-uppercase fw-bold small mb-1">Active Transport Routes</div>
-                        <div class="h2 fw-bold mb-0">@ViewBag.ActiveRoutesCount</div>
+                        <div class="card-title-sm">Active Transport Routes</div>
+                        <div class="card-value">@ViewBag.ActiveRoutesCount</div>
                     </div>
-                    <i class="bi bi-signpost-split fs-1 opacity-50"></i>
+                    <div class="k-icon-box" style="background-color: #f3e8ff; color: #8b5cf6;">
+                        <i class="bi bi-signpost-split-fill"></i>
+                    </div>
                 </div>
-            </div>
-            <div class="card-footer bg-info border-0 text-white small fw-semibold">
-                <a asp-controller="Transportation" asp-action="Index" class="text-white text-decoration-none">Manage Routes <i class="bi bi-arrow-right ms-1"></i></a>
+                <div class="mt-4 pt-3 border-top">
+                    <a asp-controller="Transportation" asp-action="Index" class="k-link-footer d-flex align-items-center" style="color: #8b5cf6;">
+                        Manage Routes <i class="bi bi-arrow-right ms-auto fs-6"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="col-xl-6 col-md-6">
-        <div class="card bg-secondary text-white shadow-sm h-100 border-0">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
+        <div class="card k-stat-card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <div class="text-uppercase fw-bold small mb-1">Total Feedbacks</div>
-                        <div class="h2 fw-bold mb-0">@ViewBag.FeedbackCount</div>
+                        <div class="card-title-sm">Reviews & Feedbacks</div>
+                        <div class="card-value">@ViewBag.FeedbackCount</div>
                     </div>
-                    <i class="bi bi-chat-right-text fs-1 opacity-50"></i>
+                    <div class="k-icon-box" style="background-color: #fee2e2; color: #ef4444;">
+                        <i class="bi bi-chat-right-quote-fill"></i>
+                    </div>
                 </div>
-            </div>
-            <div class="card-footer bg-secondary border-0 text-white small fw-semibold">
-                <a asp-controller="Feedback" asp-action="Index" class="text-white text-decoration-none">Read Reviews <i class="bi bi-arrow-right ms-1"></i></a>
+                <div class="mt-4 pt-3 border-top">
+                    <a asp-controller="Feedback" asp-action="Index" class="k-link-footer d-flex align-items-center" style="color: #ef4444;">
+                        Read Customer Reviews <i class="bi bi-arrow-right ms-auto fs-6"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
