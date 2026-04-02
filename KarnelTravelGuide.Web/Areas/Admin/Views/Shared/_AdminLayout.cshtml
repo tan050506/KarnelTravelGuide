@@ -158,10 +158,21 @@
 
             // Tự động highlight menu đang active
             var currentPath = window.location.pathname.toLowerCase();
+            
+            var isDashboard = currentPath === '/admin' || currentPath === '/admin/' || currentPath.startsWith('/admin/dashboard');
+            
             $('.k-sidebar-nav a').each(function() {
                 var href = $(this).attr('href').toLowerCase();
-                if (currentPath.includes(href) && href !== '/') {
-                    $(this).addClass('active');
+                if (href.includes("logout")) return;
+
+                if (isDashboard) {
+                    if (href === '/admin' || href === '/admin/' || href === '/admin/dashboard') {
+                        $(this).addClass('active');
+                    }
+                } else {
+                    if (href !== '/admin' && href !== '/admin/' && currentPath.includes(href) && href !== '/') {
+                        $(this).addClass('active');
+                    }
                 }
             });
         });

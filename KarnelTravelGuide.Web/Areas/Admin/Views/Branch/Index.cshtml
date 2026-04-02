@@ -21,7 +21,18 @@
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold">Branch List</h6>
-        <a asp-action="Create" class="btn btn-sm btn-primary shadow-sm"><i class="bi bi-plus"></i> Add New</a>
+        <div class="d-flex align-items-center gap-2">
+            <form method="get" asp-action="Index" class="d-flex align-items-center gap-2 m-0">
+                <input type="text" name="searchString"
+                    value="@ViewBag.CurrentFilter"
+                    placeholder="Search branches..."
+                    class="form-control form-control-sm" />
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="bi bi-search"></i>
+                </button>
+            </form>
+            <a asp-action="Create" class="btn btn-sm btn-primary shadow-sm"><i class="bi bi-plus"></i> Add New</a>
+        </div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">

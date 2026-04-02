@@ -23,9 +23,24 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? searchString)
         {
-            return View(await _context.Branches.ToListAsync());
+            ViewBag.CurrentFilter = searchString;
+
+            var branches = _context.Branches.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                var lowerSearch = searchString.ToLower();
+                branches = branches.Where(b => 
+                    (b.BranchName != null && b.BranchName.ToLower().Contains(lowerSearch)) ||
+                    (b.Address != null && b.Address.ToLower().Contains(lowerSearch)) ||
+                    (b.PhoneBranch != null && b.PhoneBranch.Contains(lowerSearch)) ||
+                    (b.EmailBranch != null && b.EmailBranch.ToLower().Contains(lowerSearch))
+                );
+            }
+
+            return View(await branches.ToListAsync());
         }
 
         public IActionResult Create()
