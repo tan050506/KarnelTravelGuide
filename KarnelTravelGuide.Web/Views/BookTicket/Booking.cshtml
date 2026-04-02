@@ -1,38 +1,80 @@
 @model KarnelTravelGuide.Web.Models.Entities.Transportation
 @{
     ViewData["Title"] = "Select Seats";
+    // Trang thao tác Booking: Không kích hoạt HeroPage để Navbar có nền trắng
 }
 
 <style>
-    body { background-color: #f8fafc; }
+    body { background-color: var(--bg); }
     
-    .card-custom { background: #fff; border-radius: 1.25rem; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: none; }
+    .card-custom { 
+        background: var(--white); 
+        border-radius: 1.5rem; 
+        padding: 2.5rem; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.04); 
+        border: 1px solid var(--line); 
+    }
     
     .legend-container { display: flex; justify-content: center; gap: 24px; margin-bottom: 30px; }
-    .legend-item { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.95rem; color: #555; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.95rem; color: var(--soft); }
     .legend-box { width: 24px; height: 24px; border-radius: 6px; }
 
     .seat-grid { display: grid; gap: 15px; justify-content: center; }
-    .seat { height: 45px; width: 50px; border-radius: 8px 8px 15px 15px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s ease; user-select: none; }
-    .seat.available { background-color: #fff; border: 2px solid #28a745; color: #28a745; }
-    .seat.available:hover { background-color: #e6f9ed; transform: translateY(-2px); }
-    .seat.booked { background-color: #e4e6eb; color: #a0a0a0; border: 2px solid #ced4da; cursor: not-allowed; }
-    .seat.selected { background-color: #0d6efd; color: #fff; border: 2px solid #0d6efd; transform: scale(1.05); box-shadow: 0 4px 10px rgba(13,110,253,0.3); }
+    .seat { 
+        height: 45px; width: 50px; 
+        border-radius: 8px 8px 15px 15px; 
+        display: flex; align-items: center; justify-content: center; 
+        font-weight: 700; font-size: 1rem; cursor: pointer; 
+        transition: all 0.2s ease; user-select: none; 
+    }
+    .seat.available { background-color: var(--white); border: 2px solid var(--g2); color: var(--g2); }
+    .seat.available:hover { background-color: var(--t-lt); transform: translateY(-2px); }
+    
+    .seat.booked { background-color: var(--line); color: var(--muted); border: 2px solid #ced4da; cursor: not-allowed; }
+    
+    .seat.selected { 
+        background-color: var(--g1); color: var(--white); border: 2px solid var(--g1); 
+        transform: scale(1.05); box-shadow: 0 4px 10px rgba(42,157,143,0.3); 
+    }
 
-    .bottom-checkout-bar { position: sticky; bottom: 20px; background: #fff; padding: 20px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 1000; border: 1px solid #e0e0e0; border-radius: 16px; margin-top: 30px; }
+    .bottom-checkout-bar { 
+        position: sticky; bottom: 20px; 
+        background: rgba(255, 255, 255, 0.95); 
+        backdrop-filter: blur(10px);
+        padding: 20px 30px; 
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.08);
+        z-index: 1000; 
+        border: 1px solid var(--line); 
+        border-radius: 1rem; 
+        margin-top: 30px;
+    }
+
+    .btn-gradient {
+        background: linear-gradient(135deg, var(--g1), var(--g2));
+        color: var(--white);
+        border: none;
+        transition: opacity 0.2s, transform 0.2s;
+        box-shadow: 0 4px 14px rgba(42,157,143,.3);
+    }
+    .btn-gradient:hover:not(.disabled) {
+        opacity: 0.9; transform: translateY(-2px); color: var(--white);
+    }
 </style>
 
 <div class="container py-5" style="max-width: 900px;">
     
-    <div class="d-flex align-items-center mb-4">
-        <a asp-action="Index" class="btn btn-light bg-white shadow-sm rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; border: 1px solid #eee;"><i class="bi bi-arrow-left text-dark"></i></a>
+    <div class="d-flex align-items-center mb-5">
+        <a asp-action="Index" class="btn btn-light bg-white shadow-sm rounded-circle me-4 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; border: 1px solid var(--line);">
+            <i class="bi bi-arrow-left" style="color: var(--ink);"></i>
+        </a>
         <div>
-            <h3 class="fw-bold mb-0 text-dark">@Model.TransportName</h3>
+            <h2 class="fw-bold mb-1" style="font-family: var(--ff-d); color: var(--ink);">@Model.TransportName</h2>
+            <span style="color: var(--soft);"><i class="bi bi-ui-checks-grid me-1" style="color: var(--g2);"></i>Select your preferred seats</span>
         </div>
     </div>
 
     @if (TempData["ErrorMessage"] != null) { 
-        <div class="alert alert-danger rounded-3 fw-bold mb-4"><i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]</div> 
+        <div class="alert alert-danger rounded-3 fw-bold mb-4 border-0"><i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]</div> 
     }
 
     <form asp-action="ConfirmBooking" method="post" id="checkoutForm">
@@ -41,47 +83,47 @@
         <input type="hidden" name="selectedSeats" id="hiddenSelectedSeats" />
 
         <div class="card-custom mb-0">
-            <div class="row bg-light p-3 rounded-4 mb-4 g-3 border align-items-center text-center">
-                <div class="col-4 border-end">
-                    <small class="text-muted fw-bold d-block text-uppercase">From</small>
-                    <strong class="fs-6 text-dark">@Model.FromBranch?.BranchName</strong>
+            <div class="row p-3 rounded-4 mb-4 g-3 border align-items-center text-center" style="background-color: var(--bg); border-color: var(--line) !important;">
+                <div class="col-4 border-end" style="border-color: var(--line) !important;">
+                    <small class="fw-bold d-block text-uppercase mb-1" style="color: var(--muted); letter-spacing: 0.05em; font-size: 0.75rem;">From</small>
+                    <strong class="fs-6 fw-bold" style="color: var(--ink);">@Model.FromBranch?.BranchName</strong>
                 </div>
-                <div class="col-4 border-end">
-                    <small class="text-muted fw-bold d-block text-uppercase">To</small>
-                    <strong class="fs-6 text-primary">@Model.ToSpot?.SpotName</strong>
+                <div class="col-4 border-end" style="border-color: var(--line) !important;">
+                    <small class="fw-bold d-block text-uppercase mb-1" style="color: var(--muted); letter-spacing: 0.05em; font-size: 0.75rem;">To</small>
+                    <strong class="fs-6 fw-bold" style="color: var(--g1);">@Model.ToSpot?.SpotName</strong>
                 </div>
                 <div class="col-4">
-                    <small class="text-muted fw-bold d-block text-uppercase">Date & Time</small>
-                    <div class="fs-6 text-danger fw-bold">
+                    <small class="fw-bold d-block text-uppercase mb-1" style="color: var(--muted); letter-spacing: 0.05em; font-size: 0.75rem;">Date & Time</small>
+                    <div class="fs-6 fw-bold text-danger">
                         <i class="bi bi-calendar-event me-1"></i>@ViewBag.TravelDate
-                        <span class="mx-1 text-muted fw-normal">|</span>
+                        <span class="mx-1 fw-normal" style="color: var(--muted);">|</span>
                         <i class="bi bi-clock me-1"></i>@Model.DepartureTime?.ToString("HH:mm")
                     </div>
                 </div>
             </div>
 
-            <div class="legend-container pb-4 border-bottom">
-                <div class="legend-item"><div class="legend-box border border-2 border-success bg-white"></div>Available</div>
-                <div class="legend-item"><div class="legend-box border border-2 border-primary bg-primary"></div>Selected</div>
-                <div class="legend-item"><div class="legend-box border border-2 border-secondary bg-light"></div>Booked</div>
+            <div class="legend-container pb-4 border-bottom" style="border-color: var(--line) !important;">
+                <div class="legend-item"><div class="legend-box border border-2 bg-white" style="border-color: var(--g2);"></div>Available</div>
+                <div class="legend-item"><div class="legend-box border border-2" style="background-color: var(--g1); border-color: var(--g1);"></div>Selected</div>
+                <div class="legend-item"><div class="legend-box border border-2" style="background-color: var(--line); border-color: #ced4da;"></div>Booked</div>
             </div>
 
             <div class="text-center mt-5" id="loadingSpinner">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p class="mt-2 text-muted fw-bold">Loading seat map...</p>
+                <div class="spinner-border" style="color: var(--g1);" role="status"></div>
+                <p class="mt-2 fw-bold" style="color: var(--soft);">Loading seat map...</p>
             </div>
             
-            <div id="seatMapContainer" class="d-none">
+            <div id="seatMapContainer" class="d-none mt-4">
                 <div class="row justify-content-center">
                     <div class="col-md-6 mb-4">
-                        <div class="p-4 rounded-4 bg-light border">
-                            <h5 class="text-center fw-bold mb-4 text-dark border-bottom pb-2">Lower Deck (Floor 1)</h5>
+                        <div class="p-4 rounded-4 border" style="background-color: var(--bg); border-color: var(--line) !important;">
+                            <h5 class="text-center fw-bold mb-4 border-bottom pb-2" style="color: var(--ink); border-color: var(--line) !important;">Lower Deck (Floor 1)</h5>
                             <div class="seat-grid" id="floor1"></div>
                         </div>
                     </div>
                     <div class="col-md-6 mb-4">
-                        <div class="p-4 rounded-4 bg-light border">
-                            <h5 class="text-center fw-bold mb-4 text-dark border-bottom pb-2">Upper Deck (Floor 2)</h5>
+                        <div class="p-4 rounded-4 border" style="background-color: var(--bg); border-color: var(--line) !important;">
+                            <h5 class="text-center fw-bold mb-4 border-bottom pb-2" style="color: var(--ink); border-color: var(--line) !important;">Upper Deck (Floor 2)</h5>
                             <div class="seat-grid" id="floor2"></div>
                         </div>
                     </div>
@@ -92,16 +134,18 @@
         <div class="bottom-checkout-bar">
             <div class="row align-items-center m-0">
                 <div class="col-md-5 text-start ps-0 pe-4">
-                    <span class="text-muted fw-bold d-block mb-1">Selected Seats:</span>
-                    <div class="fw-bold text-dark fs-5 lh-base" id="seatLabel">None</div>
+                    <span class="fw-bold d-block mb-1" style="color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Selected Seats</span>
+                    <div class="fw-bold fs-5 lh-base" style="color: var(--ink);" id="seatLabel">None</div>
                 </div>
-                <div class="col-md-3 text-center border-start border-end">
-                    <span class="text-muted fw-bold d-block mb-1">Total Amount:</span>
-                    <span class="fs-3 fw-bold text-primary lh-1" id="priceLabel">$0</span>
+                <div class="col-md-3 text-center border-start border-end" style="border-color: var(--line) !important;">
+                    <span class="fw-bold d-block mb-1" style="color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Total Amount</span>
+                    <span class="fs-3 fw-bold lh-1" style="color: var(--g1);" id="priceLabel">$0</span>
                 </div>
                 <div class="col-md-4 text-end pe-0 ps-4 d-flex justify-content-end gap-2">
-                    <a href="/BookRoom/Index?spotId=@Model.ToSpotId" class="btn btn-outline-secondary py-3 fw-bold rounded-3">Skip</a>
-                    <button type="submit" class="btn btn-primary py-3 w-100 fw-bold rounded-3 shadow-sm" id="submitBtn" disabled>Book & Next <i class="bi bi-arrow-right ms-1"></i></button>
+                    <a href="/BookRoom/Index?spotId=@Model.ToSpotId" class="btn btn-outline-secondary py-3 fw-bold rounded-pill border-0" style="background: var(--bg); color: var(--soft);">Skip</a>
+                    <button type="submit" class="btn btn-gradient py-3 w-100 rounded-pill" id="submitBtn" disabled>
+                        Book & Next <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -115,7 +159,7 @@
             const tDate = document.getElementById("travelDateVal").value;
             const capacity = @Model.SeatCapacity;
             const unitPrice = @(Model.PriceTransport ?? 0);
-
+            
             fetch(`/BookTicket/GetBookedSeats?transportationId=${tId}&date=${tDate}`)
                 .then(response => response.json())
                 .then(data => {
@@ -127,6 +171,7 @@
                     
                     let floor1Seats = [];
                     let floor2Seats = [];
+            
                     let cols = ['A', 'B', 'C', 'D', 'E', 'F'];
                     let colsPerRow = capacity > 60 ? 6 : 4; 
                     
@@ -183,9 +228,10 @@
                 const hiddenSeats = document.getElementById("hiddenSelectedSeats");
                 const priceLabel = document.getElementById("priceLabel");
                 const submitBtn = document.getElementById("submitBtn");
-
+                
                 if (selectedSeats.length > 0) {
-                    seatLabel.innerHTML = `<span class="badge bg-primary me-1 mb-1">${selectedSeats.join('</span> <span class="badge bg-primary me-1 mb-1">')}</span>`;
+                    // Cập nhật màu sắc badge hiển thị ghế đã chọn (Dùng màu nền của var(--g1))
+                    seatLabel.innerHTML = `<span class="badge me-1 mb-1" style="background-color: var(--g1); color: white;">${selectedSeats.join('</span> <span class="badge me-1 mb-1" style="background-color: var(--g1); color: white;">')}</span>`;
                     hiddenSeats.value = selectedSeats.join(',');
                     priceLabel.innerText = "$" + (selectedSeats.length * unitPrice).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
                     submitBtn.disabled = false;

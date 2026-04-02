@@ -2,65 +2,145 @@
 @model IEnumerable<Restaurant>
 @{ 
     ViewData["Title"] = "Find Restaurants"; 
+    ViewData["HeroPage"] = true; // Kích hoạt Navbar trong suốt
     var spotsList = ViewBag.Spots as IEnumerable<TouristSpot> ?? new List<TouristSpot>();
 }
 
 <style>
-    body { background-color: #f8fafc; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg); }
     
-    .search-widget { background: #fff; border-radius: 1.25rem; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
-    .form-control-custom { border-radius: 0.75rem; padding: 0.8rem 1rem; border: 1px solid transparent; background-color: #f1f5f9; font-weight: 500; transition: all 0.2s; color: #333; }
-    .form-control-custom:focus { border-color: #0d6efd; background-color: #fff; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1); outline: none; }
-    
-    .btn-custom { background-color: #0d6efd; color: white; border-radius: 0.75rem; font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 12px rgba(13,110,253,0.2); }
-    .btn-custom:hover { background-color: #0b5ed7; transform: translateY(-1px); box-shadow: 0 6px 15px rgba(13,110,253,0.3); }
+    .res-hero {
+        /* Ảnh nền nhà hàng sang trọng */
+        background: linear-gradient(rgba(24, 35, 46, 0.5), rgba(24, 35, 46, 0.8)), 
+                    url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+        background-size: cover;
+        padding: 160px 0 120px;
+        border-radius: 0 0 2rem 2rem;
+        margin-bottom: 20px;
+    }
 
-    .res-card { background: #fff; border-radius: 1.25rem; padding: 1.5rem; transition: all 0.2s ease; border: 1px solid rgba(0,0,0,0.05); }
-    .res-card:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); border-color: rgba(13,110,253,0.15); }
+    .hero-title {
+        font-family: var(--ff-d);
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        color: var(--white);
+        line-height: 1.1;
+    }
+
+    .search-widget { 
+        background: var(--white); 
+        border-radius: 1.5rem; 
+        padding: 2.5rem; 
+        box-shadow: 0 15px 40px rgba(0,0,0,0.08); 
+        border: 1px solid var(--line); 
+        margin-top: -80px; 
+        position: relative;
+        z-index: 10;
+    }
     
-    .custom-dropdown-menu { max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1000; width: 100%; background: #fff; border-radius: 0.75rem; display: none; margin-top: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid #eee; }
+    .form-control-custom { 
+        border-radius: 0.75rem; 
+        padding: 0.8rem 1.2rem; 
+        border: 1px solid var(--line); 
+        background-color: var(--bg); 
+        font-family: var(--ff-b);
+        color: var(--ink); 
+        transition: all 0.2s; 
+    }
+    .form-control-custom:focus { 
+        border-color: var(--g1); 
+        background-color: var(--white); 
+        box-shadow: 0 0 0 4px rgba(58, 125, 94, 0.1); 
+        outline: none; 
+    }
+    
+    .btn-gradient {
+        background: linear-gradient(135deg, var(--g1), var(--g2));
+        color: var(--white);
+        border: none;
+        border-radius: 0.75rem; 
+        font-weight: 700;
+        transition: opacity 0.2s, transform 0.2s;
+        box-shadow: 0 4px 14px rgba(42,157,143,.3);
+    }
+    .btn-gradient:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+        color: var(--white);
+    }
+
+    .res-card { 
+        background: var(--white); 
+        border-radius: 1.25rem; 
+        padding: 1.5rem;
+        transition: all 0.3s ease; 
+        border: 1px solid var(--line); 
+    }
+    .res-card:hover { 
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.06); 
+        border-color: rgba(42,157,143,0.2); 
+    }
+    
+    .res-name {
+        font-family: var(--ff-d);
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--ink);
+    }
+
+    .custom-dropdown-menu { 
+        max-height: 250px; overflow-y: auto; position: absolute; top: 100%; left: 0; z-index: 1000; width: 100%; 
+        background: var(--white); border-radius: 0.75rem; display: none; margin-top: 5px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid var(--line); 
+    }
     .custom-dropdown-menu.show { display: block; }
-    .dropdown-item-custom { transition: background-color 0.2s; cursor: pointer; white-space: normal; padding: 12px 15px; }
-    .dropdown-item-custom:hover { background-color: #f8f9fa; }
+    .dropdown-item-custom { transition: background-color 0.2s; cursor: pointer; white-space: normal; padding: 12px 15px; color: var(--soft); }
+    .dropdown-item-custom:hover { background: var(--g-lt); color: var(--g1); }
 </style>
 
-<div class="container py-5" style="max-width: 1000px;">
-    
-    <div class="text-center mb-5">
-        <h2 class="fw-bold text-dark mb-2">Reserve your table</h2>
-        <p class="text-muted">Find the best dining experiences for your trip.</p>
+<div class="res-hero text-center position-relative">
+    <div class="container">
+        <h1 class="hero-title mb-3">Reserve Your Table</h1>
+        <p class="lead mb-0" style="color: rgba(255,255,255,0.85); font-weight: 300;">Find the best dining experiences for your trip.</p>
     </div>
+</div>
 
+<div class="container pb-5" style="max-width: 1100px;">
+    
     @if (TempData["SuccessMessage"] != null) { 
-        <div class="alert alert-success rounded-3 fw-bold mb-4"><i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]</div> 
+        <div class="alert alert-success rounded-3 fw-bold mb-4 shadow-sm border-0" style="background-color: var(--t-lt); color: var(--g1);">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+        </div> 
     }
 
     <div class="search-widget mb-5">
         <form asp-action="Index" method="get" class="row g-3 align-items-end">
             <div class="col-md-5 position-relative">
-                <label class="form-label text-muted small fw-bold text-uppercase">Destination</label>
+                <label class="form-label text-muted small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Destination</label>
                 <input type="text" id="spotSearchInput" class="form-control form-control-custom" placeholder="Where to dine?" autocomplete="off">
                 <input type="hidden" name="spotId" id="hiddenSpotId" value="@ViewBag.CurrentSpot" />
                 <div id="spotDropdown" class="custom-dropdown-menu p-0 border"></div>
             </div>
 
             <div class="col-md-3">
-                <label class="form-label text-muted small fw-bold text-uppercase">Date</label>
+                <label class="form-label text-muted small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Date</label>
                 <input type="date" name="resDate" value="@ViewBag.ResDate" class="form-control form-control-custom" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
             </div>
 
             <div class="col-md-2">
-                <label class="form-label text-muted small fw-bold text-uppercase">Time</label>
+                <label class="form-label text-muted small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Time</label>
                 <input type="time" name="resTime" value="@ViewBag.ResTime" class="form-control form-control-custom" required />
             </div>
 
             <div class="col-md-2">
-                <button type="submit" class="btn btn-custom w-100 py-3"><i class="bi bi-search me-2"></i> Search</button>
+                <button type="submit" class="btn btn-gradient w-100 py-3"><i class="bi bi-search me-2"></i> Search</button>
             </div>
         </form>
     </div>
 
-    <h5 class="fw-bold text-dark mb-4"><i class="bi bi-shop-window text-primary me-2"></i>Available Restaurants</h5>
+    <div class="d-flex align-items-center mb-4">
+        <h3 class="fw-bold text-dark m-0" style="font-family: var(--ff-d);"><i class="bi bi-shop-window me-2" style="color: var(--g1);"></i>Available Restaurants</h3>
+    </div>
 
     @if (Model != null && Model.Any()) {
         <div class="row g-4">
@@ -70,23 +150,25 @@
                 <div class="col-md-6">
                     <div class="res-card shadow-sm h-100 d-flex flex-column">
                         <div class="d-flex mb-3">
-                            <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/img/no-image.jpg" : item.ImageUrl)" style="width: 100px; height: 80px; object-fit: cover; border-radius: 8px;" class="me-3 shadow-sm border" />
-                            <div>
-                                <h5 class="fw-bold text-dark mb-1">@item.RestaurantName</h5>
+                            <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/img/no-image.jpg" : item.ImageUrl)" style="width: 110px; height: 90px; object-fit: cover; border-radius: 12px;" class="me-3 shadow-sm border" />
+                            <div class="overflow-hidden">
+                                <h5 class="res-name mb-1 text-truncate" title="@item.RestaurantName">@item.RestaurantName</h5>
                                 <div class="mb-1">
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1">Restaurant</span>
+                                    <span class="badge" style="background-color: var(--t-lt); color: var(--g1); border: 1px solid var(--g-lt);">Restaurant</span>
                                 </div>
-                                <div class="small text-muted fw-bold mt-1 text-truncate" style="max-width: 200px;" title="@(item.Spot?.SpotName)"><i class="bi bi-geo-alt-fill text-danger me-1"></i>@(item.Spot?.SpotName)</div>
+                                <div class="small fw-bold mt-1 text-truncate" style="color: var(--soft);" title="@(item.Spot?.SpotName)">
+                                    <i class="bi bi-geo-alt-fill me-1" style="color: var(--g2);"></i>@(item.Spot?.SpotName)
+                                </div>
                             </div>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
                             <div>
-                                <small class="text-muted d-block fw-bold text-uppercase" style="font-size: 0.7rem;">Starts from</small>
-                                <h4 class="text-success fw-bold mb-0">$@minPrice.ToString("0.##")</h4>
+                                <small class="d-block fw-bold text-uppercase" style="color: var(--muted); font-size: 0.7rem; letter-spacing: 0.05em;">Starts from</small>
+                                <h4 class="fw-bold mb-0" style="color: var(--g1);">$@minPrice.ToString("0.##")</h4>
                             </div>
                             <div class="text-end">
-                                <a asp-action="Booking" asp-route-id="@item.RestaurantId" asp-route-resDate="@ViewBag.ResDate" asp-route-resTime="@ViewBag.ResTime" class="btn btn-custom px-4 py-2">Select Tables</a>
+                                <a asp-action="Booking" asp-route-id="@item.RestaurantId" asp-route-resDate="@ViewBag.ResDate" asp-route-resTime="@ViewBag.ResTime" class="btn btn-gradient px-4 py-2 rounded-pill">Select Tables</a>
                             </div>
                         </div>
                     </div>
@@ -95,17 +177,17 @@
         </div>
     } else {
         <div class="text-center py-5 bg-white rounded-4 shadow-sm border border-light">
-            <i class="bi bi-egg-fried text-muted mb-3" style="font-size: 4rem;"></i>
-            <h4 class="fw-bold text-dark">No restaurants found</h4>
-            <p class="text-muted">Try modifying your search criteria.</p>
+            <i class="bi bi-egg-fried mb-3" style="font-size: 4rem; color: var(--line);"></i>
+            <h4 class="fw-bold text-dark" style="font-family: var(--ff-d);">No restaurants found</h4>
+            <p style="color: var(--soft);">Try modifying your search criteria to find dining options.</p>
         </div>
     }
 
-    <div class="mt-5 d-flex justify-content-between px-4 py-4 bg-white rounded-3 shadow-sm border">
-        <a href="/BookRoom/Index?spotId=@ViewBag.CurrentSpot" class="btn btn-outline-secondary fw-bold px-4 py-2 rounded-pill">
+    <div class="mt-5 d-flex justify-content-between px-4 py-4 bg-white rounded-4 shadow-sm border border-light">
+        <a href="/BookRoom/Index?spotId=@ViewBag.CurrentSpot" class="btn btn-outline-secondary fw-bold px-4 py-2 rounded-pill d-flex align-items-center">
             <i class="bi bi-arrow-left me-2"></i> Back to Room Booking
         </a>
-        <a href="/Invoice/MyInvoices?tab=pending" class="btn btn-primary fw-bold px-5 py-2 rounded-pill shadow-sm">
+        <a href="/Invoice/MyInvoices?tab=pending" class="btn fw-bold px-5 py-2 rounded-pill shadow-sm" style="color: var(--white); background: var(--ink);">
             Skip & Go to Invoice <i class="bi bi-arrow-right ms-2"></i>
         </a>
     </div>
@@ -114,25 +196,27 @@
 @section Scripts {
     <script>
         const spotsData = [ @foreach(var s in spotsList) { <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)" },</text> } ];
-        const spotInput = document.getElementById('spotSearchInput'); const spotDropdown = document.getElementById('spotDropdown'); const hiddenSpotId = document.getElementById('hiddenSpotId');
+        const spotInput = document.getElementById('spotSearchInput'); const spotDropdown = document.getElementById('spotDropdown');
+        const hiddenSpotId = document.getElementById('hiddenSpotId');
 
         window.onload = function() {
-            if (hiddenSpotId.value) { const t = spotsData.find(x => x.id == hiddenSpotId.value); if (t) spotInput.value = t.name; }
+            if (hiddenSpotId.value) { const t = spotsData.find(x => x.id == hiddenSpotId.value);
+            if (t) spotInput.value = t.name; }
         };
-
         function renderDrop(filterText) {
             spotDropdown.innerHTML = '';
             const lowerFilter = filterText.toLowerCase();
             const filtered = spotsData.filter(item => item.name.toLowerCase().includes(lowerFilter));
 
             const anyItem = document.createElement('div');
-            anyItem.className = 'dropdown-item-custom border-bottom text-primary fw-bold';
+            anyItem.className = 'dropdown-item-custom border-bottom fw-bold';
+            anyItem.style.color = 'var(--g1)';
             anyItem.innerText = "-- All Destinations (Anywhere) --";
             anyItem.onclick = function() { hiddenSpotId.value = ""; spotInput.value = ""; spotDropdown.classList.remove('show'); };
             spotDropdown.appendChild(anyItem);
 
             if (filtered.length === 0) {
-                spotDropdown.innerHTML += '<div class="p-3 text-muted small fst-italic">No matches found.</div>';
+                spotDropdown.innerHTML += '<div class="p-3 small fst-italic" style="color: var(--muted);">No matches found.</div>';
             } else {
                 filtered.forEach(item => {
                     const div = document.createElement('div');

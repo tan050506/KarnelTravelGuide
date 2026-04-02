@@ -1,0 +1,115 @@
+@model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Restaurant>
+@{ ViewData["Title"] = "My Restaurant Reviews"; }
+
+<style>
+    body { background-color: var(--bg); }
+    
+    .service-card { 
+        background: var(--white); border-radius: 1.5rem; transition: 0.3s; 
+        cursor: pointer; border: 1px solid var(--line); box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+    }
+    .service-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); border-color: rgba(42,157,143,0.2); }
+    
+    .star-rating option { font-size: 1.2rem; }
+    
+    .nav-pills .nav-link.active { background: linear-gradient(135deg, var(--g1), var(--g2)); color: var(--white); border: none; }
+    .nav-pills .nav-link { color: var(--soft); border: 1px solid var(--line); margin-right: 0.5rem; }
+    
+    .btn-gradient { background: linear-gradient(135deg, var(--g1), var(--g2)); color: var(--white); border: none; transition: 0.2s; }
+    .btn-gradient:hover { opacity: 0.9; transform: translateY(-2px); color: var(--white); }
+</style>
+
+<div class="container py-5" style="max-width: 1000px;">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="font-family: var(--ff-d); color: var(--ink);">My Reviews</h2>
+            <p class="m-0" style="color: var(--soft);">Rate the places you've visited to help other travelers.</p>
+        </div>
+        <a asp-action="Chat" class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm bg-white"><i class="bi bi-headset me-2" style="color: var(--g1);"></i>Live Support</a>
+    </div>
+
+    <ul class="nav nav-pills mb-4 pb-3 border-bottom" style="border-color: var(--line) !important;">
+        <li class="nav-item">
+            <a class="nav-link bg-white fw-bold px-4 rounded-pill" asp-action="Reviews" asp-route-type="Stay"><i class="bi bi-building me-2"></i>Stays</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active fw-bold px-4 rounded-pill shadow-sm" asp-action="Reviews" asp-route-type="Restaurant"><i class="bi bi-cup-hot me-2"></i>Restaurants</a>
+        </li>
+    </ul>
+
+    <form asp-action="Reviews" method="get" class="mb-5">
+        <input type="hidden" name="type" value="Restaurant" />
+        <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border bg-white" style="border-color: var(--line) !important;">
+            <span class="input-group-text bg-white border-0 ps-4"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" name="searchString" value="@ViewBag.CurrentSearch" class="form-control border-0 shadow-none" placeholder="Search by restaurant name or location...">
+            <button class="btn btn-gradient px-5 fw-bold" type="submit">Search</button>
+        </div>
+    </form>
+
+    @if (TempData["SuccessMessage"] != null) {
+        <div class="alert alert-success rounded-4 fw-bold mb-4 shadow-sm border-0" style="background-color: var(--t-lt); color: var(--g1);"><i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]</div>
+    }
+
+    <div class="row g-4">
+        @if (Model != null && Model.Any()) {
+            foreach (var item in Model) {
+                <div class="col-md-6">
+                    <div class="card service-card h-100 overflow-hidden">
+                        <div class="d-flex h-100 p-2">
+                            <div style="width: 140px; border-radius: 1rem; background: url('@(string.IsNullOrEmpty(item.ImageUrl) ? "/img/no-image.jpg" : item.ImageUrl)') center/cover;"></div>
+                            <div class="p-3 flex-grow-1 d-flex flex-column justify-content-center">
+                                <span class="badge px-3 py-1 rounded-pill mb-2" style="width: fit-content; font-size: 0.7rem; letter-spacing: 0.05em; background-color: var(--t-lt); color: var(--g1);">RESTAURANT</span>
+                                <h5 class="fw-bold mb-1 text-truncate" style="font-family: var(--ff-d); color: var(--ink); max-width: 200px;" title="@item.RestaurantName">@item.RestaurantName</h5>
+                                <div class="small mb-3 text-truncate" style="color: var(--soft); max-width: 200px;"><i class="bi bi-geo-alt-fill me-1" style="color: var(--g2);"></i>@(item.Spot?.SpotName ?? "N/A")</div>
+                                
+                                <button type="button" class="btn text-dark fw-bold rounded-pill btn-sm w-100 shadow-sm" style="background-color: #ffc107;" data-bs-toggle="modal" data-bs-target="#reviewModal_@item.RestaurantId">
+                                    <i class="bi bi-star-fill me-1"></i> Rate Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="reviewModal_@item.RestaurantId" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-4 border-0 shadow-lg">
+                            <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                                <h4 class="modal-title fw-bold" style="font-family: var(--ff-d); color: var(--ink);">Review @item.RestaurantName</h4>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form asp-action="SubmitReview" method="post">
+                                <div class="modal-body px-4">
+                                    <input type="hidden" name="serviceId" value="@item.RestaurantId" />
+                                    <input type="hidden" name="type" value="Restaurant" />
+                                    
+                                    <div class="text-center mb-4 mt-2">
+                                        <select name="rating" class="form-select form-select-lg mx-auto bg-light text-warning fw-bold text-center star-rating border-0 shadow-sm" style="width: 200px; border-radius: 1rem;">
+                                            <option value="5">⭐⭐⭐⭐⭐</option>
+                                            <option value="4">⭐⭐⭐⭐</option>
+                                            <option value="3">⭐⭐⭐</option>
+                                            <option value="2">⭐⭐</option>
+                                            <option value="1">⭐</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold" style="color: var(--ink);">Tell us about your experience</label>
+                                        <textarea name="comment" class="form-control bg-light border-0 shadow-sm p-3" style="border-radius: 1rem; color: var(--ink);" rows="4" placeholder="The food was amazing, the service was excellent..." required></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
+                                    <button type="submit" class="btn btn-gradient w-100 rounded-pill fw-bold py-3 shadow-sm">Post Review</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        } else {
+            <div class="col-12 text-center py-5 bg-white rounded-4 border" style="border-color: var(--line) !important;">
+                <i class="bi bi-star-half mb-3 d-block" style="font-size: 4rem; color: var(--line);"></i>
+                <h4 class="fw-bold" style="font-family: var(--ff-d); color: var(--ink);">No records found</h4>
+                <p style="color: var(--soft);">You haven't completed any restaurant reservations yet.</p>
+            </div>
+        }
+    </div>
+</div>

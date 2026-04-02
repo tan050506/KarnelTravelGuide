@@ -1,61 +1,121 @@
 @model IEnumerable<KarnelTravelGuide.Web.Models.Entities.TouristSpot>
 @{
     ViewData["Title"] = "Explore Destinations";
+    // Kích hoạt Navbar trong suốt đè lên ảnh nền
+    ViewData["HeroPage"] = true; 
 }
 
 <style>
-    body { background-color: #f8fafc; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg); }
     
     .dest-hero {
-        background: linear-gradient(rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.8)), 
+        background: linear-gradient(rgba(24, 35, 46, 0.4), rgba(24, 35, 46, 0.7)), 
                     url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
         background-size: cover;
-        padding: 100px 0;
+        padding: 160px 0 100px; /* Tăng padding top để đẩy nội dung xuống dưới Navbar */
         border-radius: 0 0 2rem 2rem;
         margin-bottom: 40px;
     }
 
+    .hero-title {
+        font-family: var(--ff-d);
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        color: var(--white);
+        line-height: 1.1;
+    }
+
     .search-bar-custom {
-        background: #fff;
+        background: var(--white);
         border-radius: 50rem;
         padding: 8px 12px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.12);
         max-width: 600px;
         margin: 0 auto;
-        transform: translateY(30px);
+        transform: translateY(40px);
+    }
+    
+    .search-bar-custom input {
+        color: var(--ink);
+        font-family: var(--ff-b);
+        font-size: 1rem;
+    }
+    
+    .search-bar-custom input::placeholder { color: var(--muted); }
+
+    .btn-gradient {
+        background: linear-gradient(135deg, var(--g1), var(--g2));
+        color: var(--white);
+        border: none;
+        transition: opacity 0.2s, transform 0.2s;
+        box-shadow: 0 4px 14px rgba(42,157,143,.3);
+    }
+    .btn-gradient:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        color: var(--white);
     }
 
     .dest-card {
-        border-radius: 1.25rem; overflow: hidden; border: none; position: relative; cursor: pointer;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: all 0.3s ease;
+        border-radius: 1.25rem; 
+        overflow: hidden; 
+        border: 1px solid var(--line);
+        position: relative; 
+        cursor: pointer;
+        background: var(--white);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+        transition: all 0.3s ease;
     }
-    .dest-card img { transition: transform 0.6s ease; height: 350px; object-fit: cover; }
-    .dest-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+    .dest-card img { 
+        transition: transform 0.6s ease; 
+        height: 350px; 
+        object-fit: cover;
+    }
+    .dest-card:hover { 
+        transform: translateY(-8px); 
+        box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+        border-color: transparent;
+    }
     .dest-card:hover img { transform: scale(1.08); }
     
     .dest-overlay {
-        position: absolute; bottom: 0; left: 0; right: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
-        padding: 2.5rem 1.5rem 1.5rem; color: white;
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        background: linear-gradient(to top, rgba(24,35,46,0.9) 0%, rgba(24,35,46,0) 100%);
+        padding: 3rem 1.5rem 1.5rem; 
+        color: var(--white);
+    }
+    
+    .card-title-d {
+        font-family: var(--ff-d);
+        font-size: 1.75rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+    
+    .photo-badge {
+        background: rgba(255,255,255,0.9);
+        color: var(--ink);
+        backdrop-filter: blur(4px);
+        font-weight: 600;
     }
 </style>
 
-<div class="dest-hero text-center text-white position-relative">
+<div class="dest-hero text-center position-relative">
     <div class="container">
-        <h1 class="display-4 fw-bold mb-3">Find Your Next Adventure</h1>
-        <p class="lead opacity-75 mb-0">Discover breathtaking destinations curated just for you.</p>
+        <h1 class="hero-title mb-3">Find Your Next Adventure</h1>
+        <p class="lead mb-0" style="color: rgba(255,255,255,0.85); font-weight: 300;">Discover breathtaking destinations curated just for you.</p>
         
         <div class="search-bar-custom d-flex">
             <form asp-action="Index" method="get" class="d-flex w-100">
                 <input type="text" name="searchString" value="@ViewBag.CurrentSearch" class="form-control border-0 shadow-none px-4" placeholder="Search a place, city...">
-                <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Search</button>
+                <button type="submit" class="btn btn-gradient rounded-pill px-4 fw-bold">Search</button>
             </form>
         </div>
     </div>
 </div>
 
 <div class="container py-5">
-    <div class="row g-4 pt-3">
+    <div class="row g-4 pt-4">
         @if (Model != null && Model.Any())
         {
             foreach (var spot in Model)
@@ -63,15 +123,15 @@
                 <div class="col-md-6 col-lg-4">
                     <a asp-action="Details" asp-route-id="@spot.SpotId" class="text-decoration-none">
                         <div class="card dest-card">
-                            <img src="@(string.IsNullOrEmpty(spot.ImageUrl) ? "/img/no-image.jpg" : spot.ImageUrl)" class="w-100" alt="@spot.SpotName">
+                            <img src="@(string.IsNullOrEmpty(spot.ImageUrl) ? "/images/no-image.jpg" : spot.ImageUrl)" class="w-100" alt="@spot.SpotName">
                             <div class="dest-overlay">
-                                <h4 class="fw-bold mb-1 text-truncate">@spot.SpotName</h4>
-                                <p class="small mb-0 opacity-75 text-truncate">
-                                    <i class="bi bi-geo-alt text-danger me-1"></i> @spot.Address
+                                <h4 class="card-title-d mb-1 text-truncate">@spot.SpotName</h4>
+                                <p class="small mb-0 text-truncate" style="color: rgba(255,255,255,0.8);">
+                                    <i class="bi bi-geo-alt-fill me-1" style="color: var(--g2);"></i> @spot.Address
                                 </p>
                             </div>
                             <div class="position-absolute top-0 end-0 m-3">
-                                <span class="badge bg-white text-dark py-2 px-3 rounded-pill shadow-sm"><i class="bi bi-camera me-1"></i> @spot.TouristSpotImages.Count Photos</span>
+                                <span class="badge photo-badge py-2 px-3 rounded-pill shadow-sm"><i class="bi bi-camera me-1" style="color: var(--g1);"></i> @spot.TouristSpotImages.Count Photos</span>
                             </div>
                         </div>
                     </a>
@@ -80,9 +140,9 @@
         }
         else
         {
-            <div class="col-12 text-center py-5 text-muted">
-                <i class="bi bi-map fs-1 d-block mb-3 opacity-50"></i>
-                <h4 class="fw-bold">No destinations found</h4>
+            <div class="col-12 text-center py-5" style="color: var(--soft);">
+                <i class="bi bi-map fs-1 d-block mb-3" style="opacity: 0.3;"></i>
+                <h4 class="fw-bold" style="font-family: var(--ff-d); color: var(--ink);">No destinations found</h4>
                 <p>Try searching for another keyword or check back later.</p>
             </div>
         }

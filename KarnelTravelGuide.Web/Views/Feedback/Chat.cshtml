@@ -1,0 +1,160 @@
+@model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Feedback>
+@{ 
+    ViewData["Title"] = "Direct Support"; 
+    int? activeManagerId = ViewBag.ActiveManagerId;
+    int myId = ViewBag.MyId ?? 0;
+    var managers = ViewBag.Managers as List<KarnelTravelGuide.Web.Models.Entities.Account>;
+}
+
+<style>
+    body { background-color: var(--bg); }
+    
+    .chat-wrapper { 
+        display: flex; height: 82vh; background: var(--white); border-radius: 1.5rem; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid var(--line); 
+        margin-top: 2rem; margin-bottom: 2rem;
+    }
+    
+    /* Sidebar Danh bạ */
+    .chat-sidebar { width: 340px; border-right: 1px solid var(--line); display: flex; flex-direction: column; background: var(--white); }
+    .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--line); }
+    .sidebar-list { flex: 1; overflow-y: auto; padding: 1rem; }
+    
+    .manager-item { 
+        padding: 0.8rem 1rem; border-radius: 1rem; cursor: pointer; transition: all 0.2s; 
+        text-decoration: none; display: flex; align-items: center; margin-bottom: 0.5rem; color: var(--ink); border: 1px solid transparent;
+    }
+    .manager-item:hover { background-color: var(--bg); border-color: var(--line); }
+    .manager-item.active { background-color: var(--t-lt); color: var(--g1); border-color: rgba(42,157,143,0.2); }
+    
+    .avatar-circle { 
+        width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+        font-size: 1.2rem; flex-shrink: 0; background: linear-gradient(135deg, var(--g1), var(--g2)); color: var(--white); font-weight: bold; 
+    }
+
+    /* Main Chat */
+    .chat-main { flex: 1; display: flex; flex-direction: column; background-color: var(--bg); }
+    .main-header { padding: 1rem 1.5rem; background: var(--white); border-bottom: 1px solid var(--line); display: flex; align-items: center; }
+    .main-body { flex: 1; padding: 1.5rem; overflow-y: auto; }
+    .chat-footer { background: var(--white); border-top: 1px solid var(--line); padding: 1.2rem 1.5rem; }
+    
+    .msg-bubble { 
+        max-width: 70%; padding: 1rem 1.25rem; border-radius: 1.25rem; margin-bottom: 0.5rem; 
+        font-size: 0.95rem; box-shadow: 0 2px 10px rgba(0,0,0,0.03); line-height: 1.5;
+    }
+    .msg-customer { 
+        background: linear-gradient(135deg, var(--g1), var(--g2)); color: var(--white); 
+        border-bottom-right-radius: 0.2rem; margin-left: auto; 
+    }
+    .msg-manager { 
+        background: var(--white); color: var(--ink); border: 1px solid var(--line);
+        border-bottom-left-radius: 0.2rem; margin-right: auto; 
+    }
+
+    .btn-gradient {
+        background: linear-gradient(135deg, var(--g1), var(--g2));
+        color: var(--white); border: none; transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-gradient:hover { opacity: 0.9; transform: translateY(-2px); color: var(--white); }
+</style>
+
+<div class="container-fluid" style="max-width: 1300px;">
+    <div class="chat-wrapper">
+        
+        <div class="chat-sidebar">
+            <div class="sidebar-header d-flex justify-content-between align-items-center">
+                <h4 class="fw-bold m-0" style="font-family: var(--ff-d); color: var(--ink);">
+                    <i class="bi bi-chat-quote-fill me-2" style="color: var(--g1);"></i>Support
+                </h4>
+                <a asp-action="Reviews" class="btn btn-light btn-sm rounded-circle border shadow-sm" title="Back to Reviews"><i class="bi bi-arrow-left"></i></a>
+            </div>
+            
+            <div class="px-3 py-3 border-bottom" style="background-color: var(--bg);">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 rounded-start-pill border-light shadow-sm"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="contactSearch" class="form-control bg-white border-start-0 rounded-end-pill border-light shadow-sm px-2" placeholder="Search managers...">
+                </div>
+            </div>
+
+            <div class="sidebar-list">
+                <div class="small fw-bold text-uppercase px-2 mb-3 mt-2" style="color: var(--muted); letter-spacing: 0.05em;">Available Managers</div>
+                @if(managers != null && managers.Any()) {
+                    foreach(var mgr in managers) {
+                        <a asp-action="Chat" asp-route-activeManagerId="@mgr.AccountId" class="manager-item @(activeManagerId == mgr.AccountId ? "active" : "")">
+                            <div class="avatar-circle me-3 shadow-sm">@(mgr.FullName?.Substring(0, 1).ToUpper() ?? "M")</div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="fw-bold text-truncate mb-1" style="font-family: var(--ff-b);">@mgr.FullName</div>
+                                <div class="small fw-bold" style="color: var(--g2);"><i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i>Online Support</div>
+                            </div>
+                        </a>
+                    }
+                } else {
+                    <div class="text-center p-4 text-muted small fst-italic">No managers available.</div>
+                }
+            </div>
+        </div>
+
+        <div class="chat-main">
+            @if (activeManagerId.HasValue) {
+                var currentManager = managers?.FirstOrDefault(m => m.AccountId == activeManagerId.Value);
+
+                <div class="main-header">
+                    <div class="avatar-circle me-3 shadow-sm" style="width: 42px; height: 42px; font-size: 1rem;">@(currentManager?.FullName?.Substring(0, 1).ToUpper() ?? "M")</div>
+                    <div>
+                        <h5 class="fw-bold m-0" style="font-family: var(--ff-d); color: var(--ink);">@currentManager?.FullName</h5>
+                        <span class="small" style="color: var(--soft);">Customer Service Team</span>
+                    </div>
+                </div>
+
+                <div class="main-body" id="chatBody">
+                    <div class="text-center mb-4"><span class="badge bg-white px-3 py-2 rounded-pill shadow-sm border" style="color: var(--muted);">Conversation started</span></div>
+
+                    @foreach (var msg in Model) {
+                        string content = msg.Message?.Split('|', 3).LastOrDefault() ?? "";
+                        
+                        <div class="d-flex flex-column mb-3">
+                            <div class="msg-bubble @(msg.AccountId == myId ? "msg-customer" : "msg-manager")">
+                                @if (msg.AccountId != myId) {
+                                    <div class="fw-bold mb-1" style="font-size: 0.8rem; color: var(--g1);">@currentManager?.FullName</div>
+                                }
+                                <div>@content</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="chat-footer">
+                    <form asp-action="SendMessage" method="post" class="d-flex gap-3 align-items-center">
+                        <input type="hidden" name="activeManagerId" value="@activeManagerId" />
+                        <input type="text" name="messageContent" class="form-control bg-light border-0 px-4 py-3" style="border-radius: 2rem; color: var(--ink);" placeholder="Type your message here..." required autocomplete="off">
+                        <button type="submit" class="btn btn-gradient rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px; flex-shrink: 0;">
+                            <i class="bi bi-send-fill fs-5"></i>
+                        </button>
+                    </form>
+                </div>
+            } else {
+                <div class="d-flex flex-column align-items-center justify-content-center h-100 opacity-50" style="color: var(--soft);">
+                    <i class="bi bi-chat-heart-fill mb-3" style="font-size: 5rem; color: var(--g1);"></i>
+                    <h3 style="font-family: var(--ff-d); color: var(--ink);">How can we help?</h3>
+                    <p>Select a manager from the left menu to start chatting.</p>
+                </div>
+            }
+        </div>
+        
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var chatBody = document.getElementById("chatBody");
+        if(chatBody) chatBody.scrollTop = chatBody.scrollHeight;
+
+        document.getElementById("contactSearch")?.addEventListener("keyup", function() {
+            var val = this.value.toLowerCase();
+            document.querySelectorAll(".manager-item").forEach(function(item) {
+                var name = item.querySelector(".text-truncate").innerText.toLowerCase();
+                item.style.setProperty("display", name.indexOf(val) > -1 ? "flex" : "none", "important");
+            });
+        });
+    </script>
+}

@@ -12,9 +12,12 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 
+using KarnelTravelGuide.Web.Attributes;
+
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
     [Area("Manager")]
+    [RoleAuthorize("Manager")]
     public class RestaurantController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -29,7 +32,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // 1. GET: Index (ĐÃ THÊM PHÂN TRANG VÀ MẶC ĐỊNH MỚI NHẤT LÊN ĐẦU)
+        // 1. GET: Index (ĐÃ THÊM INCLUDE FEEDBACKS ĐỂ TÍNH SAO)
         public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             ViewData["CurrentFilter"] = searchString;
@@ -41,6 +44,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var restaurants = _context.Restaurants
                 .Include(r => r.Spot)
                 .Include(r => r.RestaurantTables) 
+                .Include(r => r.Feedbacks) // QUAN TRỌNG: INCLUDE FEEDBACK ĐỂ TÍNH SAO
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))

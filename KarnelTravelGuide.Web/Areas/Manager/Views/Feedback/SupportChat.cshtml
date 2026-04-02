@@ -1,0 +1,139 @@
+@model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Feedback>
+@{ 
+    ViewData["Title"] = "Zalo Workspace"; 
+    int? activeUserId = ViewBag.ActiveUserId;
+    int myId = ViewBag.MyId ?? 0;
+    var staffs = ViewBag.Staffs as List<KarnelTravelGuide.Web.Models.Entities.Account>;
+    var customers = ViewBag.Customers as List<KarnelTravelGuide.Web.Models.Entities.Account>;
+}
+
+<style>
+    body { background-color: #f0f2f5; }
+    .chat-wrapper { display: flex; height: 85vh; background: #fff; border-radius: 1rem; box-shadow: 0 5px 20px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e4e6eb; margin-top: 1rem;}
+    
+    /* Cột Trái (Danh bạ) */
+    .chat-sidebar { width: 350px; border-right: 1px solid #e4e6eb; display: flex; flex-direction: column; background: #fff; }
+    .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #e4e6eb; }
+    .sidebar-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
+    .user-item { padding: 0.8rem 1rem; border-radius: 0.5rem; cursor: pointer; transition: 0.2s; text-decoration: none; display: flex; align-items: center; margin-bottom: 0.2rem; color: #1c1e21; }
+    .user-item:hover { background-color: #f0f2f5; }
+    .user-item.active { background-color: #e7f3ff; color: #0d6efd; font-weight:bold; }
+    .avatar-circle { width: 45px; height: 45px; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; flex-shrink: 0; }
+    
+    /* Cột Phải (Khung chat) */
+    .chat-main { flex: 1; display: flex; flex-direction: column; background-color: #e4e6eb; }
+    .main-header { padding: 1rem 1.5rem; background: #fff; border-bottom: 1px solid #e4e6eb; display: flex; align-items: center; }
+    .main-body { flex: 1; padding: 1.5rem; overflow-y: auto; }
+    .chat-footer { background: #fff; border-top: 1px solid #e4e6eb; padding: 1rem 1.5rem; }
+    
+    .msg-bubble { max-width: 70%; padding: 0.8rem 1.2rem; border-radius: 1rem; margin-bottom: 0.5rem; position: relative; font-size: 0.95rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .msg-me { background: #0084ff; color: white; border-bottom-right-radius: 0.2rem; margin-left: auto; }
+    .msg-them { background: #fff; color: #1c1e21; border-bottom-left-radius: 0.2rem; margin-right: auto; }
+</style>
+
+<div class="container-fluid" style="max-width: 1400px;">
+    <div class="chat-wrapper">
+        
+        <div class="chat-sidebar">
+            <div class="sidebar-header d-flex justify-content-between align-items-center">
+                <h4 class="fw-bold m-0 text-dark"><i class="bi bi-chat-quote-fill text-primary me-2"></i>Messages</h4>
+                <a asp-action="Index" class="btn btn-light btn-sm rounded-circle" title="Back to Reviews"><i class="bi bi-x-lg"></i></a>
+            </div>
+            <div class="px-3 py-2 border-bottom">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0 rounded-start-pill"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="userSearch" class="form-control bg-light border-start-0 rounded-end-pill" placeholder="Search contacts...">
+                </div>
+            </div>
+            <div class="sidebar-list">
+                <div class="small fw-bold text-muted text-uppercase px-2 mb-2 mt-2"><i class="bi bi-building me-1"></i> Co-Managers</div>
+                @if (staffs != null && staffs.Any()) {
+                    foreach (var user in staffs) {
+                        <a asp-action="SupportChat" asp-route-activeUserId="@user.AccountId" class="user-item @(activeUserId == user.AccountId ? "active" : "")">
+                            <div class="avatar-circle me-3 bg-danger">@(user.FullName?.Substring(0, 1).ToUpper() ?? "M")</div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="text-truncate">@user.FullName</div>
+                                <div class="small text-muted">@user.Role?.RoleName</div>
+                            </div>
+                        </a>
+                    }
+                } else {
+                    <div class="px-3 small text-muted fst-italic mb-3">No other managers found.</div>
+                }
+
+                <div class="small fw-bold text-muted text-uppercase px-2 mb-2 mt-4"><i class="bi bi-people-fill me-1"></i> Customers</div>
+                @if (customers != null && customers.Any()) {
+                    foreach (var user in customers) {
+                        <a asp-action="SupportChat" asp-route-activeUserId="@user.AccountId" class="user-item @(activeUserId == user.AccountId ? "active" : "")">
+                            <div class="avatar-circle me-3 bg-info">@(user.FullName?.Substring(0, 1).ToUpper() ?? "C")</div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="text-truncate">@user.FullName</div>
+                            </div>
+                        </a>
+                    }
+                } else {
+                    <div class="px-3 small text-muted fst-italic mb-3">No customers found.</div>
+                }
+            </div>
+        </div>
+
+        <div class="chat-main">
+            @if (activeUserId.HasValue) {
+                var activeUser = staffs?.FirstOrDefault(u => u.AccountId == activeUserId) ?? customers?.FirstOrDefault(u => u.AccountId == activeUserId);
+                
+                <div class="main-header">
+                    <div class="avatar-circle me-3 bg-secondary" style="width: 40px; height: 40px; font-size: 1rem;">@(activeUser?.FullName?.Substring(0, 1).ToUpper() ?? "U")</div>
+                    <div>
+                        <h6 class="fw-bold text-dark m-0">@activeUser?.FullName</h6>
+                        <span class="small text-success fw-bold"><i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i>Online</span>
+                    </div>
+                </div>
+
+                <div class="main-body" id="chatBody">
+                    <div class="text-center mb-4"><span class="badge bg-white text-muted px-3 py-2 rounded-pill shadow-sm">Chat History</span></div>
+
+                    @foreach (var msg in Model) {
+                        string content = msg.Message?.Split('|', 3).LastOrDefault() ?? "";
+                        
+                        <div class="d-flex flex-column mb-3">
+                            <div class="msg-bubble @(msg.AccountId == myId ? "msg-me" : "msg-them")">
+                                <div>@content</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="chat-footer">
+                    <form asp-action="SendZaloMessage" method="post" class="d-flex gap-2">
+                        <input type="hidden" name="activeUserId" value="@activeUserId" />
+                        <input type="text" name="messageContent" class="form-control bg-light border-0 px-4" style="border-radius: 2rem;" placeholder="Type a message..." required autocomplete="off">
+                        <button type="submit" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px; flex-shrink: 0;"><i class="bi bi-send-fill"></i></button>
+                    </form>
+                </div>
+            } else {
+                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted opacity-50">
+                    <i class="bi bi-chat-dots-fill mb-3" style="font-size: 5rem;"></i>
+                    <h4>Select a Contact</h4>
+                    <p>Choose a colleague or customer from the left menu to start chatting.</p>
+                </div>
+            }
+        </div>
+        
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var chatBody = document.getElementById("chatBody");
+        if(chatBody) { chatBody.scrollTop = chatBody.scrollHeight; }
+
+        // Search Contacts
+        document.getElementById("userSearch")?.addEventListener("keyup", function() {
+            var val = this.value.toLowerCase();
+            document.querySelectorAll(".user-item").forEach(function(item) {
+                var name = item.querySelector(".text-truncate").innerText.toLowerCase();
+                item.style.setProperty("display", name.indexOf(val) > -1 ? "flex" : "none", "important");
+            });
+        });
+    </script>
+}

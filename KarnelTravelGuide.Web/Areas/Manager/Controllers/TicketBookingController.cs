@@ -8,9 +8,12 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 
+using KarnelTravelGuide.Web.Attributes;
+
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
     [Area("Manager")]
+    [RoleAuthorize("Manager")]
     public class TicketBookingController : Controller
     {
         private readonly ApplicationDbContext _context;

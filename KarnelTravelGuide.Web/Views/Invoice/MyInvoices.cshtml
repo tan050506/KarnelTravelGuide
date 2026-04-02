@@ -1,203 +1,208 @@
 @model IEnumerable<KarnelTravelGuide.Web.Models.Entities.Invoice>
 @{ 
-    ViewData["Title"] = "My Bookings & Invoices"; 
-    string activeTab = ViewData["ActiveTab"]?.ToString() ?? "pending";
+    ViewData["Title"] = "My Pending Cart"; 
     bool hasDiscount = ViewBag.HasDiscount ?? false;
+
+    int totalItems = ViewBag.TotalItems ?? 0;
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int pageSize = ViewBag.PageSize ?? 10;
 }
 
 <style>
-    body { background-color: #f8fafc; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
-    .bill-card { background: #fff; border-radius: 1.25rem; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
-    .instruction-box { background: #eef2ff; border: 2px dashed #cbd5e1; border-radius: 1rem; padding: 1.5rem; text-align: center; }
+    body { background-color: var(--bg); }
     
-    .nav-tabs .nav-link { font-weight: bold; color: #6c757d; border: none; border-bottom: 3px solid transparent; padding: 12px 24px; font-size: 1.1rem; }
-    .nav-tabs .nav-link.active { color: #0d6efd; background: transparent; border-color: #0d6efd; }
-    .nav-tabs .nav-link:hover { border-color: #dee2e6; }
+    .bill-card { 
+        background: var(--white); border-radius: 1.5rem; padding: 2.5rem; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.04); border: 1px solid var(--line); 
+    }
+    
+    .instruction-box { 
+        background: var(--g-lt); border: 2px dashed rgba(42,157,143,0.3); 
+        border-radius: 1.25rem; padding: 2rem; text-align: center; 
+    }
+    
+    .sort-icon { cursor: pointer; color: var(--muted); transition: 0.2s; }
+    .sort-icon:hover { color: var(--g1); }
+
+    .btn-gradient {
+        background: linear-gradient(135deg, var(--g1), var(--g2));
+        color: var(--white); border: none; transition: opacity 0.2s, transform 0.2s;
+        box-shadow: 0 4px 14px rgba(42,157,143,.3);
+    }
+    .btn-gradient:hover:not(.disabled) { opacity: 0.9; transform: translateY(-2px); color: var(--white); }
+
+    .section-title { font-family: var(--ff-d); color: var(--ink); font-weight: 700; }
 </style>
 
-<div class="container py-5" style="max-width: 900px;">
-    
-    <div class="text-center mb-5">
-        <h2 class="fw-bold text-dark mb-2">My Bookings</h2>
-        <p class="text-muted">Manage your pending reservations and booking history.</p>
+<div class="container py-5" style="max-width: 950px;">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom" style="border-color: var(--line) !important;">
+        <div>
+            <h2 class="section-title mb-1">My Cart</h2>
+            <p class="m-0" style="color: var(--soft);">Review and submit your pending drafts.</p>
+        </div>
+        <a asp-action="History" class="btn bg-white fw-bold px-4 py-2 rounded-pill shadow-sm" style="color: var(--soft); border: 1px solid var(--line);">
+            <i class="bi bi-clock-history me-2" style="color: var(--g2);"></i>Booking History
+        </a>
     </div>
 
     @if (TempData["SuccessMessage"] != null) {
-        <div class="alert alert-success rounded-3 fw-bold mb-4 shadow-sm"><i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]</div>
+        <div class="alert alert-success rounded-4 fw-bold mb-4 shadow-sm border-0" style="background-color: var(--t-lt); color: var(--g1);">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+        </div>
     }
 
-    <div class="bill-card p-0 overflow-hidden">
-        <ul class="nav nav-tabs px-4 pt-3 border-bottom bg-light">
-            <li class="nav-item">
-                <a class="nav-link @(activeTab == "pending" ? "active" : "")" asp-action="MyInvoices" asp-route-tab="pending"><i class="bi bi-cart-check me-2"></i>Pending Bills</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link @(activeTab == "history" ? "active" : "")" asp-action="MyInvoices" asp-route-tab="history"><i class="bi bi-clock-history me-2"></i>Booking History</a>
-            </li>
-        </ul>
+    <div class="bill-card">
+        @if (!Model.Any()) {
+            <div class="text-center py-5">
+                <i class="bi bi-cart-x mb-3 d-block" style="font-size: 4.5rem; color: var(--line);"></i>
+                <h4 class="section-title">Your cart is empty</h4>
+                <p style="color: var(--soft);">You don't have any services waiting for checkout.</p>
+                <a href="/" class="btn btn-gradient px-5 py-3 mt-3 rounded-pill fw-bold shadow-sm">Explore Services</a>
+            </div>
+        } 
+        else {
+            <div class="instruction-box mb-4">
+                <i class="bi bi-ui-checks fs-1 d-block mb-2" style="color: var(--g1);"></i>
+                <h4 class="section-title fs-3 mb-2">Ready to finalize your trip?</h4>
+                <p class="mb-0" style="color: var(--soft);">Review your items below and click <strong style="color: var(--ink);">Confirm & Send</strong> to submit your booking.</p>
+            </div>
 
-        <div class="p-4">
-             @if (activeTab == "pending") {
-                if (!Model.Any()) {
-                    <div class="text-center py-5">
-                        <i class="bi bi-cart-x text-muted mb-3" style="font-size: 4rem;"></i>
-                        <h4 class="fw-bold text-dark">No pending bookings</h4>
-                        <p class="text-muted">You don't have any services waiting for payment.</p>
-                        <a href="/" class="btn btn-primary px-4 py-2 mt-3 rounded-pill fw-bold shadow-sm">Explore Services</a>
+            @if (hasDiscount) {
+                <div class="alert border-0 rounded-4 p-4 mb-5 d-flex align-items-center shadow-sm" style="background-color: var(--g-lt);">
+                    <i class="bi bi-stars fs-1 me-3" style="color: var(--g1);"></i>
+                    <div>
+                        <h6 class="fw-bold mb-1 fs-5" style="color: var(--g1);">10% Combo Discount Applied!</h6>
+                        <span class="small" style="color: var(--soft);">Awesome! Because you booked <strong style="color: var(--ink);">2 or more distinct services</strong>, a 10% discount has been applied.</span>
                     </div>
-                } 
-                else {
-                    <div class="instruction-box mb-4">
-                        <i class="bi bi-ui-checks fs-1 text-primary d-block mb-2"></i>
-                        <h5 class="fw-bold text-dark">Ready to finalize your trip?</h5>
-                        <p class="text-muted mb-0">Review your selected services below and click <strong>Confirm & Send To Manager</strong> to submit your booking.</p>
+                </div>
+            } else {
+                <div class="alert border-0 rounded-4 p-4 mb-5 d-flex align-items-center shadow-sm" style="background-color: #f8f9fa; border: 1px solid var(--line) !important;">
+                    <i class="bi bi-info-circle fs-2 text-primary me-3"></i>
+                    <div>
+                        <h6 class="fw-bold mb-1 fs-5" style="color: var(--ink);">Want a 10% discount?</h6>
+                        <span class="small" style="color: var(--soft);">Book at least <strong style="color: var(--ink);">1 more distinct service</strong> to unlock a 10% discount on your entire bill!</span>
                     </div>
+                </div>
+            }
 
-                    @if (hasDiscount) {
-                        <div class="alert alert-success border-success border-opacity-25 rounded-4 p-3 mb-4 d-flex align-items-center shadow-sm">
-                            <i class="bi bi-stars fs-2 text-success me-3"></i>
-                            <div>
-                                <h6 class="fw-bold text-success mb-1">10% Combo Discount Applied!</h6>
-                                <span class="small text-dark">Awesome! Because you booked <strong>2 or more distinct services</strong>, a 10% discount has been applied to your final total.</span>
-                            </div>
-                        </div>
-                    } else {
-                        <div class="alert alert-info border-info border-opacity-25 rounded-4 p-3 mb-4 d-flex align-items-center shadow-sm">
-                            <i class="bi bi-info-circle fs-3 text-info me-3"></i>
-                            <div>
-                                <h6 class="fw-bold text-dark mb-1">Want a 10% discount?</h6>
-                                <span class="small text-muted">Book at least <strong>1 more distinct service</strong> (Hotel, Ticket, or Dining) to unlock a 10% discount on your entire bill!</span>
-                            </div>
-                        </div>
-                    }
-
-                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-bag-check text-primary me-2"></i>Your Selected Items</h5>
-
-                    <div class="table-responsive border rounded-4 mb-4">
-                        <table class="table table-borderless bg-white align-middle mb-0">
-                            <thead class="bg-light border-bottom text-uppercase small text-muted fw-bold">
-                                <tr>
-                                    <th class="ps-4 py-3" style="width: 55%">Service Info</th>
-                                    <th class="py-3 text-center" style="width: 15%">Quantity</th>
-                                    <th class="pe-4 py-3 text-end" style="width: 30%">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach(var inv in Model) {
-                                    if (inv.Order?.OrderDetails != null) {
-                                        foreach(var od in inv.Order.OrderDetails) {
-                                            <tr class="border-bottom border-light">
-                                                <td class="ps-4 py-3">
-                                                    @if(od.RoomBooking != null) {
-                                                        <div class="fw-bold text-dark"><i class="bi bi-door-open-fill text-primary me-2"></i>@od.RoomBooking.Room?.Stay?.Name</div>
-                                                        <div class="small text-muted mt-1 ps-4">@od.RoomBooking.Room?.RoomType | @od.RoomBooking.CheckInDate?.ToString("dd/MM") - @od.RoomBooking.CheckOutDate?.ToString("dd/MM")</div>
-                                                    } 
-                                                    else if(od.TicketBooking != null) {
-                                                        <div class="fw-bold text-dark"><i class="bi bi-ticket-detailed-fill text-info me-2"></i>@od.TicketBooking.Transportation?.TransportName</div>
-                                                        <div class="small text-muted mt-1 ps-4">Date: @od.TicketBooking.TravelDate?.ToString("dd/MM/yyyy") | Seat: @od.TicketBooking.Seat</div>
-                                                    }
-                                                    else if(od.ResBooking != null) {
-                                                        <div class="fw-bold text-dark"><i class="bi bi-ui-checks-grid text-success me-2"></i>@od.ResBooking.RestaurantTable?.Restaurant?.RestaurantName</div>
-                                                        <div class="small text-muted mt-1 ps-4">@od.ResBooking.RestaurantTable?.TableType | @od.ResBooking.ReservationDateTime?.ToString("dd/MM HH:mm")</div>
-                                                    }
-                                                </td>
-                                                <td class="py-3 text-center fw-bold text-secondary">x @(od.Quantity ?? 1)</td>
-                                                <td class="pe-4 py-3 text-end fw-bold text-dark">$@((od.Price ?? 0).ToString("0.##"))</td>
-                                            </tr>
-                                        }
-                                    }
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-7 offset-md-5">
-                            <div class="p-4 bg-light rounded-4 border">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span class="fw-bold text-muted">Subtotal (@ViewBag.TotalServices items):</span>
-                                    <span class="fw-bold text-dark fs-5">$@ViewBag.SubTotal.ToString("0.##")</span>
-                                </div>
-                                
-                                @if (hasDiscount) {
-                                    <div class="d-flex justify-content-between mb-3 text-success">
-                                        <span class="fw-bold">Combo Discount (10%):</span>
-                                        <span class="fw-bold fs-5">-$@ViewBag.DiscountAmount.ToString("0.##")</span>
-                                    </div>
-                                }
-
-                                <div class="border-top pt-3 mt-2 d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold text-dark text-uppercase fs-5">Total to pay:</span>
-                                    <div class="text-end">
-                                        @if (hasDiscount) {
-                                            <span class="text-muted text-decoration-line-through me-2 fs-5">$@ViewBag.SubTotal.ToString("0.##")</span>
-                                        }
-                                        <span class="fw-bold text-primary fs-2">$@ViewBag.FinalTotal.ToString("0.##")</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row mt-4 mb-3">
-                        <div class="col-md-8 offset-md-4 d-flex gap-3 justify-content-end">
-                            <form asp-action="CancelAllInvoices" method="post" id="cancelAllForm" class="w-50" onsubmit="return confirm('Are you sure you want to cancel all pending bookings? This action cannot be undone.');">
-                                <button type="submit" class="btn btn-outline-danger btn-lg fw-bold w-100 rounded-pill py-3 shadow-sm">
-                                    <i class="bi bi-trash-fill me-2"></i> Cancel All Drafts
-                                </button>
-                            </form>
-                            <form asp-action="ConfirmAllInvoices" method="post" id="submitAllForm" class="w-50">
-                                <button type="submit" class="btn btn-primary btn-lg shadow fw-bold w-100 rounded-pill py-3" id="submitAllBtn">
-                                    <i class="bi bi-send-fill me-2"></i> Confirm & Send
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                }
-            } 
-            else {
-                if (!Model.Any()) {
-                    <div class="text-center py-5">
-                        <i class="bi bi-journal-x text-muted mb-3" style="font-size: 4rem;"></i>
-                        <h4 class="fw-bold text-dark">No booking history</h4>
-                        <p class="text-muted">You haven't completed any bookings yet.</p>
-                    </div>
-                } else {
-                    <div class="table-responsive border rounded-4">
-                        <table class="table table-borderless bg-white align-middle mb-0">
-                            <thead class="bg-light border-bottom text-uppercase small text-muted fw-bold">
-                                <tr>
-                                    <th class="ps-4 py-3" style="width: 20%">Invoice No.</th>
-                                    <th class="py-3" style="width: 25%">Date</th>
-                                    <th class="py-3 text-center" style="width: 20%">Status</th>
-                                    <th class="pe-4 py-3 text-end" style="width: 35%">Final Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach(var inv in Model) {
-                                    <tr class="border-bottom border-light">
-                                        <td class="ps-4 py-3"><strong class="text-dark">INV-@inv.InvoiceId.ToString("D5")</strong></td>
-                                        <td class="py-3"><div class="small fw-bold text-muted">@(inv.CreatedDate?.ToString("dd/MM/yyyy HH:mm"))</div></td>
-                                        <td class="py-3 text-center">
-                                            @if(inv.PaymentStatus == "Paid") { 
-                                                <span class="badge bg-success rounded-pill px-3 py-2 shadow-sm">Paid</span> 
+            <div class="table-responsive border rounded-4 mb-4" style="border-color: var(--line) !important; overflow: hidden;">
+                <table class="table table-borderless bg-white align-middle mb-0">
+                    <thead class="border-bottom text-uppercase small fw-bold" style="background-color: var(--bg); border-color: var(--line) !important; color: var(--muted); letter-spacing: 0.05em;">
+                        <tr>
+                            <th class="ps-4 py-3" style="width: 5%;">
+                                <a asp-action="MyInvoices" asp-route-sortOrder="@ViewData["IdSortParm"]" class="text-decoration-none" style="color: var(--muted);">
+                                    <i class="bi bi-arrow-down-up fs-5 sort-icon" title="Sort Items"></i>
+                                </a>
+                            </th>
+                            <th class="py-3" style="width: 50%">Service Info</th>
+                            <th class="py-3 text-center" style="width: 15%">Quantity</th>
+                            <th class="pe-4 py-3 text-end" style="width: 30%">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ int idx = (currentPage - 1) * pageSize + 1; }
+                        @foreach(var inv in Model) {
+                            if (inv.Order?.OrderDetails != null) {
+                                foreach(var od in inv.Order.OrderDetails) {
+                                    <tr class="border-bottom" style="border-color: var(--line) !important;">
+                                        <td class="ps-4 py-4 fw-bold" style="color: var(--soft);">@idx</td>
+                                        <td class="py-4">
+                                            @if(od.RoomBooking != null) {
+                                                <div class="fw-bold mb-2" style="color: var(--ink); font-size: 1.05rem;"><i class="bi bi-door-open-fill me-2" style="color: var(--g2);"></i>@od.RoomBooking.Room?.Stay?.Name</div>
+                                                <div class="small ps-4" style="color: var(--soft);">
+                                                    <span class="badge bg-light text-dark border me-2" style="font-weight: 600;">Type: @od.RoomBooking.Room?.RoomType</span>
+                                                    <span>@od.RoomBooking.CheckInDate?.ToString("dd/MM/yyyy") - @od.RoomBooking.CheckOutDate?.ToString("dd/MM/yyyy")</span>
+                                                </div>
+                                            } 
+                                            else if(od.TicketBooking != null) {
+                                                <div class="fw-bold mb-2" style="color: var(--ink); font-size: 1.05rem;"><i class="bi bi-ticket-detailed-fill me-2" style="color: #0984e3;"></i>@od.TicketBooking.Transportation?.TransportName</div>
+                                                <div class="small ps-4" style="color: var(--soft);">
+                                                    <span class="badge bg-light text-dark border me-2" style="font-weight: 600;">Seat: @od.TicketBooking.Seat</span>
+                                                    <span>Date: @od.TicketBooking.TravelDate?.ToString("dd/MM/yyyy")</span>
+                                                </div>
                                             }
-                                            else if(inv.Order?.Status == "Submitted") { 
-                                                <span class="badge bg-info text-dark rounded-pill px-3 py-2 shadow-sm">Processing</span> 
-                                            }
-                                            else { 
-                                                <span class="badge bg-danger rounded-pill px-3 py-2 shadow-sm">Canceled</span> 
+                                            else if(od.ResBooking != null) {
+                                                <div class="fw-bold mb-2" style="color: var(--ink); font-size: 1.05rem;"><i class="bi bi-ui-checks-grid me-2" style="color: #fdcb6e;"></i>@od.ResBooking.RestaurantTable?.Restaurant?.RestaurantName</div>
+                                                <div class="small ps-4" style="color: var(--soft);">
+                                                    <span class="badge bg-light text-dark border me-2" style="font-weight: 600;">Table: @od.ResBooking.RestaurantTable?.TableType</span>
+                                                    <span class="badge bg-light text-dark border me-2" style="font-weight: 600;">Guests: @od.ResBooking.NumberOfGuests</span>
+                                                    <span>Time: @od.ResBooking.ReservationDateTime?.ToString("dd/MM/yyyy HH:mm")</span>
+                                                </div>
                                             }
                                         </td>
-                                        <td class="pe-4 py-3 text-end fw-bold text-success fs-6">$@((inv.FinalTotal ?? 0).ToString("0.##"))</td>
+                                        <td class="py-4 text-center fw-bold" style="color: var(--soft);">
+                                            x @(od.RoomBooking != null ? od.RoomBooking.NumberOfRooms : (od.Quantity ?? 1))
+                                        </td>
+                                        <td class="pe-4 py-4 text-end fw-bold" style="color: var(--ink); font-size: 1.1rem;">
+                                            $@((od.Price ?? 0).ToString("0.##"))
+                                        </td>
                                     </tr>
                                 }
-                            </tbody>
-                        </table>
-                    </div>
-                }
+                            }
+                            idx++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (ViewBag.TotalPages > 1) {
+                <div class="d-flex justify-content-between align-items-center mt-3 mb-5">
+                    <div class="small fw-bold" style="color: var(--muted);">Showing @(((currentPage - 1) * pageSize) + 1) to @(Math.Min(currentPage * pageSize, totalItems)) of @totalItems entries</div>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item @(currentPage == 1 ? "disabled" : "")"><a class="page-link px-3" asp-action="MyInvoices" asp-route-page="@(currentPage - 1)">Prev</a></li>
+                            @for (int i = 1; i <= ViewBag.TotalPages; i++) {
+                                <li class="page-item @(currentPage == i ? "active" : "")"><a class="page-link" asp-action="MyInvoices" asp-route-page="@i">@i</a></li>
+                            }
+                            <li class="page-item @(currentPage == ViewBag.TotalPages ? "disabled" : "")"><a class="page-link px-3" asp-action="MyInvoices" asp-route-page="@(currentPage + 1)">Next</a></li>
+                        </ul>
+                    </nav>
+                </div>
             }
-        </div>
+
+            <div class="row">
+                <div class="col-md-7 offset-md-5">
+                    <div class="p-4 rounded-4 border" style="background-color: var(--bg); border-color: var(--line) !important;">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-bold" style="color: var(--soft);">Subtotal (@ViewBag.TotalServices items):</span>
+                            <span class="fw-bold fs-5" style="color: var(--ink);">$@ViewBag.SubTotal.ToString("0.##")</span>
+                        </div>
+                        
+                        @if (hasDiscount) {
+                            <div class="d-flex justify-content-between mb-3" style="color: var(--g1);">
+                                <span class="fw-bold">Combo Discount (10%):</span>
+                                <span class="fw-bold fs-5">-$@ViewBag.DiscountAmount.ToString("0.##")</span>
+                            </div>
+                        }
+
+                        <div class="border-top pt-3 mt-2 d-flex justify-content-between align-items-center" style="border-color: var(--line) !important;">
+                            <span class="fw-bold text-uppercase fs-5" style="color: var(--ink);">Total to pay:</span>
+                            <div class="text-end">
+                                @if (hasDiscount) {
+                                    <span class="text-decoration-line-through me-2 fs-5" style="color: var(--muted);">$@ViewBag.SubTotal.ToString("0.##")</span>
+                                }
+                                <span class="fw-bold fs-2" style="color: var(--g1);">$@ViewBag.FinalTotal.ToString("0.##")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-5 mb-2">
+                <div class="col-md-8 offset-md-4 d-flex gap-3 justify-content-end">
+                    <form asp-action="CancelAllInvoices" method="post" id="cancelAllForm" class="w-50" onsubmit="return confirm('Are you sure you want to cancel all pending bookings? This action cannot be undone.');">
+                        <button type="submit" class="btn btn-light btn-lg fw-bold w-100 rounded-pill py-3 shadow-sm" style="color: #e74c3c; border: 1px solid #e74c3c; background-color: var(--white);">
+                            <i class="bi bi-trash-fill me-2"></i> Cancel All Drafts
+                        </button>
+                    </form>
+                    <form asp-action="ConfirmAllInvoices" method="post" id="submitAllForm" class="w-50">
+                        <button type="submit" class="btn btn-gradient btn-lg shadow fw-bold w-100 rounded-pill py-3" id="submitAllBtn">
+                            <i class="bi bi-send-fill me-2"></i> Confirm & Send
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
     </div>
 </div>
 

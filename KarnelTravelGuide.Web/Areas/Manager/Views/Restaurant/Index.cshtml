@@ -62,11 +62,26 @@
                             </td>
                             <td>
                                 <div class="fw-bold text-dark text-truncate" style="max-width: 180px;" title="@item.RestaurantName">@item.RestaurantName</div>
-                                @if(item.StarRating != null && item.StarRating > 0) {
-                                    <div class="text-warning small mt-1">@for(int i=0; i < item.StarRating; i++) { <i class="bi bi-star-fill"></i> }</div>
-                                } else {
-                                    <div class="text-muted small fst-italic mt-1">No rating yet</div>
+                                @{
+                                // THUẬT TOÁN HACK: Lọc Review (R|) và tính trung bình sao
+                                var reviews = item.Feedbacks?.Where(f => f.Message != null && f.Message.StartsWith("R|")).ToList() ?? new List<KarnelTravelGuide.Web.Models.Entities.Feedback>();
+                                double avgStar = 0;
+                                if (reviews.Any()) {
+                                    avgStar = reviews.Average(r => {
+                                        var parts = r.Message!.Split('|');
+                                        return (parts.Length >= 2 && int.TryParse(parts[1], out int s)) ? s : 0;
+                                    });
                                 }
+                            }
+                            @if (avgStar > 0) {
+                                <div class="mt-1 d-flex align-items-center">
+                                    <i class="bi bi-star-fill text-warning me-1"></i>
+                                    <span class="fw-bold text-dark me-1" style="font-size: 0.9rem;">@avgStar.ToString("0.0")</span>
+                                    <span class="small text-muted">(@reviews.Count reviews)</span>
+                                </div>
+                            } else {
+                                <div class="small text-muted fst-italic mt-1">No rating yet</div>
+                            }
                             </td>
                             <td>
                                 <div class="fw-bold text-dark fs-6 text-truncate" style="max-width: 250px;" title="@(item.Spot?.SpotName)">@(item.Spot?.SpotName ?? "N/A")</div>

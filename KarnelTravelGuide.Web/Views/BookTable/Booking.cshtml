@@ -2,36 +2,103 @@
 @{
     ViewData["Title"] = "Select Table";
     var availableTables = ViewBag.AvailableTables as Dictionary<int, int>;
+    // Trang thao tác Booking: Không kích hoạt HeroPage để Navbar có nền trắng
 }
 
 <style>
-    body { background-color: #f8fafc; }
-    .card-custom { background: #fff; border-radius: 1.25rem; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: none; }
+    body { background-color: var(--bg); }
+    .card-custom { 
+        background: var(--white); 
+        border-radius: 1.5rem; 
+        padding: 2.5rem; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.04); 
+        border: 1px solid var(--line); 
+    }
     
-    .table-card { border: 2px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; transition: all 0.2s; cursor: pointer; position: relative; overflow: hidden; background: #fff; }
-    .table-card:hover { border-color: #cbd5e1; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-    .table-card.selected { border-color: #0d6efd; background-color: #f8faff; box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1); }
-    .table-card.selected::before { content: '\F26A'; font-family: 'bootstrap-icons'; position: absolute; top: 20px; right: 20px; color: #0d6efd; font-size: 1.8rem; line-height: 1; z-index: 2; }
+    .table-card { 
+        border: 2px solid var(--line); 
+        border-radius: 1.25rem; 
+        padding: 1.5rem; 
+        transition: all 0.2s; 
+        cursor: pointer; 
+        position: relative; 
+        overflow: hidden; 
+        background: var(--white); 
+    }
+    .table-card:hover { 
+        border-color: rgba(42,157,143,0.3); 
+        transform: translateY(-2px); 
+        box-shadow: 0 10px 20px rgba(0,0,0,0.03); 
+    }
+    .table-card.selected { 
+        border-color: var(--g1); 
+        background-color: var(--g-lt); 
+        box-shadow: 0 0 0 4px rgba(58, 125, 94, 0.1); 
+    }
+    .table-card.selected::before { 
+        content: '\F26A'; 
+        font-family: 'bootstrap-icons'; 
+        position: absolute; 
+        top: 20px; right: 20px; 
+        color: var(--g1); 
+        font-size: 1.8rem;
+        line-height: 1; z-index: 2; 
+    }
     
-    .qty-input { width: 70px; text-align: center; font-weight: bold; border: 1px solid #ced4da; border-radius: 0.5rem; }
-    .qty-btn { background: #e9ecef; border: none; border-radius: 0.5rem; width: 35px; height: 35px; font-weight: bold; transition: 0.2s; }
-    .qty-btn:hover:not(:disabled) { background: #dee2e6; }
+    .table-title {
+        font-family: var(--ff-d);
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: var(--ink);
+    }
 
-    .bottom-checkout-bar { position: sticky; bottom: 20px; background: #fff; padding: 20px 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 1000; border: 1px solid #e0e0e0; border-radius: 16px; margin-top: 30px; }
+    .qty-input { 
+        width: 70px; text-align: center; font-weight: bold;
+        border: 1px solid var(--line); border-radius: 0.5rem; color: var(--ink);
+    }
+    .qty-btn { 
+        background: var(--line); border: none; border-radius: 0.5rem; width: 35px;
+        height: 35px; font-weight: bold; transition: 0.2s; color: var(--ink);
+    }
+    .qty-btn:hover:not(:disabled) { background: #d0d7de; }
+
+    .bottom-checkout-bar { 
+        position: sticky; bottom: 20px; 
+        background: rgba(255, 255, 255, 0.95); 
+        backdrop-filter: blur(10px);
+        padding: 20px 30px; 
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.08);
+        z-index: 1000; 
+        border: 1px solid var(--line); 
+        border-radius: 1rem; 
+        margin-top: 30px;
+    }
+
+    .btn-gradient {
+        background: linear-gradient(135deg, var(--g1), var(--g2));
+        color: var(--white);
+        border: none;
+        transition: opacity 0.2s, transform 0.2s;
+        box-shadow: 0 4px 14px rgba(42,157,143,.3);
+    }
+    .btn-gradient:hover:not(.disabled) {
+        opacity: 0.9; transform: translateY(-2px); color: var(--white);
+    }
 </style>
 
 <div class="container py-5" style="max-width: 900px;">
     
-    <div class="d-flex align-items-center mb-4">
-        <a asp-action="Index" class="btn btn-light bg-white shadow-sm rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; border: 1px solid #eee;"><i class="bi bi-arrow-left text-dark"></i></a>
+    <div class="d-flex align-items-center mb-5">
+        <a asp-action="Index" class="btn btn-light bg-white shadow-sm rounded-circle me-4 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; border: 1px solid var(--line);">
+            <i class="bi bi-arrow-left" style="color: var(--ink);"></i>
+        </a>
         <div>
-            <h3 class="fw-bold mb-0 text-dark">@Model.RestaurantName</h3>
-            <span class="text-muted"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Select your tables below</span>
+            <h2 class="fw-bold mb-1" style="font-family: var(--ff-d); color: var(--ink);">@Model.RestaurantName</h2>
         </div>
     </div>
 
     @if (TempData["ErrorMessage"] != null) { 
-        <div class="alert alert-danger rounded-3 fw-bold mb-4"><i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]</div> 
+        <div class="alert alert-danger rounded-3 fw-bold mb-4 border-0"><i class="bi bi-exclamation-circle me-2"></i>@TempData["ErrorMessage"]</div> 
     }
 
     <form asp-action="ConfirmBooking" method="post" id="checkoutForm">
@@ -43,33 +110,35 @@
         <input type="hidden" name="numberOfTables" id="selectedQty" required />
 
         <div class="card-custom mb-0">
-            <div class="row bg-light p-3 rounded-4 mb-4 g-3 border align-items-center text-center">
-                <div class="col-6 border-end">
-                    <small class="text-muted fw-bold d-block text-uppercase">Location</small>
-                    <strong class="fs-6 text-primary fw-bold">@(Model.Spot?.SpotName)</strong>
+            <div class="row p-3 rounded-4 mb-4 g-3 border align-items-center text-center" style="background-color: var(--bg);">
+                <div class="col-6 border-end" style="border-color: var(--line) !important;">
+                    <small class="fw-bold d-block text-uppercase mb-1" style="color: var(--muted); letter-spacing: 0.05em; font-size: 0.75rem;">Location</small>
+                    <strong class="fs-6 fw-bold" style="color: var(--ink);">@(Model.Spot?.SpotName)</strong>
                 </div>
                 <div class="col-6">
-                    <small class="text-muted fw-bold d-block text-uppercase">Date & Time</small>
-                    <div class="fs-6 text-danger fw-bold">
-                        <i class="bi bi-calendar-event me-1"></i>@ViewBag.ResDate
-                        <span class="mx-1 text-muted fw-normal">|</span>
-                        <i class="bi bi-clock me-1"></i>@ViewBag.ResTime
+                    <small class="fw-bold d-block text-uppercase mb-1" style="color: var(--muted); letter-spacing: 0.05em; font-size: 0.75rem;">Date & Time</small>
+                    <div class="fs-6 fw-bold" style="color: var(--ink);">
+                        <i class="bi bi-calendar-event me-2" style="color: var(--g1);"></i>@ViewBag.ResDate
+                        <span class="mx-2" style="color: var(--line);">|</span>
+                        <i class="bi bi-clock me-2" style="color: var(--g2);"></i>@ViewBag.ResTime
                     </div>
                 </div>
             </div>
 
-            <div class="row g-3 mb-5 pb-4 border-bottom text-start">
+            <div class="row g-3 mb-5 pb-4 border-bottom text-start" style="border-color: var(--line) !important;">
                 <div class="col-md-6">
-                    <label class="fw-bold text-dark mb-2">Number of Guests <span class="text-danger">*</span></label>
-                    <input type="number" name="numberOfGuests" class="form-control form-control-lg bg-light border-0 shadow-none fw-bold" placeholder="e.g. 4" required min="1" />
+                    <label class="fw-bold mb-2" style="color: var(--ink);">Number of Guests <span class="text-danger">*</span></label>
+                    <input type="number" name="numberOfGuests" class="form-control form-control-lg bg-light border-0 shadow-none fw-bold" placeholder="e.g. 4" required min="1" style="color: var(--g1);" />
                 </div>
                 <div class="col-md-6">
-                    <label class="fw-bold text-dark mb-2">Special Request <span class="text-muted fw-normal small">(Optional)</span></label>
+                    <label class="fw-bold mb-2" style="color: var(--ink);">Special Request <span style="color: var(--muted); font-weight: normal; font-size: 0.85rem;">(Optional)</span></label>
                     <input type="text" name="specialRequest" class="form-control form-control-lg bg-light border-0 shadow-none" placeholder="Window seat, anniversary..." />
                 </div>
             </div>
 
-            <h5 class="fw-bold mb-4 text-start"><i class="bi bi-ui-checks-grid text-primary me-2"></i>Table Types</h5>
+            <h4 class="fw-bold mb-4 text-start" style="font-family: var(--ff-d); color: var(--ink);">
+                <i class="bi bi-ui-checks-grid me-2" style="color: var(--g1);"></i>Table Types
+            </h4>
 
             <div class="row g-4 text-start">
                 @foreach(var table in Model.RestaurantTables)
@@ -81,21 +150,21 @@
                         <div class="table-card @(isSoldOut ? "opacity-50" : "")" onclick="@(!isSoldOut ? $"selectTable({table.TableId}, {table.PriceRes ?? 0}, {avail}, '{table.TableType}')" : "")" id="table-card-@table.TableId">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5 class="fw-bold text-dark mb-1">@table.TableType</h5>
+                                    <h5 class="table-title mb-1">@table.TableType</h5>
                                     @if(isSoldOut) {
-                                        <span class="badge bg-danger">Fully Booked</span>
+                                        <span class="badge bg-secondary">Fully Booked</span>
                                     } else {
-                                        <span class="text-success small fw-bold"><i class="bi bi-check-circle-fill me-1"></i> @avail available</span>
+                                        <span class="small fw-bold" style="color: var(--g1);"><i class="bi bi-check-circle-fill me-1"></i> @avail available</span>
                                     }
                                 </div>
-                                <div class="text-end pe-5">
-                                    <h4 class="fw-bold text-success mb-0">$@((table.PriceRes ?? 0).ToString("0.##"))</h4>
-                                    <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">/ table</small>
+                                <div class="text-end pe-4">
+                                    <h3 class="fw-bold mb-0" style="color: var(--g1);">$@((table.PriceRes ?? 0).ToString("0.##"))</h3>
+                                    <small class="fw-bold text-uppercase" style="color: var(--muted); font-size: 0.7rem; letter-spacing: 0.05em;">/ table</small>
                                 </div>
                             </div>
 
-                            <div class="mt-3 pt-3 border-top d-none align-items-center justify-content-between" id="qty-box-@table.TableId">
-                                <span class="fw-bold text-dark">Quantity (Tables):</span>
+                            <div class="mt-3 pt-3 border-top d-none align-items-center justify-content-between" id="qty-box-@table.TableId" style="border-color: var(--line) !important;">
+                                <span class="fw-bold" style="color: var(--soft);">Quantity (Tables):</span>
                                 <div class="d-flex align-items-center gap-2" onclick="event.stopPropagation()">
                                     <button type="button" class="qty-btn" onclick="updateQty(-1)">-</button>
                                     <input type="number" class="qty-input py-1 bg-white" id="displayQty-@table.TableId" value="1" min="1" max="@avail" readonly />
@@ -111,16 +180,18 @@
         <div class="bottom-checkout-bar">
             <div class="row align-items-center m-0">
                 <div class="col-md-5 text-start ps-0 pe-4">
-                    <span class="text-muted fw-bold d-block mb-1">Selected Table:</span>
-                    <div class="fw-bold text-dark fs-5 lh-base" id="tableLabel">None</div>
+                    <span class="fw-bold d-block mb-1" style="color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Selected Table</span>
+                    <div class="fw-bold fs-5 lh-base" style="color: var(--ink);" id="tableLabel">None</div>
                 </div>
-                <div class="col-md-3 text-center border-start border-end">
-                    <span class="text-muted fw-bold d-block mb-1">Total Amount:</span>
-                    <span class="fs-3 fw-bold text-primary lh-1" id="priceLabel">$0</span>
+                <div class="col-md-3 text-center border-start border-end" style="border-color: var(--line) !important;">
+                    <span class="fw-bold d-block mb-1" style="color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Total Amount</span>
+                    <span class="fs-3 fw-bold lh-1" style="color: var(--g1);" id="priceLabel">$0</span>
                 </div>
                 <div class="col-md-4 text-end pe-0 ps-4 d-flex justify-content-end gap-2">
-                    <a href="/Invoice/MyInvoices?tab=pending" class="btn btn-outline-secondary py-3 fw-bold rounded-3">Skip</a>
-                    <button type="submit" class="btn btn-primary py-3 w-100 fw-bold rounded-3 shadow-sm" id="submitBtn" disabled>Book & Next <i class="bi bi-arrow-right ms-1"></i></button>
+                    <a href="/Invoice/MyInvoices?tab=pending" class="btn btn-outline-secondary py-3 fw-bold rounded-pill border-0" style="background: var(--bg); color: var(--soft);">Skip</a>
+                    <button type="submit" class="btn btn-gradient py-3 w-100 rounded-pill" id="submitBtn" disabled>
+                        Book & Next <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -150,7 +221,6 @@
 
             document.getElementById("selectedTableId").value = tableId;
             document.getElementById("selectedQty").value = currentQty;
-            
             document.getElementById("tableLabel").innerText = typeName + " (x" + currentQty + ")";
             document.getElementById("submitBtn").disabled = false;
             calcTotal();

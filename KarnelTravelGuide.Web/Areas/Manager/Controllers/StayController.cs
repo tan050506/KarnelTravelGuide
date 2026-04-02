@@ -12,9 +12,12 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 
+using KarnelTravelGuide.Web.Attributes;
+
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
     [Area("Manager")]
+    [RoleAuthorize("Manager")]
     public class StayController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -30,15 +33,19 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         // 1. GET: Index (ĐÃ THÊM PHÂN TRANG VÀ MẶC ĐỊNH MỚI NHẤT LÊN ĐẦU)
+        // 1. GET: Index (ĐÃ THÊM INCLUDE FEEDBACKS ĐỂ TÍNH SAO)
         public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentSort"] = sortOrder;
-            
-            // Mặc định là hiển thị MỚI NHẤT (desc). Bấm vào link sẽ đổi thành id_asc
             ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
-            var stays = _context.Stays.Include(s => s.Spot).Include(s => s.Rooms).AsQueryable();
+            // QUAN TRỌNG: Thêm .Include(s => s.Feedbacks) vào đây
+            var stays = _context.Stays
+                .Include(s => s.Spot)
+                .Include(s => s.Rooms)
+                .Include(s => s.Feedbacks) 
+                .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -49,27 +56,21 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             switch (sortOrder)
             {
-                case "id_asc": 
-                    stays = stays.OrderBy(s => s.StayId); 
-                    break;
-                default: 
-                    stays = stays.OrderByDescending(s => s.StayId); // MẶC ĐỊNH LUÔN LÀ DESCENDING
-                    break;
+                case "id_asc": stays = stays.OrderBy(s => s.StayId); break;
+                default: stays = stays.OrderByDescending(s => s.StayId); break;
             }
 
             var allStays = await stays.ToListAsync();
 
-            // XỬ LÝ PHÂN TRANG
+            // Xử lý phân trang (Giữ nguyên logic cũ của bạn)
             int pageSize = 10;
             int totalItems = allStays.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-            
             if (page < 1) page = 1;
             if (page > totalPages && totalPages > 0) page = totalPages;
 
             var pagedStays = allStays.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
-            // Truyền dữ liệu phân trang ra View
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
             ViewBag.TotalItems = totalItems;

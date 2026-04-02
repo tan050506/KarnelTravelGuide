@@ -88,19 +88,21 @@
 
     <div class="row">
         <div class="d-flex gap-3 mt-4">
-                <form asp-action="CancelPendingPayment" method="post" class="w-50" onsubmit="return confirm('Cancel all pending services for this customer? This will release all booked tables/rooms/tickets.');">
-                    <input type="hidden" name="accountId" value="@account?.AccountId" />
-                    <button type="submit" class="btn btn-outline-danger w-100 py-3 fw-bold rounded-pill shadow-sm">
-                        <i class="bi bi-x-circle me-2"></i> Cancel
-                    </button>
-                </form>
-                
-                <form asp-action="ConfirmPayment" method="post" class="w-50" onsubmit="return confirm('Confirm payment? All listed services will be automatically marked as Confirmed.');">
-                    <input type="hidden" name="accountId" value="@account?.AccountId" />
-                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill shadow-sm">
-                        <i class="bi bi-cash-stack me-2"></i> Confirm
-                    </button>
-                </form>
-            </div>
+            <form asp-action="CancelPendingPayment" method="post" class="w-50" onsubmit="return confirm('Cancel all pending services for this customer? This will release all booked tables/rooms/tickets.');">
+                <input type="hidden" name="accountId" value="@account?.AccountId" />
+                <input type="hidden" name="orderDateStr" value="@ViewBag.OrderDateStr" />
+                <button type="submit" class="btn btn-outline-danger w-100 py-3 fw-bold rounded-pill shadow-sm">
+                    <i class="bi bi-x-circle me-2"></i> Cancel
+                </button>
+            </form>
+            
+            <form asp-action="ConfirmPayment" method="post" class="w-50" onsubmit="return confirm('Confirm payment? All listed services will be automatically marked as Confirmed.');">
+                <input type="hidden" name="accountId" value="@account?.AccountId" />
+                <input type="hidden" name="orderDateStr" value="@ViewBag.OrderDateStr" />
+                <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill shadow-sm">
+                    <i class="bi bi-cash-stack me-2"></i> Confirm
+                </button>
+            </form>
+        </div>
     </div>
 </div>

@@ -4,9 +4,12 @@ using KarnelTravelGuide.Web.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
+using KarnelTravelGuide.Web.Attributes;
+
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
     [Area("Manager")]
+    [RoleAuthorize("Manager")]
     public class DashboardController : Controller
     {
         private readonly ApplicationDbContext _context;

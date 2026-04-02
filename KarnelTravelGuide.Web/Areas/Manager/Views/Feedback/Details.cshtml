@@ -1,26 +1,44 @@
 @model KarnelTravelGuide.Web.Models.Entities.Feedback
-@{ ViewData["Title"] = "Feedback Details"; }
+@{ 
+    ViewData["Title"] = "Review Details"; 
+
+    // Tách chuỗi Review (R|Sao|Nội dung)
+    string rawMessage = Model.Message ?? "";
+    int fbRating = 0; string fbContent = rawMessage;
+    if (rawMessage.StartsWith("R|") && rawMessage.Contains("|")) {
+        var parts = rawMessage.Split('|', 3);
+        if (parts.Length == 3) { int.TryParse(parts[1], out fbRating); fbContent = parts[2]; }
+    }
+}
+
+<style>
+    .star-active { color: #ffc107; font-size: 1.5rem; }
+    .star-inactive { color: #e4e5e9; font-size: 1.5rem; }
+</style>
 
 <div class="k-card p-4 bg-white rounded-4 shadow-sm border-0 mx-auto" style="max-width: 900px;">
     
     <div class="d-flex align-items-center border-bottom pb-3 mb-4">
         <a asp-action="Index" class="btn btn-light rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="bi bi-arrow-left"></i></a>
-        <h4 class="fw-bold m-0 text-dark">Feedback #@Model.FeedbackId</h4>
+        <h4 class="fw-bold m-0 text-dark">Review #@Model.FeedbackId</h4>
         <div class="ms-auto">
-            <span class="badge bg-info text-dark fs-6 px-3 py-2 rounded-pill">Customer Review</span>
+            <span class="badge bg-dark text-white fs-6 px-4 py-2 rounded-pill"><i class="bi bi-star-fill text-warning me-1"></i> Customer Review</span>
         </div>
     </div>
 
-    <div class="row g-4 mb-5 border-bottom pb-4">
+    @if (TempData["SuccessMessage"] != null) {
+        <div class="alert alert-success rounded-3 fw-bold mb-4"><i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]</div>
+    }
+
+    <div class="row g-4 mb-4 border-bottom pb-4">
         <div class="col-md-6 border-end pe-md-4">
             <h6 class="fw-bold text-secondary text-uppercase mb-3"><i class="bi bi-person-circle me-2"></i>Customer Info</h6>
-            <div class="mb-2"><span class="text-muted d-inline-block" style="width: 100px;">Name:</span> <strong class="text-dark">@Model.Account?.FullName</strong></div>
-            <div><span class="text-muted d-inline-block" style="width: 100px;">Phone:</span> <strong class="text-primary">@Model.Account?.PhoneNumber</strong></div>
+            <div class="mb-2"><span class="text-muted d-inline-block" style="width: 100px;">Name:</span> <strong class="text-dark fs-6">@Model.Account?.FullName</strong></div>
+            <div><span class="text-muted d-inline-block" style="width: 100px;">Phone:</span> <strong class="text-primary fs-6">@Model.Account?.PhoneNumber</strong></div>
         </div>
         
         <div class="col-md-6 ps-md-4 mt-4 mt-md-0">
             <h6 class="fw-bold text-secondary text-uppercase mb-3"><i class="bi bi-box-seam me-2"></i>Service Info</h6>
-            
             @if (Model.StayId != null) {
                 <div class="mb-2"><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-1">Stay</span></div>
                 <strong class="text-dark fs-5">@Model.Stay?.Name</strong>
@@ -34,27 +52,40 @@
         </div>
     </div>
 
-    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-chat-right-text-fill text-primary me-2"></i>Feedback Content</h5>
-    
-    <div class="bg-light p-4 rounded-4 border mb-4">
-        <p class="text-dark fs-5 fst-italic lh-base mb-0">
-            "@(string.IsNullOrEmpty(Model.Message) ? "Customer did not leave a written message." : Model.Message)"
+    <div class="bg-light p-4 rounded-4 border mb-4 text-center">
+        <div class="mb-2">
+            @for (int i = 1; i <= 5; i++) {
+                if (i <= fbRating) { <i class="bi bi-star-fill star-active"></i> }
+                else { <i class="bi bi-star-fill star-inactive"></i> }
+            }
+        </div>
+        <p class="text-dark fs-5 fst-italic lh-base mb-0 p-3 bg-white rounded-3 border shadow-sm mt-3 text-start">
+            "@(string.IsNullOrEmpty(fbContent) ? "No comment provided." : fbContent)"
         </p>
+    </div>
+
+    <div class="p-4 rounded-4 border @(string.IsNullOrEmpty(Model.ReplyMessage) ? "bg-white border-warning" : "bg-success bg-opacity-10 border-success") mb-4">
+        <h6 class="fw-bold text-uppercase mb-3 @(string.IsNullOrEmpty(Model.ReplyMessage) ? "text-warning" : "text-success")">
+            <i class="bi bi-reply-all-fill me-2"></i>Manager Reply (Public)
+        </h6>
         
-        @if (!string.IsNullOrEmpty(Model.ReplyMessage)) {
-            <div class="mt-4 pt-4 border-top">
-                <span class="text-muted fw-bold d-block text-uppercase mb-2"><i class="bi bi-reply-all-fill text-success me-2"></i>Admin Reply</span>
-                <p class="text-success fs-6 lh-base mb-0 p-3 bg-success bg-opacity-10 rounded-3 border border-success border-opacity-25">
-                    @Model.ReplyMessage
-                </p>
+        <form asp-action="Details" method="post">
+            <input type="hidden" name="id" value="@Model.FeedbackId" />
+            <div class="mb-3">
+                <textarea name="replyContent" class="form-control rounded-3" rows="3" placeholder="Thank the customer for their review or address their concerns..." required>@Model.ReplyMessage</textarea>
             </div>
-        }
+            <div class="text-end">
+                <button type="submit" class="btn @(string.IsNullOrEmpty(Model.ReplyMessage) ? "btn-warning text-dark" : "btn-success") px-4 fw-bold rounded-pill shadow-sm">
+                    <i class="bi bi-send-fill me-2"></i> @(string.IsNullOrEmpty(Model.ReplyMessage) ? "Post Reply" : "Update Reply")
+                </button>
+            </div>
+        </form>
     </div>
 
     <div class="mt-4 pt-4 border-top text-end">
-        <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this feedback? This action cannot be undone.');">
+        <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this review?');">
             <input type="hidden" name="id" value="@Model.FeedbackId" />
-            <button type="submit" class="btn btn-danger px-4 py-2 fw-bold rounded-3"><i class="bi bi-trash me-2"></i> Delete Feedback</button>
+            <button type="submit" class="btn btn-outline-danger px-4 py-2 fw-bold rounded-pill"><i class="bi bi-trash me-2"></i> Delete Review</button>
         </form>
     </div>
 </div>

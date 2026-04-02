@@ -1,0 +1,133 @@
+@model KarnelTravelGuide.Web.Models.Entities.Invoice
+@{ 
+    ViewData["Title"] = "Invoice Receipt"; 
+    DateTime? earliestDate = ViewBag.EarliestDate;
+    bool canCancel = ViewBag.CanCancel ?? false;
+}
+
+<style>
+    body { background-color: var(--bg); }
+    
+    .bill-card { 
+        background: var(--white); border-radius: 1.5rem; padding: 2.5rem; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.04); border: 1px solid var(--line); 
+    }
+    
+    .section-title { font-family: var(--ff-d); color: var(--ink); font-weight: 700; }
+    
+    .btn-gradient {
+        background: linear-gradient(135deg, var(--g1), var(--g2));
+        color: var(--white); border: none; transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-gradient:hover:not(.disabled) { opacity: 0.9; transform: translateY(-2px); color: var(--white); }
+</style>
+
+<div class="container py-5" style="max-width: 850px;">
+    
+    <div class="d-flex align-items-center mb-4 pb-3 border-bottom" style="border-color: var(--line) !important;">
+        <a asp-action="HistoryDetails" asp-route-dateStr="@Model.CreatedDate?.ToString("yyyy-MM-dd")" class="btn bg-white rounded-circle me-4 d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px; border: 1px solid var(--line); color: var(--ink);">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="section-title m-0">Invoice Receipt</h2>
+            <span class="small" style="color: var(--soft);">Created on @Model.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</span>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null) {
+        <div class="alert alert-success rounded-4 fw-bold mb-4 shadow-sm border-0" style="background-color: var(--t-lt); color: var(--g1);">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null) {
+        <div class="alert alert-danger rounded-4 fw-bold mb-4 shadow-sm border-0">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="bill-card mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="fw-bold text-uppercase mb-2" style="color: var(--muted); letter-spacing: 0.05em;"><i class="bi bi-hash me-1"></i>Invoice ID</h6>
+            <h3 class="section-title m-0">INV-@Model.InvoiceId.ToString("D5")</h3>
+        </div>
+        <div class="text-end">
+            @if(Model.PaymentStatus == "Paid") { <span class="badge px-4 py-2 rounded-pill fs-6 mb-2 shadow-sm" style="background-color: var(--g-lt); color: var(--g1); border: 1px solid var(--g1);">Paid</span> } 
+            else if(Model.Order?.Status == "Submitted") { <span class="badge px-4 py-2 rounded-pill fs-6 mb-2 shadow-sm" style="background-color: #e0f7fa; color: #0984e3; border: 1px solid #0984e3;">Processing</span> }
+            else { <span class="badge px-4 py-2 rounded-pill fs-6 mb-2 shadow-sm" style="background-color: #ffeaea; color: #e74c3c; border: 1px solid #e74c3c;">Canceled</span> }
+            
+            <div class="fw-bold fs-2 mt-1">
+                @if (Model.SubTotal > Model.FinalTotal) {
+                    <span class="text-decoration-line-through me-2 fs-5" style="color: var(--muted);">$@Model.SubTotal?.ToString("0.##")</span>
+                }
+                <span style="color: var(--g1);">$@Model.FinalTotal?.ToString("0.##")</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bill-card">
+        <h4 class="section-title mb-4"><i class="bi bi-list-check me-2" style="color: var(--g2);"></i>Detailed Services</h4>
+
+        <ul class="list-group rounded-4 shadow-sm mb-4 border-0 overflow-hidden" style="border: 1px solid var(--line) !important;">
+            @if(Model.Order?.OrderDetails != null) {
+                foreach(var od in Model.Order.OrderDetails) {
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-white p-4 border-0 border-bottom" style="border-color: var(--line) !important;">
+                        <div>
+                            @if(od.RoomBooking != null) {
+                                <div class="fw-bold mb-1" style="color: var(--ink); font-size: 1.1rem;"><i class="bi bi-door-open-fill me-2" style="color: var(--g2);"></i>@(od.Quantity ?? 1) x @od.RoomBooking.Room?.Stay?.Name</div>
+                                <div class="small ps-4" style="color: var(--soft);">Room: @od.RoomBooking.Room?.RoomType</div>
+                            } else if (od.TicketBooking != null) {
+                                <div class="fw-bold mb-1" style="color: var(--ink); font-size: 1.1rem;"><i class="bi bi-ticket-detailed-fill me-2" style="color: #0984e3;"></i>@(od.Quantity ?? 1) x @od.TicketBooking.Transportation?.TransportName</div>
+                                <div class="small fw-bold ps-4" style="color: #e74c3c;">Seat: @od.TicketBooking.Seat</div>
+                            } else if (od.ResBooking != null) {
+                                <div class="fw-bold mb-1" style="color: var(--ink); font-size: 1.1rem;"><i class="bi bi-ui-checks-grid me-2" style="color: #fdcb6e;"></i>@(od.Quantity ?? 1) x @od.ResBooking.RestaurantTable?.Restaurant?.RestaurantName</div>
+                                <div class="small ps-4" style="color: var(--soft);">Table: @od.ResBooking.RestaurantTable?.TableType</div>
+                            }
+                        </div>
+                        <span class="fw-bold fs-4" style="color: var(--g1);">$@((od.Price ?? 0).ToString("0.##"))</span>
+                    </li>
+                }
+            }
+        </ul>
+
+        @if(Model.PaymentStatus == "Paid" || Model.Order?.Status == "Submitted") {
+            <div class="mt-5 border-top pt-4" style="border-color: var(--line) !important;">
+                <h5 class="section-title mb-4"><i class="bi bi-shield-exclamation text-danger me-2"></i>Cancellation Policy</h5>
+                
+                @if (earliestDate.HasValue) {
+                    <div class="alert border rounded-4 p-4 mb-4 d-flex justify-content-between align-items-center" style="background-color: var(--bg); border-color: var(--line) !important;">
+                        <div>
+                            <div class="fw-bold text-uppercase small" style="color: var(--muted); letter-spacing: 0.05em;"><i class="bi bi-calendar-event me-2" style="color: var(--g1);"></i>Earliest Service Date:</div>
+                            <div class="mt-1" style="color: var(--ink);">Your trip begins on <strong style="color: var(--g1);">@earliestDate.Value.ToString("dd/MM/yyyy HH:mm")</strong>.</div>
+                        </div>
+                        <div class="section-title fs-3">@earliestDate.Value.ToString("dd/MM/yyyy")</div>
+                    </div>
+                }
+
+                @if(canCancel) {
+                    <div class="alert border-0 rounded-4 p-4 mb-4 d-flex align-items-center" style="background-color: #fff3cd;">
+                        <i class="bi bi-info-circle fs-2 text-warning me-4"></i>
+                        <span style="color: #856404;">You are eligible to cancel this booking. Our policy requires cancellation at least <strong style="color: #d39e00;">3 days (72 hours)</strong> before the first service begins.</span>
+                    </div>
+
+                    <form asp-action="CancelPaidInvoice" method="post" onsubmit="return confirm('Are you sure you want to cancel this booking? A refund will be processed and all reservations will be canceled.');">
+                        <input type="hidden" name="invoiceId" value="@Model.InvoiceId" />
+                        <button type="submit" class="btn bg-white w-100 py-3 fw-bold rounded-pill fs-6 shadow-sm mt-2" style="color: #e74c3c; border: 1px solid #e74c3c;">
+                            <i class="bi bi-x-circle me-2"></i> Cancel & Request Refund
+                        </button>
+                    </form>
+                } else {
+                    <div class="alert border-0 rounded-4 p-4 d-flex align-items-center mb-4" style="background-color: #ffeaea;">
+                        <i class="bi bi-exclamation-octagon fs-2 text-danger me-4"></i>
+                        <div>
+                            <h6 class="fw-bold text-danger mb-1 fs-5" style="font-family: var(--ff-d);">Cancellation Unavailable</h6>
+                            <span style="color: #c0392b;">We're sorry, but you cannot cancel this booking because your trip starts in <strong>less than 3 days</strong>.</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary w-100 py-3 fw-bold rounded-pill fs-6 opacity-50" disabled>
+                        <i class="bi bi-x-circle me-2"></i> Cancel Booking
+                    </button>
+                }
+            </div>
+        }
+    </div>
+</div>

@@ -7,9 +7,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
+using KarnelTravelGuide.Web.Attributes;
+
 namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 {
     [Area("Manager")]
+    [RoleAuthorize("Manager")]
     public class InvoiceController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -44,13 +47,16 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var uniqueInvoices = rawInvoices.GroupBy(i => i.InvoiceId).Select(g => g.First()).ToList();
 
             var grouped = uniqueInvoices
-                .GroupBy(i => i.Account)
+                .GroupBy(i => new { 
+                    i.AccountId, 
+                    TimeKey = i.CreatedDate.HasValue ? i.CreatedDate.Value.ToString("yyyy-MM-dd HH:mm") : "" 
+                })
                 .Select(g => new PendingBillViewModel
                 {
-                    Account = g.Key,
+                    Account = g.First().Account,
                     TotalServices = g.Count(), 
                     SubTotal = g.Sum(i => i.SubTotal ?? 0),
-                    OrderDate = g.Min(i => i.CreatedDate)
+                    OrderDate = g.First().CreatedDate
                 });
 
             if (sortOrder == "date_asc") grouped = grouped.OrderBy(g => g.OrderDate);
@@ -132,8 +138,10 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         // 3. THANH TOÁN (CUSTOMER BILL)
-        public async Task<IActionResult> CustomerBill(int accountId)
+        public async Task<IActionResult> CustomerBill(int accountId, string orderDateStr)
         {
+            if (!DateTime.TryParseExact(orderDateStr, "yyyy-MM-dd HH:mm", null, System.Globalization.DateTimeStyles.None, out DateTime exactTimeMinute)) return RedirectToAction(nameof(Index));
+
             var account = await _context.Accounts.FindAsync(accountId);
             if (account == null) return NotFound();
 
@@ -141,7 +149,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.RoomBooking!).ThenInclude(rb => rb.Room!).ThenInclude(r => r.Stay)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.ResBooking!).ThenInclude(rb => rb.RestaurantTable!).ThenInclude(rt => rt.Restaurant)
-                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted")
+                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted" && i.CreatedDate.HasValue
+                            && i.CreatedDate.Value.Year == exactTimeMinute.Year
+                            && i.CreatedDate.Value.Month == exactTimeMinute.Month
+                            && i.CreatedDate.Value.Day == exactTimeMinute.Day
+                            && i.CreatedDate.Value.Hour == exactTimeMinute.Hour
+                            && i.CreatedDate.Value.Minute == exactTimeMinute.Minute)
                 .ToListAsync();
 
             var invoices = rawInvoices.GroupBy(i => i.InvoiceId).Select(g => g.First()).ToList();
@@ -165,16 +178,24 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             ViewBag.DiscountAmount = discountAmount;
             ViewBag.FinalTotal = finalTotal;
             ViewBag.HasDiscount = distinctServices >= 2;
+            ViewBag.OrderDateStr = orderDateStr;
 
             return View(invoices);
         }
 
         [HttpPost]
-        public async Task<IActionResult> ConfirmPayment(int accountId)
+        public async Task<IActionResult> ConfirmPayment(int accountId, string orderDateStr)
         {
+            if (!DateTime.TryParseExact(orderDateStr, "yyyy-MM-dd HH:mm", null, System.Globalization.DateTimeStyles.None, out DateTime exactTimeMinute)) return RedirectToAction(nameof(Index));
+
             var rawInvoices = await _context.Invoices
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails)
-                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted")
+                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted" && i.CreatedDate.HasValue
+                            && i.CreatedDate.Value.Year == exactTimeMinute.Year
+                            && i.CreatedDate.Value.Month == exactTimeMinute.Month
+                            && i.CreatedDate.Value.Day == exactTimeMinute.Day
+                            && i.CreatedDate.Value.Hour == exactTimeMinute.Hour
+                            && i.CreatedDate.Value.Minute == exactTimeMinute.Minute)
                 .ToListAsync();
 
             var invoices = rawInvoices.GroupBy(i => i.InvoiceId).Select(g => g.First()).ToList();
@@ -207,11 +228,18 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
         // TÍNH NĂNG MỚI: HỦY ĐƠN CHỜ THANH TOÁN (Tại trang Checkout)
         [HttpPost]
-        public async Task<IActionResult> CancelPendingPayment(int accountId)
+        public async Task<IActionResult> CancelPendingPayment(int accountId, string orderDateStr)
         {
+            if (!DateTime.TryParseExact(orderDateStr, "yyyy-MM-dd HH:mm", null, System.Globalization.DateTimeStyles.None, out DateTime exactTimeMinute)) return RedirectToAction(nameof(Index));
+
             var rawInvoices = await _context.Invoices
                 .Include(i => i.Order)
-                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted")
+                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted" && i.CreatedDate.HasValue
+                            && i.CreatedDate.Value.Year == exactTimeMinute.Year
+                            && i.CreatedDate.Value.Month == exactTimeMinute.Month
+                            && i.CreatedDate.Value.Day == exactTimeMinute.Day
+                            && i.CreatedDate.Value.Hour == exactTimeMinute.Hour
+                            && i.CreatedDate.Value.Minute == exactTimeMinute.Minute)
                 .ToListAsync();
 
             if (rawInvoices.Any())
@@ -256,11 +284,16 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var uniqueInvoices = invoicesList.GroupBy(i => i.InvoiceId).Select(g => g.First());
 
             var customerGroups = uniqueInvoices
-                .GroupBy(i => new { i.AccountId, i.PaymentStatus })
+                .GroupBy(i => new { 
+                    i.AccountId, 
+                    i.PaymentStatus, 
+                    TimeKey = i.CreatedDate.HasValue ? i.CreatedDate.Value.ToString("yyyy-MM-dd HH:mm") : "" 
+                })
                 .Select(g => new DailyCustomerInvoiceViewModel
                 {
                     Account = g.First().Account,
                     PaymentStatus = g.Key.PaymentStatus ?? "",
+                    CheckoutTime = g.First().CreatedDate,
                     Invoices = g.ToList(),
                     FinalTotal = g.Sum(i => i.FinalTotal ?? 0),
                     TotalItems = g.Count()
@@ -289,9 +322,9 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         }
 
         // 5. TRANG CHI TIẾT CỦA 1 KHÁCH (INVOICE RECEIPT)
-        public async Task<IActionResult> CustomerDailyInvoice(int accountId, string dateStr)
+        public async Task<IActionResult> CustomerDailyInvoice(int accountId, string exactTimeStr)
         {
-            if (!DateTime.TryParse(dateStr, out DateTime date)) return RedirectToAction(nameof(History));
+            if (!DateTime.TryParseExact(exactTimeStr, "yyyy-MM-dd HH:mm", null, System.Globalization.DateTimeStyles.None, out DateTime exactTimeMinute)) return RedirectToAction(nameof(History));
 
             var account = await _context.Accounts.FindAsync(accountId);
             if (account == null) return NotFound();
@@ -300,23 +333,34 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.RoomBooking!).ThenInclude(rb => rb.Room!).ThenInclude(r => r.Stay)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.ResBooking!).ThenInclude(rb => rb.RestaurantTable!).ThenInclude(rt => rt.Restaurant)
-                .Where(i => i.AccountId == accountId && i.CreatedDate.HasValue && i.CreatedDate.Value.Date == date.Date && (i.PaymentStatus != "Unpaid" || (i.Order != null && i.Order.Status == "Canceled")))
+                .Where(i => i.AccountId == accountId && i.CreatedDate.HasValue 
+                            && i.CreatedDate.Value.Year == exactTimeMinute.Year
+                            && i.CreatedDate.Value.Month == exactTimeMinute.Month
+                            && i.CreatedDate.Value.Day == exactTimeMinute.Day
+                            && i.CreatedDate.Value.Hour == exactTimeMinute.Hour
+                            && i.CreatedDate.Value.Minute == exactTimeMinute.Minute
+                            && (i.PaymentStatus != "Unpaid" || (i.Order != null && i.Order.Status == "Canceled")))
                 .ToListAsync();
 
             var uniqueInvoices = rawInvoices.GroupBy(i => i.InvoiceId).Select(g => g.First()).ToList();
 
             ViewBag.Account = account;
-            ViewBag.SelectedDate = date;
+            ViewBag.SelectedDate = exactTimeMinute;
             return View(uniqueInvoices);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CancelCustomerInvoices(int accountId, string dateStr)
+        public async Task<IActionResult> CancelCustomerInvoices(int accountId, string exactTimeStr)
         {
-            if (!DateTime.TryParse(dateStr, out DateTime date)) return RedirectToAction(nameof(History));
+            if (!DateTime.TryParseExact(exactTimeStr, "yyyy-MM-dd HH:mm", null, System.Globalization.DateTimeStyles.None, out DateTime exactTimeMinute)) return RedirectToAction(nameof(History));
 
             var invoices = await _context.Invoices.Include(i => i.Order)
-                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Paid" && i.CreatedDate.HasValue && i.CreatedDate.Value.Date == date.Date)
+                .Where(i => i.AccountId == accountId && i.PaymentStatus == "Paid" && i.CreatedDate.HasValue
+                            && i.CreatedDate.Value.Year == exactTimeMinute.Year
+                            && i.CreatedDate.Value.Month == exactTimeMinute.Month
+                            && i.CreatedDate.Value.Day == exactTimeMinute.Day
+                            && i.CreatedDate.Value.Hour == exactTimeMinute.Hour
+                            && i.CreatedDate.Value.Minute == exactTimeMinute.Minute)
                 .ToListAsync();
 
             if (invoices.Any())
@@ -327,10 +371,10 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     if (inv.Order != null) inv.Order.Status = "Canceled";
                 }
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "All invoices for this customer have been canceled and services released.";
+                TempData["SuccessMessage"] = "All invoices for this checkout have been canceled and services released.";
             }
             
-            return RedirectToAction(nameof(DailyDetails), new { dateStr = dateStr });
+            return RedirectToAction(nameof(DailyDetails), new { dateStr = exactTimeMinute.ToString("yyyy-MM-dd") });
         }
     }
 
@@ -354,6 +398,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
     {
         public Account? Account { get; set; }
         public string PaymentStatus { get; set; } = string.Empty;
+        public DateTime? CheckoutTime { get; set; }
         public List<Invoice> Invoices { get; set; } = new();
         public decimal FinalTotal { get; set; }
         public int TotalItems { get; set; }

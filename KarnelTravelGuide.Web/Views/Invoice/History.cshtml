@@ -1,0 +1,128 @@
+@model IEnumerable<KarnelTravelGuide.Web.Controllers.CustomerCheckoutBatchViewModel>
+@{ 
+    ViewData["Title"] = "Booking History"; 
+    int totalItems = ViewBag.TotalItems ?? 0;
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int pageSize = ViewBag.PageSize ?? 10;
+}
+
+<style>
+    body { background-color: var(--bg); }
+    
+    .history-card { 
+        background: var(--white); border-radius: 1.5rem; padding: 2.5rem; 
+        box-shadow: 0 10px 40px rgba(0,0,0,0.04); border: 1px solid var(--line); 
+    }
+    
+    .sort-icon { cursor: pointer; color: var(--muted); transition: 0.2s; }
+    .sort-icon:hover { color: var(--g1); }
+    
+    .action-btn { 
+        width: 36px; height: 36px; padding: 0; line-height: 34px; 
+        display: inline-flex; align-items: center; justify-content: center; 
+        transition: all 0.2s;
+    }
+    .action-btn:hover { background-color: var(--g-lt); color: var(--g1) !important; border-color: var(--g1) !important; }
+
+    .section-title { font-family: var(--ff-d); color: var(--ink); font-weight: 700; }
+    
+    .btn-gradient {
+        background: linear-gradient(135deg, var(--g1), var(--g2));
+        color: var(--white); border: none; transition: opacity 0.2s, transform 0.2s;
+    }
+    .btn-gradient:hover { opacity: 0.9; transform: translateY(-2px); color: var(--white); }
+</style>
+
+<div class="container py-5" style="max-width: 1050px;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom" style="border-color: var(--line) !important;">
+        <div class="d-flex align-items-center">
+            <a asp-action="MyInvoices" class="btn bg-white rounded-circle me-4 d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px; border: 1px solid var(--line); color: var(--ink);"><i class="bi bi-arrow-left"></i></a>
+            <div>
+                <h2 class="section-title m-0">Booking History</h2>
+                <span class="small" style="color: var(--soft);">Grouped by checkout session. Click action buttons to view details.</span>
+            </div>
+        </div>
+        
+        <form asp-action="History" method="get" class="d-flex gap-2">
+            <div class="input-group shadow-sm" style="border-radius: 0.75rem; overflow: hidden; border: 1px solid var(--line);">
+                <input type="text" name="searchString" value="@ViewData["CurrentSearch"]" class="form-control border-0 bg-white px-3" style="min-width: 200px;" placeholder="Search date...">
+                <button type="submit" class="btn btn-gradient px-3"><i class="bi bi-search"></i></button>
+            </div>
+            @if (!string.IsNullOrEmpty(ViewData["CurrentSearch"]?.ToString())) {
+                <a asp-action="History" class="btn bg-white border shadow-sm d-flex align-items-center" style="border-radius: 0.75rem; color: var(--soft);">Clear</a>
+            }
+        </form>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null) {
+        <div class="alert alert-success rounded-4 fw-bold mb-4 shadow-sm border-0" style="background-color: var(--t-lt); color: var(--g1);"><i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]</div>
+    }
+
+    <div class="history-card">
+        <div class="table-responsive border rounded-4 mb-4" style="border-color: var(--line) !important; overflow: hidden;">
+            <table class="table table-borderless bg-white align-middle mb-0">
+                <thead class="border-bottom text-uppercase small fw-bold" style="background-color: var(--bg); border-color: var(--line) !important; color: var(--muted); letter-spacing: 0.05em;">
+                    <tr>
+                        <th class="ps-4 py-3 text-center" style="width: 5%;">
+                            <a asp-action="History" asp-route-sortOrder="@ViewData["IdSortParm"]" class="text-decoration-none" style="color: var(--muted);">
+                                <i class="bi bi-arrow-down-up fs-5 sort-icon" title="Sort by Date"></i>
+                            </a>
+                        </th>
+                        <th class="py-3" style="width: 30%;">Transaction Time</th>
+                        <th class="py-3 text-center" style="width: 20%;">Booked Items</th>
+                        <th class="py-3 text-end" style="width: 20%;">Total Paid</th>
+                        <th class="py-3 text-center" style="width: 10%;">Status</th>
+                        <th class="pe-4 py-3 text-center" style="width: 15%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any()) {
+                        int idx = (currentPage - 1) * pageSize + 1;
+                        foreach (var batch in Model) {
+                            <tr class="border-bottom" style="border-color: var(--line) !important;">
+                                <td class="ps-4 py-4 text-center fw-bold" style="color: var(--soft);">@idx</td>
+                                <td class="py-4">
+                                    <div class="fw-bold fs-6 mb-1" style="color: var(--ink);"><i class="bi bi-calendar-check me-2" style="color: var(--g1);"></i>@batch.TransactionTime.ToString("dd/MM/yyyy")</div>
+                                    <div class="small fw-bold" style="color: var(--g2);"><i class="bi bi-clock me-1"></i>@batch.TransactionTime.ToString("HH:mm:ss")</div>
+                                </td>
+                                <td class="py-4 text-center">
+                                    <span class="badge rounded-pill px-3 py-2" style="background-color: var(--t-lt); color: var(--g1); border: 1px solid var(--g-lt);">@batch.TotalServices Services</span>
+                                </td>
+                                <td class="py-4 text-end fw-bold fs-5" style="color: var(--g1);">$@batch.TotalPaid.ToString("0.##")</td>
+                                <td class="py-4 text-center">
+                                    @if(batch.Status == "Paid") { <span class="badge bg-success rounded-pill px-3 py-2 shadow-sm">Paid</span> } 
+                                    else if(batch.Status == "Processing") { <span class="badge rounded-pill px-3 py-2 shadow-sm" style="background-color: #e0f7fa; color: #0984e3;">Processing</span> }
+                                    else { <span class="badge bg-danger rounded-pill px-3 py-2 shadow-sm">Canceled</span> }
+                                </td>
+                                <td class="pe-4 py-4 text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a asp-action="HistoryDetails" asp-route-exactTimeStr="@batch.TransactionTime.ToString("yyyy-MM-dd HH:mm")" class="btn rounded-circle action-btn shadow-sm" style="color: #0984e3; border: 1px solid #0984e3;" title="View Details"><i class="bi bi-eye"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            idx++;
+                        }
+                    } else {
+                        <tr><td colspan="6" class="text-center py-5 fst-italic" style="color: var(--soft);"><i class="bi bi-journal-x fs-1 d-block mb-3" style="color: var(--line);"></i>No checkout history found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (ViewBag.TotalPages > 1) {
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="small fw-bold" style="color: var(--muted);">Showing @(((currentPage - 1) * pageSize) + 1) to @(Math.Min(currentPage * pageSize, totalItems)) of @totalItems entries</div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")"><a class="page-link px-3" asp-action="History" asp-route-page="@(currentPage - 1)">Prev</a></li>
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++) {
+                            <li class="page-item @(currentPage == i ? "active" : "")"><a class="page-link" asp-action="History" asp-route-page="@i">@i</a></li>
+                        }
+                        <li class="page-item @(currentPage == ViewBag.TotalPages ? "disabled" : "")"><a class="page-link px-3" asp-action="History" asp-route-page="@(currentPage + 1)">Next</a></li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+</div>
