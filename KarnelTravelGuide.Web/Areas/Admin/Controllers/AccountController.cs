@@ -133,6 +133,11 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
                 existing.RoleId = account.RoleId;
                 existing.BranchId = account.RoleId == 2 ? account.BranchId : null;
 
+                if (!string.IsNullOrEmpty(account.Password))
+                {
+                    existing.Password = account.Password;
+                }
+
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
