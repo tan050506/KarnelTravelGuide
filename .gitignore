@@ -9,6 +9,3 @@
 appsettings.json
 appsettings.Development.json
 *.env
-
-# Bỏ qua thư mục chứa ảnh do người dùng upload lên (để không làm nặng GitHub)
-KarnelTravelGuide.Web/wwwroot/uploads/
