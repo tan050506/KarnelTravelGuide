@@ -62,13 +62,13 @@
 
             <div class="col-md-3">
                 <label class="fw-bold text-dark mb-2">Price ($) <span class="text-danger">*</span></label>
-                <input asp-for="PriceTransport" id="PriceTransport" class="form-control bg-light border" type="number" min="1" max="1000000000" step="any" value="@Model.PriceTransport?.ToString("0.##")" required />
-                <small class="text-danger fw-bold d-none mt-1" id="priceError">Price must be between 1 and 1,000,000,000.</small>
+                <input asp-for="PriceTransport" id="PriceTransport" class="form-control bg-light border" type="number" min="1" step="any" value="@Model.PriceTransport?.ToString("0.##")" required />
+                <small class="text-danger fw-bold d-none mt-1" id="priceError">Price must be greater than 0.</small>
             </div>
 
             <div class="col-md-3">
                 <label class="fw-bold text-dark mb-2">Total Seats <span class="text-danger">*</span></label>
-                <input asp-for="SeatCapacity" id="SeatCapacity" class="form-control bg-light border" type="number" min="1" max="100" value="@Model.SeatCapacity" required />
+                <input asp-for="SeatCapacity" id="SeatCapacity" class="form-control bg-light border" type="number" min="1" value="@Model.SeatCapacity" required />
                 <small class="text-danger fw-bold d-none mt-1" id="seatError">Seats must be between 1 and 100.</small>
             </div>
 
@@ -114,7 +114,7 @@
 
         function validatePrice() {
             const val = parseFloat(priceInput.value);
-            if (isNaN(val) || val < 1 || val > 1000000000) {
+            if (isNaN(val) || val < 1) {
                 priceError.classList.remove('d-none');
                 priceInput.classList.add('border-danger');
                 return false;
@@ -125,9 +125,13 @@
             }
         }
 
+        const transportTypeSelect = document.getElementById('TransportType');
+
         function validateSeats() {
             const val = parseInt(seatInput.value);
-            if (isNaN(val) || val < 1 || val > 100) {
+            const maxSeats = transportTypeSelect.value === 'Land' ? 100 : 300;
+            if (isNaN(val) || val < 1 || val > maxSeats) {
+                seatError.innerText = `Seats must be between 1 and ${maxSeats}.`;
                 seatError.classList.remove('d-none');
                 seatInput.classList.add('border-danger');
                 return false;
@@ -137,6 +141,12 @@
                 return true;
             }
         }
+
+        transportTypeSelect.addEventListener('change', function() {
+            const maxSeats = this.value === 'Land' ? 100 : 300;
+            seatInput.setAttribute('max', maxSeats);
+            if (seatInput.value !== '') validateSeats();
+        });
 
         priceInput.addEventListener('input', validatePrice);
         seatInput.addEventListener('input', validateSeats);
@@ -173,6 +183,9 @@
         const addressText = document.getElementById('destAddressText');
 
         window.onload = function() {
+            const maxSeats = transportTypeSelect.value === 'Land' ? 100 : 300;
+            seatInput.setAttribute('max', maxSeats);
+            
             if (hiddenId.value) {
                 const currentSpot = spots.find(s => s.id == hiddenId.value);
                 if (currentSpot) {

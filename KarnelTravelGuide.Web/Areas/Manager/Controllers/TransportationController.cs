@@ -127,6 +127,8 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         {
             if (imageFile == null || imageFile.Length == 0) ModelState.AddModelError(string.Empty, "Transport image is required.");
             if (transportation.ToSpotId == null) ModelState.AddModelError("ToSpotId", "Please select a destination.");
+            int maxSeats = transportation.TransportType == "Land" ? 100 : 300;
+            if (transportation.SeatCapacity < 1 || transportation.SeatCapacity > maxSeats) ModelState.AddModelError("SeatCapacity", $"Seats must be between 1 and {maxSeats}.");
             
             ModelState.Remove("FromBranch"); ModelState.Remove("ToSpot"); ModelState.Remove("TicketBookings");
 
@@ -191,6 +193,9 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         public async Task<IActionResult> Edit(int id, [Bind("TransportationId,TransportName,TransportType,FromBranchId,ToSpotId,DepartureTime,PriceTransport,SeatCapacity,Description,ImageUrl")] Transportation transportation, IFormFile? imageFile)
         {
             if (id != transportation.TransportationId) return NotFound();
+
+            int maxSeats = transportation.TransportType == "Land" ? 100 : 300;
+            if (transportation.SeatCapacity < 1 || transportation.SeatCapacity > maxSeats) ModelState.AddModelError("SeatCapacity", $"Seats must be between 1 and {maxSeats}.");
 
             ModelState.Remove("FromBranch"); ModelState.Remove("ToSpot"); ModelState.Remove("TicketBookings");
 

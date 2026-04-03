@@ -365,13 +365,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (invoices.Any())
             {
-                foreach (var inv in invoices)
-                {
-                    inv.PaymentStatus = "Canceled";
-                    if (inv.Order != null) inv.Order.Status = "Canceled";
-                }
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "All invoices for this checkout have been canceled and services released.";
+                TempData["ErrorMessage"] = "Cannot cancel confirmed/paid invoices.";
             }
             
             return RedirectToAction(nameof(DailyDetails), new { dateStr = exactTimeMinute.ToString("yyyy-MM-dd") });

@@ -112,10 +112,10 @@
             <a asp-area="Manager" asp-controller="Restaurant" asp-action="Index"><i class="bi bi-shop-window"></i> Restaurant</a>
 
             <div class="k-section-title">Bookings</div>
+            <a asp-area="Manager" asp-controller="TicketBooking" asp-action="Index"><i class="bi bi-ticket-detailed-fill"></i> Ticket Booking</a>
             <a asp-area="Manager" asp-controller="RoomBooking" asp-action="Index"><i class="bi bi-door-open-fill"></i> Room Booking</a>
             <a asp-area="Manager" asp-controller="TableBooking" asp-action="Index"><i class="bi bi-cup-hot-fill"></i> Table Booking</a>
-            <a asp-area="Manager" asp-controller="TicketBooking" asp-action="Index"><i class="bi bi-ticket-detailed-fill"></i> Ticket Booking</a>
-
+    
             <div class="k-section-title">Business</div>
             <a asp-area="Manager" asp-controller="Invoice" asp-action="Index"><i class="bi bi-receipt-cutoff text-warning"></i> Invoice</a>
             <a asp-area="Manager" asp-controller="Feedback" asp-action="Index"><i class="bi bi-chat-right-text-fill text-info"></i> Feedback</a>
@@ -136,7 +136,17 @@
             </div>
             <div class="d-flex align-items-center gap-3">
                 <div class="bg-light border px-3 py-2 rounded-pill fw-bold text-dark d-flex align-items-center shadow-sm">
-                    <span class="bg-success rounded-circle me-2" style="width: 8px; height: 8px;"></span>
+                    @{
+                        var userAvatar = Context.Session.GetString("UserAvatar");
+                    }
+                    @if (!string.IsNullOrEmpty(userAvatar))
+                    {
+                        <img src="@userAvatar" alt="Avatar" class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <span class="bg-success rounded-circle me-2" style="width: 8px; height: 8px;"></span>
+                    }
                     <span style="font-size: 0.9rem;">@(Context.Session.GetString("UserName") ?? "Manager Online")</span>
                 </div>
             </div>

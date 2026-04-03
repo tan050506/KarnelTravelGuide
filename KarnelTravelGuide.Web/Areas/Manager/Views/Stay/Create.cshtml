@@ -67,7 +67,7 @@
                             <tbody id="roomTableBody">
                                 </tbody>
                         </table>
-                        <small class="text-danger mt-2 fw-bold d-none" id="roomErrorMsg"><i class="bi bi-exclamation-triangle-fill me-1"></i> Error: Price must be 1$ - 1,000,000,000$. Quantity must be 1 - 100.</small>
+                        <small class="text-danger mt-2 fw-bold d-none" id="roomErrorMsg"><i class="bi bi-exclamation-triangle-fill me-1"></i> Error: Price must be greater than 0$. Quantity must be 1 - 100.</small>
                     </div>
                 </div>
             </div>
@@ -116,11 +116,13 @@
                 <td class="py-3">
                     <select name="Rooms[${roomIndex}].RoomType" class="form-select bg-white border" required>
                         <option value="Standard">Standard</option>
-                        <option value="VIP">VIP</option>
+                        <option value="Superior">Superior</option>
+                        <option value="Deluxe">Deluxe</option>
+                        <option value="Suite">Suite</option>
                     </select>
                 </td>
                 <td class="py-3">
-                    <input type="number" name="Rooms[${roomIndex}].PriceRoom" class="form-control bg-white border" min="1" max="1000000000" step="any" placeholder="" required />
+                    <input type="number" name="Rooms[${roomIndex}].PriceRoom" class="form-control bg-white border" min="1" step="any" placeholder="" required />
                 </td>
                 <td class="py-3">
                     <input type="number" name="Rooms[${roomIndex}].Quantity" class="form-control bg-white border" min="1" max="100" placeholder="" required />
@@ -152,7 +154,7 @@
             
             document.querySelectorAll('input[name$=".PriceRoom"]').forEach(inp => {
                 let val = parseFloat(inp.value);
-                if (inp.value !== "" && (isNaN(val) || val < 1 || val > 1000000000)) { 
+                if (inp.value !== "" && (isNaN(val) || val < 1)) { 
                     inp.classList.add('border-danger'); isValid = false; 
                 } else { inp.classList.remove('border-danger'); }
             });

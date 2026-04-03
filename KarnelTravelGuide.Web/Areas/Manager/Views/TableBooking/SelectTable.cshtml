@@ -52,7 +52,8 @@
             <div class="row g-3 mb-5 pb-4 border-bottom text-start">
                 <div class="col-md-6">
                     <label class="fw-bold text-dark mb-2">Number of Guests <span class="text-danger">*</span></label>
-                    <input type="number" name="NumberOfGuests" class="form-control form-control-lg bg-light border-0 shadow-none fw-bold" placeholder="e.g. 4" required min="1" />
+                    <input type="number" id="numberOfGuests" name="NumberOfGuests" class="form-control form-control-lg bg-light border-0 shadow-none fw-bold" placeholder="e.g. 4" required min="1" />
+                    <small class="text-danger d-none fw-bold mt-1" id="guestsError"></small>
                 </div>
                 <div class="col-md-6">
                     <label class="fw-bold text-dark mb-2">Special Request</label>
@@ -124,6 +125,26 @@
         let currentPrice = 0;
         let maxAvail = 0;
         let currentQty = 1;
+        let guestsPerTable = 4;
+
+        function checkGuests() {
+            if(!currentTableId) return true;
+            let maxG = guestsPerTable * currentQty;
+            let gInput = document.getElementById('numberOfGuests');
+            let val = parseInt(gInput.value) || 0;
+            if(val > maxG) {
+                document.getElementById('guestsError').innerText = "Max " + maxG + " guests for " + currentQty + " selected table(s).";
+                document.getElementById('guestsError').classList.remove('d-none');
+                gInput.classList.add('border', 'border-danger');
+                return false;
+            } else {
+                document.getElementById('guestsError').classList.add('d-none');
+                gInput.classList.remove('border', 'border-danger');
+                return true;
+            }
+        }
+
+        document.getElementById('numberOfGuests').addEventListener('input', checkGuests);
 
         function selectTable(tableId, price, avail, typeName) {
             document.querySelectorAll('.room-card').forEach(c => c.classList.remove('selected'));
@@ -138,6 +159,7 @@
             currentPrice = price;
             maxAvail = avail;
             currentQty = 1;
+            guestsPerTable = typeName.toUpperCase().includes('VIP') ? 10 : 4;
 
             document.getElementById("selectedTableId").value = tableId;
             document.getElementById("selectedQty").value = currentQty;
@@ -145,6 +167,9 @@
             document.getElementById("tableLabel").innerText = typeName + " (x" + currentQty + ")";
             document.getElementById("submitBtn").disabled = false;
             calcTotal();
+            
+            document.getElementById('numberOfGuests').setAttribute('max', guestsPerTable * currentQty);
+            checkGuests();
         }
 
         function updateQty(change) {
@@ -159,6 +184,8 @@
                 let typeName = document.querySelector('#table-card-' + currentTableId + ' h5').innerText;
                 document.getElementById("tableLabel").innerText = typeName + " (x" + currentQty + ")";
                 calcTotal();
+                document.getElementById('numberOfGuests').setAttribute('max', guestsPerTable * currentQty);
+                checkGuests();
             }
         }
 
@@ -167,7 +194,17 @@
             document.getElementById("priceLabel").innerText = "$" + total.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
         }
 
-        document.getElementById("checkoutForm").addEventListener("submit", function() {
+        document.getElementById("checkoutForm").addEventListener("submit", function(e) {
+            if(!currentTableId) {
+                e.preventDefault();
+                alert("Please select a table type.");
+                return;
+            }
+            if(!checkGuests()) {
+                e.preventDefault();
+                document.getElementById('numberOfGuests').focus();
+                return;
+            }
             const btn = document.getElementById("submitBtn");
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Processing...';
             btn.classList.add('disabled');

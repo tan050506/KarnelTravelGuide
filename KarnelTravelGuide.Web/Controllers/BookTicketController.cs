@@ -46,7 +46,12 @@ namespace KarnelTravelGuide.Web.Controllers
                 routes = routes.Where(t => t.DepartureTime.HasValue && t.DepartureTime.Value.TimeOfDay == parsedTime);
             }
 
-            return View(await routes.ToListAsync());
+            if (fromBranchId.HasValue || toSpotId.HasValue || !string.IsNullOrEmpty(transportType) || !string.IsNullOrEmpty(travelTime))
+            {
+                return View(await routes.OrderByDescending(t => t.TransportationId).ToListAsync());
+            }
+
+            return View(await routes.OrderByDescending(t => t.TransportationId).Take(6).ToListAsync());
         }
 
         // 2. BOOKING: TRANG CHỌN GHẾ

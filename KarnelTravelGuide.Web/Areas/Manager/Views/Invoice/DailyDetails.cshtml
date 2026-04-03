@@ -78,13 +78,7 @@
                                 <div class="d-flex justify-content-center gap-2">
                                     <a asp-action="CustomerDailyInvoice" asp-route-accountId="@group.Account?.AccountId" asp-route-exactTimeStr="@group.CheckoutTime?.ToString("yyyy-MM-dd HH:mm")" class="btn btn-outline-info rounded-circle action-btn" title="View Details"><i class="bi bi-eye"></i></a>
                                     
-                                    @if(group.PaymentStatus == "Paid") {
-                                        <form asp-action="CancelCustomerInvoices" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel all invoices for this checkout?');">
-                                            <input type="hidden" name="accountId" value="@group.Account?.AccountId" />
-                                            <input type="hidden" name="exactTimeStr" value="@group.CheckoutTime?.ToString("yyyy-MM-dd HH:mm")" />
-                                            <button type="submit" class="btn btn-outline-danger rounded-circle action-btn" title="Cancel Checkout"><i class="bi bi-trash"></i></button>
-                                        </form>
-                                    }
+
                                 </div>
                             </td>
                         </tr>

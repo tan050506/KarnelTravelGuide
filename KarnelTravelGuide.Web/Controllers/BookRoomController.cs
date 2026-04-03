@@ -32,9 +32,14 @@ namespace KarnelTravelGuide.Web.Controllers
                 .Include(s => s.Rooms)
                 .AsQueryable();
 
-            if (spotId.HasValue) stays = stays.Where(s => s.SpotId == spotId);
+            if (spotId.HasValue) 
+            {
+                stays = stays.Where(s => s.SpotId == spotId);
+                return View(await stays.OrderByDescending(s => s.StayId).ToListAsync());
+            }
 
-            return View(await stays.ToListAsync());
+            // Nếu không tìm kiếm, chỉ lấy 6 cái mới nhất làm gợi ý
+            return View(await stays.OrderByDescending(s => s.StayId).Take(6).ToListAsync());
         }
 
         [HttpGet]

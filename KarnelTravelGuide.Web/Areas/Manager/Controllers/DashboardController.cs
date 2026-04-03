@@ -42,6 +42,19 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             // 5. Đếm tổng số feedback của khách hàng
             ViewBag.FeedbackCount = await _context.Feedbacks.CountAsync();
 
+            // 6. Đếm số lượng vé xe đã được xác nhận (Confirmed)
+            var ticketsBookedCount = await _context.OrderDetails
+                .Include(od => od.Order)
+                .CountAsync(od => od.TicketBookingId != null && od.Order!.Status == "Confirmed");
+            ViewBag.TicketsBookedCount = ticketsBookedCount;
+
+            // Truyền dữ liệu sang View để vẽ biểu đồ
+            ViewBag.ChartJsonData = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                labels = new[] { "Stays (Rooms)", "Restaurants (Tables)", "Transport (Tickets)" },
+                data = new[] { ViewBag.RoomsBookedCount, ViewBag.TablesBookedCount, ticketsBookedCount }
+            });
+
             return View();
         }
     }

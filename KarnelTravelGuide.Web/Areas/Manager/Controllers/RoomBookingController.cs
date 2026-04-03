@@ -109,6 +109,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
             if (order != null)
             {
+                if (order.Status == "Confirmed")
+                {
+                    TempData["ErrorMessage"] = "Cannot cancel a confirmed booking.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 order.Status = "Canceled"; 
                 var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.OrderId == orderId);
                 if (invoice != null) invoice.PaymentStatus = "Canceled"; 

@@ -75,7 +75,7 @@
                             <tbody id="roomTableBody">
                                 </tbody>
                         </table>
-                        <small class="text-danger mt-2 fw-bold d-none" id="roomErrorMsg"><i class="bi bi-exclamation-triangle-fill me-1"></i> Error: Price must be $1 - $1,000,000,000. Quantity must be 1 - 100.</small>
+                        <small class="text-danger mt-2 fw-bold d-none" id="roomErrorMsg"><i class="bi bi-exclamation-triangle-fill me-1"></i> Error: Price must be greater than $0. Quantity must be 1 - 100.</small>
                     </div>
                 </div>
             </div>
@@ -123,18 +123,22 @@
             const tr = document.createElement('tr');
             
             let stdSelected = type === 'Standard' ? 'selected' : '';
-            let vipSelected = type === 'VIP' ? 'selected' : '';
+            let supSelected = type === 'Superior' ? 'selected' : '';
+            let delSelected = type === 'Deluxe' ? 'selected' : '';
+            let suiSelected = type === 'Suite' ? 'selected' : '';
 
             tr.innerHTML = `
                 <input type="hidden" name="Rooms[${roomIndex}].RoomId" value="${roomId}" />
                 <td class="py-3">
                     <select name="Rooms[${roomIndex}].RoomType" class="form-select bg-white border" required>
                         <option value="Standard" ${stdSelected}>Standard</option>
-                        <option value="VIP" ${vipSelected}>VIP</option>
+                        <option value="Superior" ${supSelected}>Superior</option>
+                        <option value="Deluxe" ${delSelected}>Deluxe</option>
+                        <option value="Suite" ${suiSelected}>Suite</option>
                     </select>
                 </td>
                 <td class="py-3">
-                    <input type="number" name="Rooms[${roomIndex}].PriceRoom" value="${price}" class="form-control bg-white border" min="1" max="1000000000" step="any" required />
+                    <input type="number" name="Rooms[${roomIndex}].PriceRoom" value="${price}" class="form-control bg-white border" min="1" step="any" required />
                 </td>
                 <td class="py-3">
                     <input type="number" name="Rooms[${roomIndex}].Quantity" value="${qty}" class="form-control bg-white border" min="1" max="100" required />
@@ -169,7 +173,7 @@
             
             document.querySelectorAll('input[name$=".PriceRoom"]').forEach(inp => {
                 let val = parseFloat(inp.value);
-                if (inp.value !== "" && (isNaN(val) || val < 1 || val > 1000000000)) { 
+                if (inp.value !== "" && (isNaN(val) || val < 1)) { 
                     inp.classList.add('border-danger'); isValid = false; 
                 } else { inp.classList.remove('border-danger'); }
             });

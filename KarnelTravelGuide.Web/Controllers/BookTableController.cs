@@ -32,9 +32,13 @@ namespace KarnelTravelGuide.Web.Controllers
                 .Include(r => r.RestaurantTables)
                 .AsQueryable();
 
-            if (spotId.HasValue) restaurants = restaurants.Where(r => r.SpotId == spotId);
+            if (spotId.HasValue) 
+            {
+                restaurants = restaurants.Where(r => r.SpotId == spotId);
+                return View(await restaurants.OrderByDescending(r => r.RestaurantId).ToListAsync());
+            }
 
-            return View(await restaurants.ToListAsync());
+            return View(await restaurants.OrderByDescending(r => r.RestaurantId).Take(6).ToListAsync());
         }
 
         [HttpGet]
@@ -86,6 +90,14 @@ namespace KarnelTravelGuide.Web.Controllers
             if (table == null || numberOfTables <= 0 || numberOfGuests <= 0)
             {
                 TempData["ErrorMessage"] = "Invalid booking details.";
+                return RedirectToAction("Booking", new { id = restaurantId, resDate = resDate, resTime = resTime });
+            }
+
+            int maxGuestsPerTable = (table.TableType?.ToUpper().Contains("VIP") == true) ? 10 : 4;
+            int maxTotalGuests = maxGuestsPerTable * numberOfTables;
+            if (numberOfGuests > maxTotalGuests)
+            {
+                TempData["ErrorMessage"] = $"Max {maxTotalGuests} guests for {numberOfTables} selected table(s).";
                 return RedirectToAction("Booking", new { id = restaurantId, resDate = resDate, resTime = resTime });
             }
 

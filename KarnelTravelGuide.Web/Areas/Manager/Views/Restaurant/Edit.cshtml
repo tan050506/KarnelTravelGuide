@@ -67,7 +67,7 @@
                             <tbody id="tableBody">
                                 </tbody>
                         </table>
-                        <small class="text-danger mt-2 fw-bold d-none" id="tableErrorMsg"><i class="bi bi-exclamation-triangle-fill me-1"></i> Error: Price must be $1 - $1,000,000,000. Quantity must be 1 - 100.</small>
+                        <small class="text-danger mt-2 fw-bold d-none" id="tableErrorMsg"><i class="bi bi-exclamation-triangle-fill me-1"></i> Error: Price must be greater than $0. Quantity must be 1 - 100.</small>
                     </div>
                 </div>
             </div>
@@ -124,7 +124,7 @@
                     </select>
                 </td>
                 <td class="py-3">
-                    <input type="number" name="Prices" value="${price}" class="form-control bg-white border" min="1" max="1000000000" step="any" required />
+                    <input type="number" name="Prices" value="${price}" class="form-control bg-white border" min="1" step="any" required />
                 </td>
                 <td class="py-3">
                     <input type="number" name="Quantities" value="${qty}" class="form-control bg-white border" min="1" max="100" required />
@@ -145,7 +145,7 @@
             let isValid = true;
             document.querySelectorAll('input[name="Prices"]').forEach(inp => {
                 let val = parseFloat(inp.value);
-                if (inp.value !== "" && (isNaN(val) || val < 1 || val > 1000000000)) { inp.classList.add('border-danger'); isValid = false; }
+                if (inp.value !== "" && (isNaN(val) || val < 1)) { inp.classList.add('border-danger'); isValid = false; }
                 else { inp.classList.remove('border-danger'); }
             });
             document.querySelectorAll('input[name="Quantities"]').forEach(inp => {

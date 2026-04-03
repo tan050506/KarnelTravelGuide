@@ -44,6 +44,11 @@ namespace KarnelTravelGuide.Web.Controllers
                     
                     string userRoleName = user.Role?.RoleName ?? "Customer";
                     HttpContext.Session.SetString("UserRole", userRoleName);
+
+                    if (!string.IsNullOrEmpty(user.AvatarUrl))
+                    {
+                        HttpContext.Session.SetString("UserAvatar", user.AvatarUrl);
+                    }
                     
                     // SỬA: Đổi tên Session thành AccountId
                     HttpContext.Session.SetInt32("AccountId", user.AccountId);
@@ -157,6 +162,10 @@ namespace KarnelTravelGuide.Web.Controllers
             await _context.SaveChangesAsync();
 
             HttpContext.Session.SetString("UserName", user.FullName ?? "");
+            if (!string.IsNullOrEmpty(user.AvatarUrl))
+            {
+                HttpContext.Session.SetString("UserAvatar", user.AvatarUrl);
+            }
             TempData["SuccessMessage"] = "Profile updated successfully!";
             return RedirectToAction("Profile");
         }

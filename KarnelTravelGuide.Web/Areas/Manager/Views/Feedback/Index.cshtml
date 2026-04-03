@@ -67,7 +67,7 @@
                         // FIX LỖI CS8600 TẠI ĐÂY (Thêm ?? "N/A" để đảm bảo không bị null)
                         string serviceName = (item.StayId != null ? item.Stay?.Name : item.Restaurant?.RestaurantName) ?? "N/A";
                         
-                        string badgeClass = item.StayId != null ? "bg-primary" : "bg-success";
+                        string themeColor = item.StayId != null ? "primary" : "success";
                         string badgeText = item.StayId != null ? "Stay" : "Restaurant";
 
                         // Tách chuỗi Review (R|Sao|Nội dung)
@@ -85,7 +85,7 @@
                                 <div class="small fw-bold text-primary"><i class="bi bi-telephone text-primary me-1"></i>@(item.Account?.PhoneNumber ?? "N/A")</div>
                             </td>
                             <td>
-                                <div><span class='badge @badgeClass bg-opacity-10 text-@badgeClass border border-@badgeClass border-opacity-25 rounded-pill px-3 py-1'>@badgeText</span></div>
+                                <div><span class='badge bg-@themeColor bg-opacity-10 text-@themeColor border border-@themeColor border-opacity-25 rounded-pill px-3 py-1'>@badgeText</span></div>
                                 <div class="small fw-bold text-dark text-truncate mt-1" style="max-width: 180px;" title="@serviceName">@serviceName</div>
                             </td>
                             <td>

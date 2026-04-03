@@ -108,6 +108,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
             if (order != null)
             {
+                if (order.Status == "Confirmed")
+                {
+                    TempData["ErrorMessage"] = "Cannot cancel a confirmed booking.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 order.Status = "Canceled"; 
                 var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.OrderId == orderId);
                 if (invoice != null) invoice.PaymentStatus = "Canceled"; 
@@ -225,6 +231,14 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var table = await _context.RestaurantTables.FirstOrDefaultAsync(t => t.TableId == TableId);
             if (table == null || NumberOfTables <= 0) return NotFound();
+
+            int maxGuestsPerTable = (table.TableType?.ToUpper().Contains("VIP") == true) ? 10 : 4;
+            int maxTotalGuests = maxGuestsPerTable * NumberOfTables;
+            if (NumberOfGuests > maxTotalGuests)
+            {
+                TempData["ErrorMessage"] = $"Max {maxTotalGuests} guests for {NumberOfTables} selected table(s).";
+                return RedirectToAction(nameof(Create));
+            }
 
             DateTime resDateTime = DateTime.Parse($"{ResDate} {ResTime}");
             decimal totalAmount = (table.PriceRes ?? 0) * NumberOfTables;

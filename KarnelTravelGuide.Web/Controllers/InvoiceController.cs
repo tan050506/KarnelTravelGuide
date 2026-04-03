@@ -254,7 +254,7 @@ namespace KarnelTravelGuide.Web.Controllers
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.ResBooking!)
                 .FirstOrDefaultAsync(i => i.InvoiceId == invoiceId && i.AccountId == accountId);
 
-            if (invoice != null && (invoice.PaymentStatus == "Paid" || invoice.Order?.Status == "Submitted"))
+            if (invoice != null && invoice.Order?.Status == "Submitted")
             {
                 DateTime? earliestDate = null;
                 if (invoice.Order?.OrderDetails != null)

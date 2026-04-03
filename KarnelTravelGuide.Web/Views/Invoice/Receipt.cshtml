@@ -89,7 +89,7 @@
             }
         </ul>
 
-        @if(Model.PaymentStatus == "Paid" || Model.Order?.Status == "Submitted") {
+        @if(Model.Order?.Status == "Submitted") {
             <div class="mt-5 border-top pt-4" style="border-color: var(--line) !important;">
                 <h5 class="section-title mb-4"><i class="bi bi-shield-exclamation text-danger me-2"></i>Cancellation Policy</h5>
                 

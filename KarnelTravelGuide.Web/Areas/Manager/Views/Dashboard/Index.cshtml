@@ -53,7 +53,7 @@
 </div>
 
 <div class="row g-4">
-    <div class="col-xl-4 col-md-6">
+    <div class="col-xl-3 col-md-6">
         <div class="card k-stat-card border-0 shadow-sm h-100">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start mb-3">
@@ -74,7 +74,7 @@
         </div>
     </div>
 
-    <div class="col-xl-4 col-md-6">
+    <div class="col-xl-3 col-md-6">
         <div class="card k-stat-card border-0 shadow-sm h-100">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start mb-3">
@@ -88,14 +88,14 @@
                 </div>
                 <div class="mt-4 pt-3 border-top">
                     <a asp-controller="RoomBooking" asp-action="Index" class="k-link-footer d-flex align-items-center" style="color: #0ea5e9;">
-                        View Room Bookings <i class="bi bi-arrow-right ms-auto fs-6"></i>
+                        View <i class="bi bi-arrow-right ms-auto fs-6"></i>
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-xl-4 col-md-6">
+    <div class="col-xl-3 col-md-6">
         <div class="card k-stat-card border-0 shadow-sm h-100">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start mb-3">
@@ -109,7 +109,28 @@
                 </div>
                 <div class="mt-4 pt-3 border-top">
                     <a asp-controller="TableBooking" asp-action="Index" class="k-link-footer d-flex align-items-center" style="color: #10b981;">
-                        View Table Bookings <i class="bi bi-arrow-right ms-auto fs-6"></i>
+                        View <i class="bi bi-arrow-right ms-auto fs-6"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card k-stat-card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="card-title-sm">Confirmed Tickets</div>
+                        <div class="card-value">@ViewBag.TicketsBookedCount</div>
+                    </div>
+                    <div class="k-icon-box" style="background-color: #fce7f3; color: #ec4899;">
+                        <i class="bi bi-ticket-detailed-fill"></i>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-top">
+                    <a asp-controller="TicketBooking" asp-action="Index" class="k-link-footer d-flex align-items-center" style="color: #ec4899;">
+                        View <i class="bi bi-arrow-right ms-auto fs-6"></i>
                     </a>
                 </div>
             </div>
@@ -158,3 +179,98 @@
         </div>
     </div>
 </div>
+
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="card k-stat-card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-4" style="color: var(--k-ink);"><i class="bi bi-pie-chart-fill me-2" style="color: #8b5cf6;"></i>Services Operations Distribution</h5>
+                <div style="height: 380px; display: flex; justify-content: center; position: relative;">
+                    <canvas id="servicesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const rawJson = '@Html.Raw(ViewBag.ChartJsonData)';
+            let chartData = null;
+            
+            try {
+                chartData = JSON.parse(rawJson);
+            } catch (e) {
+                console.error("Could not parse chart data", e);
+                return;
+            }
+
+            const ctx = document.getElementById('servicesChart').getContext('2d');
+            
+            // Nếu không có dữ liệu nào (toàn 0) thì vẽ biểu đồ trống
+            const totalValues = chartData.data.reduce((a, b) => a + b, 0);
+
+            const data = {
+                labels: chartData.labels,
+                datasets: [{
+                    data: totalValues === 0 ? [1] : chartData.data, // Fallback if 0 bookings
+                    backgroundColor: [
+                        '#0ea5e9', // Stays (Blue)
+                        '#10b981', // Restaurants (Green)
+                        '#ec4899', // Transport (Pink)
+                        '#e5e7eb'  // Empty State (Gray)
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 12,
+                    cutout: '70%'
+                }]
+            };
+
+            // Nếu trống thay đổi nhãn
+            if(totalValues === 0) {
+                data.labels = ["No Bookings Yet"];
+                data.datasets[0].backgroundColor = ['#e5e7eb'];
+            }
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 14,
+                                    family: "'Inter', sans-serif",
+                                    weight: "600"
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            padding: 15,
+                            titleFont: { size: 14, family: "'Inter', sans-serif" },
+                            bodyFont: { size: 14, family: "'Inter', sans-serif", weight: 'bold' },
+                            callbacks: {
+                                label: function(context) {
+                                    if(totalValues === 0) return " 0 items";
+                                    return " " + context.label + ": " + context.raw + " items";
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                }
+            });
+        });
+    </script>
+}
