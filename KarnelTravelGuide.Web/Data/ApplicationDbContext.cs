@@ -23,7 +23,7 @@ public partial class ApplicationDbContext : DbContext
     public virtual DbSet<Order> Orders { get; set; }
     public virtual DbSet<OrderDetail> OrderDetails { get; set; }
     public virtual DbSet<Restaurant> Restaurants { get; set; }
-    public virtual DbSet<RestaurantTable> RestaurantTables { get; set; } // Đã thêm bảng RestaurantTable
+    public virtual DbSet<RestaurantTable> RestaurantTables { get; set; } 
     public virtual DbSet<RestaurantBooking> RestaurantBookings { get; set; }
     public virtual DbSet<Role> Roles { get; set; }
     public virtual DbSet<Room> Rooms { get; set; }
@@ -138,13 +138,10 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.RestaurantId).HasColumnName("RestaurantID");
             entity.Property(e => e.RestaurantName).HasMaxLength(100);
             entity.Property(e => e.SpotId).HasColumnName("SpotID");
-            
-            // Đã xóa PriceRes, TableCapacity, TableType
-            
+
             entity.HasOne(d => d.Spot).WithMany(p => p.Restaurants).HasForeignKey(d => d.SpotId).HasConstraintName("FK_Restaurant_Spot");
         });
 
-        // BẢNG MỚI: Cấu hình bảng RestaurantTable với PriceRes
         modelBuilder.Entity<RestaurantTable>(entity =>
         {
             entity.HasKey(e => e.TableId).HasName("PK__RestaurantTable");
@@ -153,13 +150,12 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.TableId).HasColumnName("TableID");
             entity.Property(e => e.RestaurantId).HasColumnName("RestaurantID");
             entity.Property(e => e.TableType).HasMaxLength(50);
-            
-            // Cấu hình đúng kiểu dữ liệu cho PriceRes
+
             entity.Property(e => e.PriceRes).HasColumnType("decimal(18, 2)");
             
             entity.HasOne(d => d.Restaurant).WithMany(p => p.RestaurantTables)
                 .HasForeignKey(d => d.RestaurantId)
-                .OnDelete(DeleteBehavior.Cascade) // Đảm bảo xóa cha thì xóa con
+                .OnDelete(DeleteBehavior.Cascade) 
                 .HasConstraintName("FK_RestaurantTable_Restaurant");
         });
 
@@ -170,10 +166,9 @@ public partial class ApplicationDbContext : DbContext
             
             entity.Property(e => e.ResBookingId).HasColumnName("ResBookingID");
             entity.Property(e => e.ReservationDateTime).HasColumnType("datetime");
-            entity.Property(e => e.TableId).HasColumnName("TableID"); // Sử dụng TableID thay vì RestaurantID
+            entity.Property(e => e.TableId).HasColumnName("TableID"); 
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 2)");
-            
-            // Liên kết khóa ngoại trực tiếp tới RestaurantTable
+
             entity.HasOne(d => d.RestaurantTable).WithMany(p => p.RestaurantBookings)
                 .HasForeignKey(d => d.TableId)
                 .HasConstraintName("FK_RestaurantBooking_Table");

@@ -18,7 +18,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        // THÊM Ổ KHÓA CHỐNG SPAM CLICK ĐÚP
         private static readonly ConcurrentDictionary<string, bool> _inFlightRequests = new();
 
         public RoomBookingController(ApplicationDbContext context)
@@ -26,7 +25,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context = context;
         }
 
-        // 1. INDEX (ĐÃ THÊM PHÂN TRANG)
         public async Task<IActionResult> Index(string? searchString, string? checkInDate, string? sortOrder, int page = 1)
         {
             var query = _context.Orders
@@ -51,22 +49,19 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             ViewData["CurrentSearch"] = searchString;
             ViewData["CurrentDate"] = checkInDate;
             ViewData["CurrentSort"] = sortOrder;
-            
-            // Mặc định là hiển thị MỚI NHẤT (desc). Bấm vào link sẽ đổi thành id_asc
+
             ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
             switch (sortOrder)
             {
                 case "id_asc": query = query.OrderBy(o => o.OrderId); break;
-                default: query = query.OrderByDescending(o => o.OrderId); break; // MẶC ĐỊNH LUÔN LÀ DESCENDING
+                default: query = query.OrderByDescending(o => o.OrderId); break; 
             }
 
             var rawOrders = await query.ToListAsync();
-            
-            // Lọc trùng lặp
+
             var uniqueOrders = rawOrders.GroupBy(o => o.OrderId).Select(g => g.First()).ToList();
 
-            // XỬ LÝ PHÂN TRANG
             int pageSize = 10;
             int totalItems = uniqueOrders.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
@@ -76,7 +71,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var pagedOrders = uniqueOrders.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
-            // Truyền dữ liệu phân trang ra View
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
             ViewBag.TotalItems = totalItems;
@@ -85,7 +79,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedOrders);
         }
 
-        // 2. CONFIRM BOOKING
         [HttpPost]
         public async Task<IActionResult> ConfirmBooking(int orderId)
         {
@@ -102,7 +95,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // 3. CANCEL ORDER
         [HttpPost]
         public async Task<IActionResult> CancelOrder(int orderId)
         {
@@ -125,7 +117,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // 4. DETAILS
         public async Task<IActionResult> Details(int id)
         {
             var order = await _context.Orders
@@ -137,7 +128,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(order);
         }
 
-        // 5. GET: Create
         public async Task<IActionResult> Create()
         {
             ViewBag.Customers = await _context.Accounts.Where(a => a.RoleId == 3).ToListAsync();
@@ -146,10 +136,9 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View();
         }
 
-        // 6. GET: SelectRoom
         public async Task<IActionResult> SelectRoom(int stayId, string? checkIn, string? checkOut, string? customerType, int? accountId, string? walkInName, string? walkInPhone)
         {
-            // FIX CẢNH BÁO NULL REFERENCE: Bắt buộc CheckIn và CheckOut phải có giá trị
+            
             if (string.IsNullOrEmpty(checkIn) || string.IsNullOrEmpty(checkOut))
             {
                 TempData["ErrorMessage"] = "Check-in and Check-out dates are required.";
@@ -163,7 +152,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (stay == null) return NotFound();
 
-            // Thêm dấu '!' báo cho compiler biết biến chắc chắn không null
             DateOnly dateIn = DateOnly.FromDateTime(DateTime.Parse(checkIn!));
             DateOnly dateOut = DateOnly.FromDateTime(DateTime.Parse(checkOut!));
 
@@ -193,12 +181,11 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(stay);
         }
 
-        // 7. POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int? AccountId, string? CustomerType, string? WalkInName, string? WalkInPhone, int StayId, int RoomId, string? CheckIn, string? CheckOut, int NumberOfRooms)
         {
-            // FIX CẢNH BÁO NULL REFERENCE
+            
             if (string.IsNullOrEmpty(CheckIn) || string.IsNullOrEmpty(CheckOut))
             {
                 TempData["ErrorMessage"] = "Check-in and Check-out dates are required.";
@@ -243,7 +230,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             int totalNights = dateOut.DayNumber - dateIn.DayNumber;
             decimal totalAmount = (room.PriceRoom ?? 0) * NumberOfRooms * totalNights;
 
-            // KHÓA YÊU CẦU: Chặn click đúp khi tạo đơn hàng
             string requestKey = $"RoomOrder_{finalAccountId}_{RoomId}_{CheckIn}_{CheckOut}";
             if (!_inFlightRequests.TryAdd(requestKey, true))
             {
@@ -253,7 +239,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             try
             {
-                // CHỐNG SPAM / DOUBLE-CLICK ở tầng Database (Khoảng thời gian 30s)
+                
                 bool isDuplicate = await _context.Orders.AnyAsync(o => 
                     o.AccountId == finalAccountId && 
                     o.TotalAmount == totalAmount && 

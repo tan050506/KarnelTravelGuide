@@ -23,7 +23,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        // THÊM Ổ KHÓA CHỐNG SPAM CLICK ĐÚP
         private static readonly ConcurrentDictionary<string, bool> _inFlightRequests = new();
 
         public RestaurantController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
@@ -32,19 +31,17 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // 1. GET: Index (ĐÃ THÊM INCLUDE FEEDBACKS ĐỂ TÍNH SAO)
         public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentSort"] = sortOrder;
-            
-            // Mặc định là hiển thị MỚI NHẤT (desc). Bấm vào link sẽ đổi thành id_asc
+
             ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
             var restaurants = _context.Restaurants
                 .Include(r => r.Spot)
                 .Include(r => r.RestaurantTables) 
-                .Include(r => r.Feedbacks) // QUAN TRỌNG: INCLUDE FEEDBACK ĐỂ TÍNH SAO
+                .Include(r => r.Feedbacks) 
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
@@ -60,13 +57,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     restaurants = restaurants.OrderBy(s => s.RestaurantId); 
                     break;
                 default: 
-                    restaurants = restaurants.OrderByDescending(s => s.RestaurantId); // MẶC ĐỊNH LUÔN LÀ DESCENDING
+                    restaurants = restaurants.OrderByDescending(s => s.RestaurantId); 
                     break;
             }
 
             var allRestaurants = await restaurants.ToListAsync();
 
-            // XỬ LÝ PHÂN TRANG
             int pageSize = 10;
             int totalItems = allRestaurants.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
@@ -76,7 +72,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var pagedRestaurants = allRestaurants.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
-            // Truyền dữ liệu phân trang ra View
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
             ViewBag.TotalItems = totalItems;
@@ -109,7 +104,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             ModelState.Remove("Spot");
             if (ModelState.IsValid)
             {
-                // KHÓA YÊU CẦU: Chặn click đúp cùng 1 Tên Nhà Hàng
+                
                 string requestKey = $"Res_{restaurant.RestaurantName}_{restaurant.SpotId}";
                 if (!_inFlightRequests.TryAdd(requestKey, true))
                 {
@@ -119,7 +114,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
                 try
                 {
-                    // Kiểm tra trùng lặp trong DB
+                    
                     bool isDuplicate = await _context.Restaurants.AnyAsync(r => r.RestaurantName == restaurant.RestaurantName && r.SpotId == restaurant.SpotId);
                     if (isDuplicate)
                     {
@@ -153,12 +148,11 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 }
                 finally
                 {
-                    // Mở khóa sau khi xử lý xong
+                    
                     _inFlightRequests.TryRemove(requestKey, out _);
                 }
             }
-            
-            // Dữ liệu fallback nếu ModelState không hợp lệ
+
             ViewBag.TouristSpots = await _context.TouristSpots.ToListAsync();
             return View(restaurant);
         }
@@ -178,7 +172,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        // ĐÃ BỔ SUNG TableIds để nhận diện Bàn nào đang bị sửa, Bàn nào bị xóa
+        
         public async Task<IActionResult> Edit(int id, Restaurant restaurant, IFormFile? imageFile, int[] TableIds, string[] TableTypes, decimal[] Prices, int[] Quantities)
         {
             if (id != restaurant.RestaurantId) return NotFound();
@@ -196,7 +190,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
                     _context.Update(restaurant);
 
-                    // 1. KIỂM TRA BÀN BỊ XÓA CÓ ĐANG ĐƯỢC ĐẶT KHÔNG
                     var existingTables = await _context.RestaurantTables.Where(t => t.RestaurantId == id).ToListAsync();
                     var submittedIds = TableIds != null ? TableIds.Where(tid => tid > 0).ToList() : new List<int>();
                     var tablesToDelete = existingTables.Where(t => !submittedIds.Contains(t.TableId)).ToList();
@@ -212,7 +205,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                         _context.RestaurantTables.Remove(t);
                     }
 
-                    // 2. CẬP NHẬT HOẶC THÊM MỚI BÀN
                     for (int i = 0; i < TableTypes.Length; i++)
                     {
                         if (string.IsNullOrEmpty(TableTypes[i])) continue;

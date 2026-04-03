@@ -19,9 +19,6 @@ namespace KarnelTravelGuide.Web.Controllers
             _context = context;
         }
 
-        // ==========================================
-        // 1. TRANG PENDING (Giỏ hàng của Khách)
-        // ==========================================
         public async Task<IActionResult> MyInvoices(string? sortOrder, int page = 1)
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
@@ -70,9 +67,6 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(pagedInvoices);
         }
 
-        // ==========================================
-        // 2. TRANG LỊCH SỬ (Gộp theo Lần Checkout)
-        // ==========================================
         public async Task<IActionResult> History(string? searchString, string? sortOrder, int page = 1)
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
@@ -90,7 +84,6 @@ namespace KarnelTravelGuide.Web.Controllers
             var rawHistory = await query.ToListAsync();
             var uniqueHistory = rawHistory.GroupBy(i => i.InvoiceId).Select(g => g.First()).ToList();
 
-            // Nhóm theo thời gian Checkout (CreatedDate chính xác đến phút)
             var historyGroups = uniqueHistory
                 .GroupBy(i => i.CreatedDate.HasValue ? i.CreatedDate.Value.ToString("yyyy-MM-dd HH:mm") : "")
                 .Select(g => new CustomerCheckoutBatchViewModel
@@ -128,15 +121,11 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(pagedHistory);
         }
 
-        // ==========================================
-        // 3. TRANG CHI TIẾT CỦA 1 LẦN CHECKOUT
-        // ==========================================
         public async Task<IActionResult> HistoryDetails(string exactTimeStr, string? searchString, string? sortOrder, int page = 1)
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
             if (accountId == null) return RedirectToAction("Login", "Account");
 
-            // Format used when generating link: yyyy-MM-dd HH:mm
             if (!DateTime.TryParseExact(exactTimeStr, "yyyy-MM-dd HH:mm", null, System.Globalization.DateTimeStyles.None, out DateTime exactTimeMinute)) return RedirectToAction(nameof(History));
 
             ViewData["CurrentSearch"] = searchString;
@@ -185,9 +174,6 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(pagedInvoices);
         }
 
-        // ==========================================
-        // 4. TRANG BIÊN LAI (KIỂM TRA HỦY TRƯỚC 3 NGÀY)
-        // ==========================================
         public async Task<IActionResult> Receipt(int id)
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
@@ -201,7 +187,6 @@ namespace KarnelTravelGuide.Web.Controllers
 
             if (invoice == null) return NotFound();
 
-            // Tìm ngày bắt đầu sớm nhất trong hóa đơn
             DateTime? earliestDate = null;
             if (invoice.Order?.OrderDetails != null)
             {
@@ -225,7 +210,6 @@ namespace KarnelTravelGuide.Web.Controllers
                 }
             }
 
-            // Kiểm tra điều kiện 3 ngày (72 giờ)
             bool canCancel = false;
             if (earliestDate.HasValue)
             {
@@ -239,9 +223,6 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(invoice);
         }
 
-        // ==========================================
-        // 5. API: XỬ LÝ HỦY HÓA ĐƠN TRONG LỊCH SỬ
-        // ==========================================
         [HttpPost]
         public async Task<IActionResult> CancelPaidInvoice(int invoiceId)
         {
@@ -294,9 +275,6 @@ namespace KarnelTravelGuide.Web.Controllers
             return RedirectToAction(nameof(Receipt), new { id = invoiceId });
         }
 
-        // ==========================================
-        // 6. GỬI & XÓA GIỎ HÀNG (PENDING)
-        // ==========================================
         [HttpPost]
         public async Task<IActionResult> ConfirmAllInvoices()
         {

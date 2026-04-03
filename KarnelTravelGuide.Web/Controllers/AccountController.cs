@@ -49,8 +49,7 @@ namespace KarnelTravelGuide.Web.Controllers
                     {
                         HttpContext.Session.SetString("UserAvatar", user.AvatarUrl);
                     }
-                    
-                    // SỬA: Đổi tên Session thành AccountId
+
                     HttpContext.Session.SetInt32("AccountId", user.AccountId);
 
                     if (userRoleName == "Admin")
@@ -111,11 +110,10 @@ namespace KarnelTravelGuide.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
-            // SỬA: Lấy AccountId từ Session
+            
             var accountId = HttpContext.Session.GetInt32("AccountId");
             if (accountId == null) return RedirectToAction("Login");
 
-            // SỬA: Tìm kiếm bằng accountId
             var user = await _context.Accounts.FindAsync(accountId);
             if (user == null) return RedirectToAction("Login");
 
@@ -126,11 +124,10 @@ namespace KarnelTravelGuide.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Profile(Account model, IFormFile? avatarFile, string? newPassword)
         {
-            // SỬA: Lấy AccountId từ Session
+            
             var accountId = HttpContext.Session.GetInt32("AccountId");
             if (accountId == null) return RedirectToAction("Login");
 
-            // SỬA: Tìm kiếm bằng accountId
             var user = await _context.Accounts.FindAsync(accountId);
             if (user == null) return RedirectToAction("Login");
 

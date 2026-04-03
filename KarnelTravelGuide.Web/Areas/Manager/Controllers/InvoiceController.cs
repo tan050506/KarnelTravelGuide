@@ -22,7 +22,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context = context;
         }
 
-        // 1. TRANG PENDING PAYMENTS (ĐÃ THÊM PHÂN TRANG)
         public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             ViewData["CurrentSearch"] = searchString;
@@ -64,7 +63,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var sortedGroups = grouped.ToList();
 
-            // PHÂN TRANG
             int pageSize = 10;
             int totalItems = sortedGroups.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
@@ -81,7 +79,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedPending);
         }
 
-        // 2. TRANG PAYMENT HISTORY
         public async Task<IActionResult> History(string? searchString, string? sortOrder, int page = 1)
         {
             ViewData["CurrentSearch"] = searchString;
@@ -137,7 +134,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedHistory);
         }
 
-        // 3. THANH TOÁN (CUSTOMER BILL)
         public async Task<IActionResult> CustomerBill(int accountId, string orderDateStr)
         {
             if (!DateTime.TryParseExact(orderDateStr, "yyyy-MM-dd HH:mm", null, System.Globalization.DateTimeStyles.None, out DateTime exactTimeMinute)) return RedirectToAction(nameof(Index));
@@ -226,7 +222,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(History));
         }
 
-        // TÍNH NĂNG MỚI: HỦY ĐƠN CHỜ THANH TOÁN (Tại trang Checkout)
         [HttpPost]
         public async Task<IActionResult> CancelPendingPayment(int accountId, string orderDateStr)
         {
@@ -255,8 +250,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
-        // 4. CHI TIẾT NGÀY (DAILY DETAILS)
         public async Task<IActionResult> DailyDetails(string dateStr, string? searchString, string? sortOrder, int page = 1)
         {
             if (!DateTime.TryParse(dateStr, out DateTime date)) return RedirectToAction(nameof(History));
@@ -321,7 +314,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedGroups);
         }
 
-        // 5. TRANG CHI TIẾT CỦA 1 KHÁCH (INVOICE RECEIPT)
         public async Task<IActionResult> CustomerDailyInvoice(int accountId, string exactTimeStr)
         {
             if (!DateTime.TryParseExact(exactTimeStr, "yyyy-MM-dd HH:mm", null, System.Globalization.DateTimeStyles.None, out DateTime exactTimeMinute)) return RedirectToAction(nameof(History));

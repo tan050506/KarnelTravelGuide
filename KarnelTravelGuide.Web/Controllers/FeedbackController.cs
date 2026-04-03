@@ -18,9 +18,6 @@ namespace KarnelTravelGuide.Web.Controllers
             _context = context;
         }
 
-        // ======================================================
-        // LUỒNG 1: TRANG ĐÁNH GIÁ (CHỈ HIỆN DỊCH VỤ ĐÃ MUA & THANH TOÁN)
-        // ======================================================
         public async Task<IActionResult> Reviews(string? searchString, string type = "Stay")
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
@@ -77,9 +74,6 @@ namespace KarnelTravelGuide.Web.Controllers
             return RedirectToAction(nameof(Reviews), new { type = type });
         }
 
-        // ======================================================
-        // LUỒNG 2: CHAT TRỰC TIẾP VỚI MANAGER (ZALO CHUẨN ĐỐI XỨNG Z|)
-        // ======================================================
         public async Task<IActionResult> Chat(int? activeManagerId)
         {
             int? myId = HttpContext.Session.GetInt32("AccountId");
@@ -118,10 +112,8 @@ namespace KarnelTravelGuide.Web.Controllers
             if (myId == null || activeManagerId == 0 || string.IsNullOrWhiteSpace(messageContent))
                 return RedirectToAction(nameof(Chat), new { activeManagerId = activeManagerId });
 
-            // Gắn protocol Z| chuẩn xác
             var feedback = new Feedback { AccountId = myId.Value, Message = $"Z|{activeManagerId}|{messageContent}" };
 
-            // Mượn ID lách luật
             var dummyStay = await _context.Stays.FirstOrDefaultAsync();
             if (dummyStay != null) feedback.StayId = dummyStay.StayId;
             else {

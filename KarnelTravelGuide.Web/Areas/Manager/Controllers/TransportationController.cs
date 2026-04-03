@@ -22,7 +22,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        // THÊM Ổ KHÓA CHỐNG SPAM CLICK ĐÚP
         private static readonly ConcurrentDictionary<string, bool> _inFlightRequests = new();
 
         public TransportationController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
@@ -53,15 +52,13 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return fallbackBranch;
         }
 
-        // 1. GET: Index (ĐÃ THÊM PHÂN TRANG VÀ MẶC ĐỊNH MỚI NHẤT LÊN ĐẦU)
         public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
             
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentSort"] = sortOrder;
-            
-            // Mặc định là hiển thị MỚI NHẤT (desc). Bấm vào link sẽ đổi thành id_asc
+
             ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
             var transportations = _context.Transportations
@@ -84,13 +81,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     transportations = transportations.OrderBy(t => t.TransportationId); 
                     break;
                 default: 
-                    transportations = transportations.OrderByDescending(t => t.TransportationId); // MẶC ĐỊNH LUÔN LÀ DESCENDING
+                    transportations = transportations.OrderByDescending(t => t.TransportationId); 
                     break;
             }
 
             var allTransportations = await transportations.ToListAsync();
 
-            // XỬ LÝ PHÂN TRANG
             int pageSize = 10;
             int totalItems = allTransportations.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
@@ -100,7 +96,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var pagedTransportations = allTransportations.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
-            // Truyền dữ liệu phân trang ra View
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
             ViewBag.TotalItems = totalItems;
@@ -134,7 +129,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (ModelState.IsValid)
             {
-                // KHÓA YÊU CẦU: Chặn click đúp cùng 1 Tuyến Xe
+                
                 string requestKey = $"Trans_{transportation.TransportName}_{transportation.FromBranchId}_{transportation.ToSpotId}";
                 if (!_inFlightRequests.TryAdd(requestKey, true))
                 {
@@ -144,7 +139,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
                 try
                 {
-                    // Kiểm tra trùng lặp trong DB
+                    
                     bool isDuplicate = await _context.Transportations.AnyAsync(t => t.TransportName == transportation.TransportName && t.FromBranchId == transportation.FromBranchId && t.ToSpotId == transportation.ToSpotId);
                     if (isDuplicate)
                     {
@@ -161,7 +156,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 }
                 finally
                 {
-                    // Mở khóa sau khi xử lý xong
+                    
                     _inFlightRequests.TryRemove(requestKey, out _);
                 }
             }

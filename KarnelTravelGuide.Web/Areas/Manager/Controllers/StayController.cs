@@ -23,7 +23,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        // THÊM Ổ KHÓA CHỐNG SPAM CLICK ĐÚP
         private static readonly ConcurrentDictionary<string, bool> _inFlightRequests = new();
 
         public StayController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
@@ -32,15 +31,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // 1. GET: Index (ĐÃ THÊM PHÂN TRANG VÀ MẶC ĐỊNH MỚI NHẤT LÊN ĐẦU)
-        // 1. GET: Index (ĐÃ THÊM INCLUDE FEEDBACKS ĐỂ TÍNH SAO)
         public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentSort"] = sortOrder;
             ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
-            // QUAN TRỌNG: Thêm .Include(s => s.Feedbacks) vào đây
             var stays = _context.Stays
                 .Include(s => s.Spot)
                 .Include(s => s.Rooms)
@@ -62,7 +58,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var allStays = await stays.ToListAsync();
 
-            // Xử lý phân trang (Giữ nguyên logic cũ của bạn)
             int pageSize = 10;
             int totalItems = allStays.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
@@ -102,7 +97,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (ModelState.IsValid)
             {
-                // KHÓA YÊU CẦU: Chặn click đúp cùng 1 Tên Stay
+                
                 string requestKey = $"Stay_{stay.Name}_{stay.SpotId}";
                 if (!_inFlightRequests.TryAdd(requestKey, true))
                 {
@@ -112,7 +107,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
                 try
                 {
-                    // Kiểm tra trùng lặp trong Database
+                    
                     bool isDuplicate = await _context.Stays.AnyAsync(s => s.Name == stay.Name && s.SpotId == stay.SpotId);
                     if (isDuplicate)
                     {
@@ -129,12 +124,11 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 }
                 finally
                 {
-                    // Mở khóa sau khi xử lý xong
+                    
                     _inFlightRequests.TryRemove(requestKey, out _);
                 }
             }
-            
-            // Dữ liệu fallback nếu ModelState không hợp lệ
+
             ViewBag.TouristSpots = await _context.TouristSpots.ToListAsync();
             return View(stay);
         }
@@ -229,7 +223,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            // 1. KIỂM TRA RÀNG BUỘC: Nếu Stay này đã có người đặt phòng thì TUYỆT ĐỐI KHÔNG ĐƯỢC XÓA
+            
             bool hasBookings = await _context.RoomBookings.AnyAsync(rb => rb.Room != null && rb.Room.StayId == id);
             if (hasBookings)
             {
@@ -237,20 +231,18 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // 2. TÌM STAY VÀ BAO GỒM CẢ CÁC ROOM CỦA NÓ (Dùng Include)
             var stay = await _context.Stays
                 .Include(s => s.Rooms)
                 .FirstOrDefaultAsync(s => s.StayId == id);
 
             if (stay != null)
             {
-                // 3. XÓA TẤT CẢ CÁC PHÒNG (ROOM) CỦA STAY NÀY TRƯỚC
+                
                 if (stay.Rooms != null && stay.Rooms.Any())
                 {
                     _context.Rooms.RemoveRange(stay.Rooms);
                 }
 
-                // 4. XÓA ẢNH VÀ XÓA STAY
                 DeletePhysicalFile(stay.ImageUrl); 
                 _context.Stays.Remove(stay);
                 

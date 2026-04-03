@@ -18,7 +18,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        // THÊM Ổ KHÓA CHỐNG SPAM CLICK ĐÚP
         private static readonly ConcurrentDictionary<string, bool> _inFlightRequests = new();
 
         public TicketBookingController(ApplicationDbContext context)
@@ -26,7 +25,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context = context;
         }
 
-        // 1. INDEX: Quản lý danh sách đơn (ĐÃ THÊM PHÂN TRANG)
         public async Task<IActionResult> Index(string? searchString, string? travelDate, string? sortOrder, int page = 1)
         {
             var query = _context.Orders
@@ -52,23 +50,20 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             ViewData["CurrentSearch"] = searchString;
             ViewData["CurrentDate"] = travelDate;
             ViewData["CurrentSort"] = sortOrder;
-            
-            // Nếu chưa chọn sort, mặc định là hiển thị MỚI NHẤT (desc). Bấm vào link sẽ đổi thành id_asc
+
             ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
             switch (sortOrder)
             {
                 case "id_asc": query = query.OrderBy(o => o.OrderId); break;
-                default: query = query.OrderByDescending(o => o.OrderId); break; // MẶC ĐỊNH LUÔN LÀ DESCENDING
+                default: query = query.OrderByDescending(o => o.OrderId); break; 
             }
 
             var rawOrders = await query.ToListAsync();
-            
-            // Lọc trùng lặp do 1 đơn có nhiều vé
+
             var uniqueOrders = rawOrders.GroupBy(o => o.OrderId).Select(g => g.First()).ToList();
 
-            // XỬ LÝ PHÂN TRANG (PAGINATION)
-            int pageSize = 10; // Giới hạn 10 đơn / 1 trang
+            int pageSize = 10; 
             int totalItems = uniqueOrders.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
             
@@ -77,7 +72,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var pagedOrders = uniqueOrders.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
-            // Truyền dữ liệu phân trang ra View
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
             ViewBag.TotalItems = totalItems;
@@ -86,7 +80,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedOrders);
         }
 
-        // 2. CONFIRM BOOKING
         [HttpPost]
         public async Task<IActionResult> ConfirmBooking(int orderId)
         {
@@ -103,7 +96,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // 3. CANCEL ORDER
         [HttpPost]
         public async Task<IActionResult> CancelOrder(int orderId)
         {
@@ -126,7 +118,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // 4. DETAILS
         public async Task<IActionResult> Details(int id)
         {
             var order = await _context.Orders
@@ -139,7 +130,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(order);
         }
 
-        // 5. GET: Create
         public async Task<IActionResult> Create()
         {
             ViewBag.Customers = await _context.Accounts.Where(a => a.RoleId == 3).ToListAsync();
@@ -149,7 +139,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View();
         }
 
-        // 6. GET: SelectSeat
         public async Task<IActionResult> SelectSeat(int transportationId, string? travelDate, string? customerType, int? accountId, string? walkInName, string? walkInPhone)
         {
             if (string.IsNullOrEmpty(travelDate))
@@ -170,7 +159,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(transport);
         }
 
-        // 7. POST: Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int? AccountId, string? CustomerType, string? WalkInName, string? WalkInPhone, int TransportationId, string? TravelDate, string? SelectedSeats)
@@ -270,7 +258,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             }
         }
 
-        // 8. API GET BOOKED SEATS
         [HttpGet]
         public async Task<IActionResult> GetBookedSeats(int transportationId, string? date)
         {

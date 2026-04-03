@@ -11,7 +11,6 @@ namespace KarnelTravelGuide.Web.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        // Bơm DbContext vào để lấy dữ liệu
         public HomeController(ApplicationDbContext context)
         {
             _context = context;
@@ -19,14 +18,13 @@ namespace KarnelTravelGuide.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Lấy 3 địa điểm du lịch mới nhất kèm theo danh sách ảnh của nó
+            
             var topSpots = await _context.TouristSpots
                 .Include(t => t.TouristSpotImages)
                 .OrderByDescending(t => t.SpotId)
                 .Take(3)
                 .ToListAsync();
 
-            // Truyền dữ liệu sang View
             return View(topSpots);
         }
 

@@ -38,7 +38,6 @@ namespace KarnelTravelGuide.Web.Controllers
                 return View(await stays.OrderByDescending(s => s.StayId).ToListAsync());
             }
 
-            // Nếu không tìm kiếm, chỉ lấy 6 cái mới nhất làm gợi ý
             return View(await stays.OrderByDescending(s => s.StayId).Take(6).ToListAsync());
         }
 

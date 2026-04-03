@@ -23,7 +23,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        // THÊM Ổ KHÓA CHỐNG SPAM CLICK ĐÚP
         private static readonly ConcurrentDictionary<string, bool> _inFlightRequests = new();
 
         public TouristSpotController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
@@ -52,15 +51,13 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return fallbackBranch;
         }
 
-        // 1. GET: Index (ĐÃ THÊM PHÂN TRANG VÀ MẶC ĐỊNH MỚI NHẤT LÊN ĐẦU)
         public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
             
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentSort"] = sortOrder;
-            
-            // Mặc định là hiển thị MỚI NHẤT (desc). Bấm vào link sẽ đổi thành id_asc
+
             ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
             var spots = _context.TouristSpots
@@ -82,13 +79,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     spots = spots.OrderBy(t => t.SpotId);
                     break;
                 default:
-                    spots = spots.OrderByDescending(t => t.SpotId); // MẶC ĐỊNH LUÔN LÀ DESCENDING
+                    spots = spots.OrderByDescending(t => t.SpotId); 
                     break;
             }
 
             var allSpots = await spots.ToListAsync();
 
-            // XỬ LÝ PHÂN TRANG
             int pageSize = 10;
             int totalItems = allSpots.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
@@ -98,7 +94,6 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var pagedSpots = allSpots.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
-            // Truyền dữ liệu phân trang ra View
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
             ViewBag.TotalItems = totalItems;
@@ -123,7 +118,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (ModelState.IsValid)
             {
-                // KHÓA YÊU CẦU: Chặn click đúp cùng 1 Tên Địa Điểm
+                
                 string requestKey = $"Spot_{spot.SpotName}_{spot.BranchId}";
                 if (!_inFlightRequests.TryAdd(requestKey, true))
                 {
@@ -164,7 +159,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 }
                 finally
                 {
-                    // Mở khóa sau khi xử lý xong
+                    
                     _inFlightRequests.TryRemove(requestKey, out _);
                 }
             }
