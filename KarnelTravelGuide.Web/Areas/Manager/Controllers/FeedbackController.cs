@@ -22,6 +22,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context = context;
         }
 
+        // Retrieves a paginated, filtered, and sorted list of customer reviews
         public async Task<IActionResult> Index(string? searchString, string? serviceType, string? sortOrder, int page = 1)
         {
             ViewData["CurrentSearch"] = searchString;
@@ -30,6 +31,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
+            // Query only standard reviews identified by the "R|" prefix
             var query = _context.Feedbacks
                 .Include(f => f.Account)
                 .Include(f => f.Stay)
@@ -37,6 +39,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 .Where(f => f.Message != null && f.Message.StartsWith("R|"))
                 .AsQueryable();
 
+            // Apply text search filter across account name and message content
             if (!string.IsNullOrEmpty(searchString))
             {
                 query = query.Where(f =>
@@ -44,12 +47,14 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     (f.Message != null && f.Message.Contains(searchString)));
             }
 
+            // Apply filter based on the booked service category
             if (!string.IsNullOrEmpty(serviceType))
             {
                 if (serviceType == "Stay") query = query.Where(f => f.StayId != null);
                 else if (serviceType == "Restaurant") query = query.Where(f => f.RestaurantId != null);
             }
 
+            // Apply sorting logic
             switch (sortOrder)
             {
                 case "id_asc": query = query.OrderBy(f => f.FeedbackId); break;
@@ -58,6 +63,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var allFeedbacks = await query.ToListAsync();
 
+            // Calculate pagination metrics
             int pageSize = 10;
             int totalItems = allFeedbacks.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
@@ -75,6 +81,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedFeedbacks);
         }
 
+        // Retrieves detailed information for a specific customer review
         public async Task<IActionResult> Details(int id)
         {
             var feedback = await _context.Feedbacks
@@ -87,6 +94,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(feedback);
         }
 
+        // Handles the manager's response to a customer review
         [HttpPost]
         public async Task<IActionResult> Details(int id, string replyContent)
         {
@@ -100,6 +108,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Details), new { id = id });
         }
 
+        // Handles the deletion of a specific feedback record
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -113,11 +122,13 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Loads the real-time chat interface and conversation history with a selected user
         public async Task<IActionResult> SupportChat(int? activeUserId)
         {
             int? myId = HttpContext.Session.GetInt32("AccountId");
             if (myId == null) return RedirectToAction("Login", "Account", new { area = "" });
 
+            // Fetch list of potential contacts (Managers and Customers)
             var allAccounts = await _context.Accounts
                 .Include(a => a.Role)
                 .Where(a => a.AccountId != myId && a.Role != null && (a.Role.RoleName == "Manager" || a.Role.RoleName == "Customer"))
@@ -129,6 +140,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             ViewBag.ActiveUserId = activeUserId;
             ViewBag.MyId = myId;
 
+            // Load direct messages matching the Zalo-style chat protocol "Z|{targetId}|"
             if (activeUserId.HasValue)
             {
                 string myPrefix = $"Z|{activeUserId.Value}|"; 
@@ -147,6 +159,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(new List<Feedback>());
         }
 
+        // Processes and saves a new chat message to the database
         [HttpPost]
         public async Task<IActionResult> SendZaloMessage(int activeUserId, string messageContent)
         {
@@ -156,6 +169,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var feedback = new Feedback { AccountId = myId.Value, Message = $"Z|{activeUserId}|{messageContent}" };
 
+            // Assign a dummy StayId or RestaurantId to bypass potential database foreign key constraints
             var dummyStay = await _context.Stays.FirstOrDefaultAsync();
             if (dummyStay != null) feedback.StayId = dummyStay.StayId;
             else {

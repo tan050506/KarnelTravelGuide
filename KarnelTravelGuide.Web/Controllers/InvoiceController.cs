@@ -19,6 +19,7 @@ namespace KarnelTravelGuide.Web.Controllers
             _context = context;
         }
 
+        // Retrieves the customer's pending cart items, applies combo discounts, and paginates the result
         public async Task<IActionResult> MyInvoices(string? sortOrder, int page = 1)
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
@@ -67,6 +68,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(pagedInvoices);
         }
 
+        // Retrieves a grouped history of the customer's past checkouts and submitted orders
         public async Task<IActionResult> History(string? searchString, string? sortOrder, int page = 1)
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
@@ -121,6 +123,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(pagedHistory);
         }
 
+        // Fetches the detailed list of invoices for a specific past transaction batch
         public async Task<IActionResult> HistoryDetails(string exactTimeStr, string? searchString, string? sortOrder, int page = 1)
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
@@ -174,6 +177,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(pagedInvoices);
         }
 
+        // Displays the detailed receipt and determines if the booking is eligible for cancellation (>= 3 days prior)
         public async Task<IActionResult> Receipt(int id)
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
@@ -223,6 +227,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(invoice);
         }
 
+        // Processes a cancellation request for a submitted/paid invoice if it meets the 3-day advance notice rule
         [HttpPost]
         public async Task<IActionResult> CancelPaidInvoice(int invoiceId)
         {
@@ -275,6 +280,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return RedirectToAction(nameof(Receipt), new { id = invoiceId });
         }
 
+        // Submits all pending cart items to the manager for review and payment collection
         [HttpPost]
         public async Task<IActionResult> ConfirmAllInvoices()
         {
@@ -300,6 +306,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return RedirectToAction(nameof(History));
         }
 
+        // Completely empties the customer's cart by deleting all unsubmitted pending orders and their related bookings
         [HttpPost]
         public async Task<IActionResult> CancelAllInvoices()
         {

@@ -2,7 +2,6 @@
 @{ 
     ViewData["Title"] = "Stay Management"; 
     
-    // TÍNH TOÁN STT DỰA TRÊN PHÂN TRANG VÀ CHIỀU SẮP XẾP
     bool isDescending = string.IsNullOrEmpty(ViewData["CurrentSort"]?.ToString()) || ViewData["CurrentSort"]?.ToString() == "id_desc";
     int totalItems = ViewBag.TotalItems ?? 0;
     int currentPage = ViewBag.CurrentPage ?? 1;
@@ -62,7 +61,6 @@
                             <td>
                                 <div class="fw-bold text-dark text-truncate" style="max-width: 180px;" title="@item.Name">@item.Name</div>
                                 @{
-                                    // THUẬT TOÁN HACK: Lọc Review (R|) và tính trung bình sao từ cột Message
                                     var reviews = item.Feedbacks?.Where(f => f.Message != null && f.Message.StartsWith("R|")).ToList() 
                                                 ?? new List<KarnelTravelGuide.Web.Models.Entities.Feedback>();
                                     double avgStar = 0;

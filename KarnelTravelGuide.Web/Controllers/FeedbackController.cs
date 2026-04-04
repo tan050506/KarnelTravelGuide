@@ -18,6 +18,7 @@ namespace KarnelTravelGuide.Web.Controllers
             _context = context;
         }
 
+        // Retrieves the customer's paid services and displays the review interface for either Stays or Restaurants
         public async Task<IActionResult> Reviews(string? searchString, string type = "Stay")
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
@@ -26,6 +27,7 @@ namespace KarnelTravelGuide.Web.Controllers
             ViewBag.ActiveType = type;
             ViewBag.CurrentSearch = searchString;
 
+            // Fetch order IDs that have been successfully paid by the current user
             var paidOrderIds = await _context.Invoices.Where(i => i.AccountId == accountId && i.PaymentStatus == "Paid").Select(i => i.OrderId).ToListAsync();
             
             var orderDetails = await _context.OrderDetails
@@ -35,6 +37,7 @@ namespace KarnelTravelGuide.Web.Controllers
 
             if (type == "Stay")
             {
+                // Group the booked stays and apply any provided search filters
                 var stays = orderDetails.Where(od => od.RoomBooking?.Room?.Stay != null)
                                         .Select(od => od.RoomBooking!.Room!.Stay!)
                                         .GroupBy(s => s.StayId).Select(g => g.First()).AsQueryable();
@@ -46,6 +49,7 @@ namespace KarnelTravelGuide.Web.Controllers
             }
             else
             {
+                // Group the booked restaurants and apply any provided search filters
                 var restaurants = orderDetails.Where(od => od.ResBooking?.RestaurantTable?.Restaurant != null)
                                               .Select(od => od.ResBooking!.RestaurantTable!.Restaurant!)
                                               .GroupBy(r => r.RestaurantId).Select(g => g.First()).AsQueryable();
@@ -57,6 +61,7 @@ namespace KarnelTravelGuide.Web.Controllers
             }
         }
 
+        // Processes and saves a new customer review using a specific formatted string pattern "R|rating|comment"
         [HttpPost]
         public async Task<IActionResult> SubmitReview(int serviceId, string type, int rating, string comment)
         {
@@ -74,6 +79,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return RedirectToAction(nameof(Reviews), new { type = type });
         }
 
+        // Initializes the direct messaging interface, fetching available managers and the active conversation history
         public async Task<IActionResult> Chat(int? activeManagerId)
         {
             int? myId = HttpContext.Session.GetInt32("AccountId");
@@ -90,6 +96,7 @@ namespace KarnelTravelGuide.Web.Controllers
 
             if (activeManagerId.HasValue)
             {
+                // Load messages matching the custom chat protocol prefixes for the current user and selected manager
                 string myPrefix = $"Z|{activeManagerId.Value}|";
                 string theirPrefix = $"Z|{myId.Value}|";
 
@@ -105,6 +112,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(new List<Feedback>());
         }
 
+        // Sends a new chat message to the selected manager, using a dummy service ID to satisfy database constraints
         [HttpPost]
         public async Task<IActionResult> SendMessage(int activeManagerId, string messageContent)
         {

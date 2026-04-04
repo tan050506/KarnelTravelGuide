@@ -18,7 +18,7 @@
             --k-bg-light: #f8fafc;
             --k-sidebar-bg: #0f172a;
             --k-sidebar-hover: #1e293b;
-            --k-primary: #0d6efd; /* Màu xanh dương đặc trưng cho Admin */
+            --k-primary: #0d6efd; 
             --k-border: #e2e8f0;
             --k-ink: #0f172a;
             --k-soft: #64748b;
@@ -31,7 +31,6 @@
             font-family: var(--ff-b);
         }
         
-        /* ─── SIDEBAR ─── */
         .k-sidebar { 
             width: 270px; height: 100vh; position: fixed; top: 0; left: 0; 
             background-color: var(--k-sidebar-bg); color: #94a3b8; 
@@ -63,7 +62,6 @@
             margin: 1.5rem 0 0.5rem 1.2rem; 
         }
 
-        /* ─── MAIN WRAPPER ─── */
         .k-main-wrapper { 
             margin-left: 270px; min-height: 100vh; display: flex; flex-direction: column; 
             transition: margin-left 0.3s ease; 
@@ -156,7 +154,6 @@
                 $('#sidebarOverlay').removeClass('show');
             });
 
-            // Tự động highlight menu đang active
             var currentPath = window.location.pathname.toLowerCase();
             
             var isDashboard = currentPath === '/admin' || currentPath === '/admin/' || currentPath.startsWith('/admin/dashboard');

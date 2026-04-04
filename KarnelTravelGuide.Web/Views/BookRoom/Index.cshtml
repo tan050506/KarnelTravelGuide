@@ -2,7 +2,7 @@
 @model IEnumerable<Stay>
 @{ 
     ViewData["Title"] = "Find Stays"; 
-    ViewData["HeroPage"] = true; // Kích hoạt Navbar trong suốt
+    ViewData["HeroPage"] = true;
     var spotsList = ViewBag.Spots as IEnumerable<TouristSpot> ?? new List<TouristSpot>();
 }
 

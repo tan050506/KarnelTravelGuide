@@ -129,7 +129,6 @@
 
 @section Scripts {
     <script>
-        // ================== LOGIC VALIDATION SỐ ĐIỆN THOẠI ==================
         const walkInPhoneInput = document.getElementById('inputWalkInPhone');
         const phoneErrorMsg = document.getElementById('phoneErrorMsg');
 
@@ -159,7 +158,6 @@
         });
 
 
-        // --- 1. JS TÌM KIẾM KHÁCH HÀNG ---
         const customers = [
             @foreach(var acc in customersList) { <text>{ id: @acc.AccountId, name: "@Html.Raw(acc.FullName)", phone: "@Html.Raw(acc.PhoneNumber)", email: "@Html.Raw(acc.Email)" },</text> }
         ];
@@ -210,7 +208,6 @@
             document.getElementById("lblMember").classList.toggle("text-primary", isMember);
         }
 
-        // --- 2. JS TÌM KIẾM ĐỊA ĐIỂM ---
         const spotsData = [ @foreach(var s in spotsList) { <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)" },</text> } ];
         const spotInput = document.getElementById('spotSearchInput'); const spotDropdown = document.getElementById('spotDropdown'); const hiddenSpotId = document.getElementById('searchSpot');
 
@@ -243,7 +240,6 @@
         spotInput.addEventListener('focus', function() { renderSpotDropdown(this.value); });
         document.addEventListener('click', function(e) { if (!spotInput.contains(e.target) && !spotDropdown.contains(e.target)) spotDropdown.classList.remove('show'); });
 
-        // --- 3. JS LỌC KHÁCH SẠN ---
         const allStays = [
             @foreach(var s in staysList) {
                 var types = s.Rooms != null ? string.Join(",", s.Rooms.Select(r => r.RoomType).Distinct()) : "";

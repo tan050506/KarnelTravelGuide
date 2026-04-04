@@ -25,6 +25,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context = context;
         }
 
+        // Retrieves a paginated, filtered, and sorted list of restaurant table bookings
         public async Task<IActionResult> Index(string? searchString, string? resDate, string? sortOrder, int page = 1)
         {
             var query = _context.Orders
@@ -33,6 +34,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 .Where(o => o.OrderDetails!.Any(od => od.ResBookingId != null) && o.Status != "Pending")
                 .AsQueryable();
 
+            // Apply search filter based on customer phone number or name
             if (!string.IsNullOrEmpty(searchString))
             {
                 query = query.Where(o => 
@@ -40,6 +42,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     (o.Account!.FullName != null && o.Account!.FullName.Contains(searchString)));
             }
 
+            // Apply filter for a specific reservation date
             if (!string.IsNullOrEmpty(resDate) && DateTime.TryParse(resDate, out DateTime parsedDate))
             {
                 query = query.Where(o => o.OrderDetails!.Any(od => od.ResBooking!.ReservationDateTime.HasValue && od.ResBooking.ReservationDateTime.Value.Date == parsedDate.Date));
@@ -51,6 +54,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
+            // Apply sorting logic
             switch (sortOrder)
             {
                 case "id_asc": query = query.OrderBy(o => o.OrderId); break;
@@ -61,6 +65,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var uniqueOrders = rawOrders.GroupBy(o => o.OrderId).Select(g => g.First()).ToList();
 
+            // Calculate pagination metrics
             int pageSize = 10;
             int totalItems = uniqueOrders.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
@@ -78,6 +83,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedOrders);
         }
 
+        // Confirms a pending table booking and marks the corresponding invoice as paid
         [HttpPost]
         public async Task<IActionResult> ConfirmBooking(int orderId)
         {
@@ -94,12 +100,14 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Cancels an unconfirmed booking and releases the reserved tables
         [HttpPost]
         public async Task<IActionResult> CancelOrder(int orderId)
         {
             var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
             if (order != null)
             {
+                // Prevent cancellation if the booking is already confirmed/paid
                 if (order.Status == "Confirmed")
                 {
                     TempData["ErrorMessage"] = "Cannot cancel a confirmed booking.";
@@ -116,6 +124,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Retrieves the full breakdown of a specific table booking order
         public async Task<IActionResult> Details(int id)
         {
             var order = await _context.Orders
@@ -127,6 +136,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(order);
         }
 
+        // Loads initial form data to manually create a new table reservation
         public async Task<IActionResult> Create()
         {
             ViewBag.Customers = await _context.Accounts.Where(a => a.RoleId == 3).ToListAsync();
@@ -135,6 +145,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View();
         }
 
+        // Computes and displays the remaining available tables for a selected restaurant and time slot
         public async Task<IActionResult> SelectTable(int restaurantId, string? resDate, string? resTime, string? customerType, int? accountId, string? walkInName, string? walkInPhone)
         {
             if (string.IsNullOrEmpty(resDate) || string.IsNullOrEmpty(resTime))
@@ -152,6 +163,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             DateTime resDateTime = DateTime.Parse($"{resDate} {resTime}");
 
+            // Subtract active bookings from the total table inventory to find current availability
             var availableTablesDict = new Dictionary<int, int>();
             foreach (var table in restaurant.RestaurantTables)
             {
@@ -177,6 +189,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(restaurant);
         }
 
+        // Processes the final reservation, handling walk-in customers, capacity constraints, and concurrency
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int? AccountId, string? CustomerType, string? WalkInName, string? WalkInPhone, int RestaurantId, int TableId, string? ResDate, string? ResTime, int NumberOfTables, int NumberOfGuests, string? SpecialRequest)
@@ -189,6 +202,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             int finalAccountId = 0;
 
+            // Handle account creation logic for unregistered "Walk-in" guests
             if (CustomerType == "WalkIn")
             {
                 if (string.IsNullOrEmpty(WalkInName) || string.IsNullOrEmpty(WalkInPhone))
@@ -220,6 +234,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var table = await _context.RestaurantTables.FirstOrDefaultAsync(t => t.TableId == TableId);
             if (table == null || NumberOfTables <= 0) return NotFound();
 
+            // Validate that the number of guests does not exceed the allowed capacity for the selected table type
             int maxGuestsPerTable = (table.TableType?.ToUpper().Contains("VIP") == true) ? 10 : 4;
             int maxTotalGuests = maxGuestsPerTable * NumberOfTables;
             if (NumberOfGuests > maxTotalGuests)
@@ -232,6 +247,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             decimal totalAmount = (table.PriceRes ?? 0) * NumberOfTables;
 
             string requestKey = $"TableOrder_{finalAccountId}_{TableId}_{ResDate}_{ResTime}";
+            // Prevent duplicate form submissions
             if (!_inFlightRequests.TryAdd(requestKey, true))
             {
                 TempData["ErrorMessage"] = "Processing your booking... Please avoid double-clicking.";
@@ -240,6 +256,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             try
             {
+                // Check for identical orders created within the last 30 seconds to avoid accidental duplicates
                 bool isDuplicate = await _context.Orders.AnyAsync(o => 
                     o.AccountId == finalAccountId && 
                     o.TotalAmount == totalAmount && 
@@ -251,6 +268,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
+                // Generate the order, booking details, and corresponding unpaid invoice
                 var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Submitted" }; 
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();

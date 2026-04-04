@@ -27,8 +27,10 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
         {
             ViewBag.CurrentFilter = searchString;
 
+            // Initialize the base query for branches
             var branches = _context.Branches.AsQueryable();
 
+            // Apply multi-field search filter
             if (!string.IsNullOrEmpty(searchString))
             {
                 var lowerSearch = searchString.ToLower();
@@ -52,10 +54,12 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Branch branch, IFormFile? imageFile)
         {
+            // Validate branch uniqueness and format constraints
             ValidateBranch(branch, isEdit: false);
 
             if (ModelState.IsValid)
             {
+                // Process and save uploaded branch image with a unique GUID filename
                 if (imageFile != null && imageFile.Length > 0)
                 {
                     string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "branches");
@@ -102,6 +106,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
                 var existing = await _context.Branches.FindAsync(id);
                 if (existing == null) return NotFound();
 
+                // Process new image file if uploaded, replacing the old reference
                 if (imageFile != null && imageFile.Length > 0)
                 {
                     string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "branches");
@@ -117,6 +122,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
                     existing.ImageUrl = "/images/branches/" + uniqueFileName;
                 }
 
+                // Update core details
                 existing.BranchName = branch.BranchName;
                 existing.Address = branch.Address;
                 existing.PhoneBranch = branch.PhoneBranch;
@@ -136,6 +142,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             var branch = await _context.Branches.FindAsync(id);
             if (branch == null) return RedirectToAction(nameof(Index));
 
+            // Referential integrity check: Prevent deletion if branch is tied to existing accounts, spots, or routes
             bool isUsed =
                 _context.Accounts.Any(a => a.BranchId == id) ||
                 _context.TouristSpots.Any(s => s.BranchId == id) ||
@@ -156,18 +163,21 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
 
         private void ValidateBranch(Branch branch, bool isEdit)
         {
+            // Ensure branch names are unique across the system
             if (_context.Branches.Any(b => b.BranchName == branch.BranchName &&
                 (!isEdit || b.BranchId != branch.BranchId)))
             {
                 ModelState.AddModelError("BranchName", "Branch name already exists.");
             }
 
+            // Validate phone number format
             if (!string.IsNullOrEmpty(branch.PhoneBranch) &&
                 !Regex.IsMatch(branch.PhoneBranch, @"^(0[3|5|7|8|9])[0-9]{8}$"))
             {
                 ModelState.AddModelError("PhoneBranch", "Invalid phone number.");
             }
 
+            // Validate email format
             if (!string.IsNullOrEmpty(branch.EmailBranch) &&
                 !Regex.IsMatch(branch.EmailBranch, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
             {

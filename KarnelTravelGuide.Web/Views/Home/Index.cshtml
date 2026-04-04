@@ -5,12 +5,7 @@
 }
 
 <style>
-/* ================================================================
-   KARNEL TRAVEL — INDEX PAGE
-   Clean, warm, editorial travel aesthetic
-   ================================================================ */
 
-/* ── shared helpers ── */
 .label-tag {
     display: inline-block;
     font-size: .72rem;
@@ -36,9 +31,6 @@
     line-height: 1.75;
 }
 
-/* ================================================================
-   1. HERO
-   ================================================================ */
 .hero {
     position: relative;
     height: 100vh;
@@ -162,7 +154,6 @@
 }
 .btn-outline-w:hover { background: rgba(255,255,255,.13); border-color: rgba(255,255,255,.65); color: #fff; }
 
-/* scroll cue */
 .hero__scroll {
     position: absolute;
     bottom: 2rem;
@@ -190,15 +181,12 @@
     50%      { opacity: .8; transform: translateX(-50%) translateY(6px); }
 }
 
-/* ================================================================
-   2. SEARCH BAR — fixed, always full-width, never cut off
-   ================================================================ */
 .search-section {
     background: var(--white);
     padding: 0;
     position: relative;
     z-index: 10;
-    margin-top: -1px; /* seamless from hero */
+    margin-top: -1px;
 }
 
 .search-card {
@@ -255,7 +243,6 @@
 .sf-input::placeholder { color: var(--line); font-weight: 400; }
 .sf-input option { font-weight: 400; color: var(--ink); }
 
-/* The search button cell */
 .sf-btn-cell {
     padding: .85rem 1.25rem;
     display: flex;
@@ -283,7 +270,6 @@
 }
 .sf-btn:hover { opacity: .9; transform: translateY(-1px); }
 
-/* Mobile search stacks */
 @@media (max-width: 767px) {
     .search-form { flex-direction: column; }
     .sf-field { border-right: none; border-bottom: 1px solid var(--line); }
@@ -291,9 +277,6 @@
     .sf-btn { width: 100%; justify-content: center; border-radius: 8px; }
 }
 
-/* ================================================================
-   3. FEATURES
-   ================================================================ */
 .features-sec {
     padding: 6rem 0 5rem;
     background: var(--bg);
@@ -353,9 +336,6 @@
 }
 .feat-more:hover { gap: .55rem; }
 
-/* ================================================================
-   4. DESTINATIONS
-   ================================================================ */
 .dest-sec {
     padding: 6rem 0;
     background: var(--white);
@@ -381,7 +361,6 @@
 }
 .btn-border-green:hover { background: var(--g1); color: #fff; }
 
-/* dest card */
 .dcard {
     position: relative;
     border-radius: 16px;
@@ -457,7 +436,6 @@
 }
 .dcard:hover .dcard__btn { opacity: 1; transform: translateY(0); }
 
-/* heights */
 .dcard-tall  img { height: 520px; }
 .dcard-short img { height: 248px; }
 @@media (max-width: 767px) {
@@ -465,7 +443,6 @@
     .dcard-short img { height: 280px; }
 }
 
-/* empty state */
 .dest-empty {
     text-align: center;
     padding: 4rem 2rem;
@@ -484,9 +461,6 @@
     box-shadow: 0 4px 16px rgba(26,60,45,.08);
 }
 
-/* ================================================================
-   5. WHY US
-   ================================================================ */
 .why-sec {
     padding: 6rem 0;
     background: var(--bg);
@@ -548,9 +522,6 @@
 .stat-card__num { font-family: var(--ff-d); font-size: 1.45rem; font-weight: 600; color: var(--ink); line-height: 1; }
 .stat-card__lbl { font-size: .82rem; color: var(--muted); line-height: 1.5; }
 
-/* ================================================================
-   6. TRUST BAR — 4 items always equal row, never wrap
-   ================================================================ */
 .trust-sec {
     background: linear-gradient(135deg, #1f5c43 0%, #1a8a7a 100%);
     padding: 3.25rem 0;
@@ -596,9 +567,6 @@
 }
 </style>
 
-<!-- ══════════════════════════════════════
-     HERO
-     ══════════════════════════════════════ -->
 <section class="hero">
     <div class="hero__bg"></div>
 
@@ -624,9 +592,6 @@
     <div class="hero__scroll"><span></span>Scroll</div>
 </section>
 
-<!-- ══════════════════════════════════════
-     SEARCH — full-width bar, no overflow
-     ══════════════════════════════════════ -->
 <section class="search-section">
     <div class="search-card">
         <div class="container-fluid px-0">
@@ -661,9 +626,6 @@
     </div>
 </section>
 
-<!-- ══════════════════════════════════════
-     FEATURES
-     ══════════════════════════════════════ -->
 <section class="features-sec">
     <div class="container">
         <div class="text-center mb-5">
@@ -675,9 +637,6 @@
     </div>
 </section>
 
-<!-- ══════════════════════════════════════
-     DESTINATIONS
-     ══════════════════════════════════════ -->
 <section class="dest-sec">
     <div class="container">
         <div class="sec-header">
@@ -744,7 +703,6 @@
         }
         else
         {
-            <!-- 3+ : large left + two stacked right -->
             <div class="row g-4">
                 <div class="col-lg-7">
                     <a asp-controller="Destination" asp-action="Detail" asp-route-id="@spots[0].SpotId" class="dcard dcard-tall">
@@ -787,9 +745,7 @@
     </div>
 </section>
 
-<!-- ══════════════════════════════════════
-     WHY US
-     ══════════════════════════════════════ -->
+
 <section class="why-sec">
     <div class="container">
         <div class="row align-items-center g-5">
@@ -810,7 +766,7 @@
                 <p class="sec-p mt-2" style="max-width:420px;">From the moment you land on our platform to the day you return home — every detail is taken care of.</p>
                 <div class="stat-cards">
                     <div class="stat-card">
-                        <div class="stat-card__icon sic-green"><i class="bi bi-shield-check-fill"></i></div>
+                        <div class="stat-card__icon sic-green"><i class="bi bi-shield-fill-check"></i></div>
                         <div>
                             <div class="stat-card__num">100%</div>
                             <div class="stat-card__lbl">Secure &amp; verified bookings with instant confirmation</div>
@@ -836,9 +792,6 @@
     </div>
 </section>
 
-<!-- ══════════════════════════════════════
-     TRUST BAR — 4 equal columns, never wraps
-     ══════════════════════════════════════ -->
 <section class="trust-sec">
     <div class="container">
         <div class="trust-grid">

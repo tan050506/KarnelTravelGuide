@@ -20,6 +20,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
+            // Fetch all finalized invoices (excluding pending/draft carts) sorted by newest first
             var invoices = await _context.Invoices
                 .Include(i => i.Account)
                 .Include(i => i.Order)
@@ -27,6 +28,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
                 .OrderByDescending(i => i.CreatedDate)
                 .ToListAsync();
 
+            // Calculate total gross revenue derived only from successfully paid invoices
             decimal totalRevenue = invoices.Where(i => i.PaymentStatus == "Paid").Sum(i => i.FinalTotal ?? 0);
             int totalOrders = invoices.Count;
 

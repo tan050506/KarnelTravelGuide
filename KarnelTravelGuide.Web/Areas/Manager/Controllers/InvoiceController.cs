@@ -22,17 +22,20 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context = context;
         }
 
+        // Retrieves a paginated list of all pending customer bills grouped by checkout session
         public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             ViewData["CurrentSearch"] = searchString;
             ViewData["CurrentSort"] = sortOrder;
             ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "date_asc" : "";
 
+            // Fetch unpaid invoices linked to submitted orders
             var query = _context.Invoices
                 .Include(i => i.Account)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!)
                 .Where(i => i.PaymentStatus == "Unpaid" && i.Order != null && i.Order.Status == "Submitted");
 
+            // Apply search filter for customer name or phone number
             if (!string.IsNullOrEmpty(searchString))
             {
                 query = query.Where(i => 
@@ -45,6 +48,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var rawInvoices = await query.ToListAsync();
             var uniqueInvoices = rawInvoices.GroupBy(i => i.InvoiceId).Select(g => g.First()).ToList();
 
+            // Group individual services into a single pending bill per customer session
             var grouped = uniqueInvoices
                 .GroupBy(i => new { 
                     i.AccountId, 
@@ -63,6 +67,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var sortedGroups = grouped.ToList();
 
+            // Calculate pagination metrics
             int pageSize = 10;
             int totalItems = sortedGroups.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
@@ -79,6 +84,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedPending);
         }
 
+        // Retrieves a paginated summary of past transactions grouped by date
         public async Task<IActionResult> History(string? searchString, string? sortOrder, int page = 1)
         {
             ViewData["CurrentSearch"] = searchString;
@@ -103,6 +109,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var rawHistory = await query.ToListAsync();
             var uniqueHistory = rawHistory.GroupBy(i => i.InvoiceId).Select(g => g.First()).ToList();
 
+            // Aggregate transaction data to show daily revenue and customer count
             var historyGroups = uniqueHistory
                 .GroupBy(i => i.CreatedDate!.Value.Date)
                 .Select(g => new HistoryGroupViewModel
@@ -134,6 +141,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedHistory);
         }
 
+        // Displays the detailed draft bill for a specific customer and checkout session
         public async Task<IActionResult> CustomerBill(int accountId, string orderDateStr)
         {
             if (!DateTime.TryParseExact(orderDateStr, "yyyy-MM-dd HH:mm", null, System.Globalization.DateTimeStyles.None, out DateTime exactTimeMinute)) return RedirectToAction(nameof(Index));
@@ -141,6 +149,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             var account = await _context.Accounts.FindAsync(accountId);
             if (account == null) return NotFound();
 
+            // Fetch the deeply nested invoice details including related services (Room, Ticket, Table)
             var rawInvoices = await _context.Invoices
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.RoomBooking!).ThenInclude(rb => rb.Room!).ThenInclude(r => r.Stay)
                 .Include(i => i.Order!).ThenInclude(o => o.OrderDetails!).ThenInclude(od => od.TicketBooking!).ThenInclude(tb => tb.Transportation)
@@ -164,6 +173,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             int distinctServices = invoices.Count;
             decimal subTotal = invoices.Sum(i => i.SubTotal ?? 0);
             
+            // Apply a 10% combo discount if the customer booked 2 or more distinct services
             decimal discountPercent = distinctServices >= 2 ? 0.1m : 0m;
             decimal discountAmount = subTotal * discountPercent;
             decimal finalTotal = subTotal - discountAmount;
@@ -179,6 +189,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(invoices);
         }
 
+        // Processes the final payment, applies applicable discounts, and updates the order status
         [HttpPost]
         public async Task<IActionResult> ConfirmPayment(int accountId, string orderDateStr)
         {
@@ -213,6 +224,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     inv.FinalTotal = inv.SubTotal;
                 }
 
+                // Finalize the payment and confirm the booking
                 inv.PaymentStatus = "Paid";
                 if (inv.Order != null) inv.Order.Status = "Confirmed";
             }
@@ -222,6 +234,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(History));
         }
 
+        // Cancels an unpaid draft and releases the reserved services
         [HttpPost]
         public async Task<IActionResult> CancelPendingPayment(int accountId, string orderDateStr)
         {
@@ -250,6 +263,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Retrieves a detailed list of all customer transactions for a specific date
         public async Task<IActionResult> DailyDetails(string dateStr, string? searchString, string? sortOrder, int page = 1)
         {
             if (!DateTime.TryParse(dateStr, out DateTime date)) return RedirectToAction(nameof(History));
@@ -314,6 +328,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedGroups);
         }
 
+        // Displays the final read-only receipt for a specific past transaction
         public async Task<IActionResult> CustomerDailyInvoice(int accountId, string exactTimeStr)
         {
             if (!DateTime.TryParseExact(exactTimeStr, "yyyy-MM-dd HH:mm", null, System.Globalization.DateTimeStyles.None, out DateTime exactTimeMinute)) return RedirectToAction(nameof(History));
@@ -341,6 +356,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(uniqueInvoices);
         }
 
+        // Prevents the cancellation of already confirmed and paid invoices
         [HttpPost]
         public async Task<IActionResult> CancelCustomerInvoices(int accountId, string exactTimeStr)
         {

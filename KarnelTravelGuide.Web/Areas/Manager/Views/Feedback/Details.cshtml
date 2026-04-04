@@ -2,7 +2,6 @@
 @{ 
     ViewData["Title"] = "Review Details"; 
 
-    // Tách chuỗi Review (R|Sao|Nội dung)
     string rawMessage = Model.Message ?? "";
     int fbRating = 0; string fbContent = rawMessage;
     if (rawMessage.StartsWith("R|") && rawMessage.Contains("|")) {

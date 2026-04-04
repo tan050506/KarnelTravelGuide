@@ -1,7 +1,6 @@
 @model KarnelTravelGuide.Web.Models.Entities.Transportation
 @{
     ViewData["Title"] = "Select Seats";
-    // Trang thao tác Booking: Không kích hoạt HeroPage để Navbar có nền trắng
 }
 
 <style>
@@ -230,7 +229,6 @@
                 const submitBtn = document.getElementById("submitBtn");
                 
                 if (selectedSeats.length > 0) {
-                    // Cập nhật màu sắc badge hiển thị ghế đã chọn (Dùng màu nền của var(--g1))
                     seatLabel.innerHTML = `<span class="badge me-1 mb-1" style="background-color: var(--g1); color: white;">${selectedSeats.join('</span> <span class="badge me-1 mb-1" style="background-color: var(--g1); color: white;">')}</span>`;
                     hiddenSeats.value = selectedSeats.join(',');
                     priceLabel.innerText = "$" + (selectedSeats.length * unitPrice).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });

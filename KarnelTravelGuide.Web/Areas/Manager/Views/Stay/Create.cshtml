@@ -145,10 +145,9 @@
                 row.querySelector('input[name$=".Quantity"]').name = `Rooms[${roomIndex}].Quantity`;
                 roomIndex++;
             });
-            validateRoomInputs(); // Kiểm tra lại sau khi xóa
+            validateRoomInputs(); 
         }
 
-        // VALIDATION ĐỘNG
         function validateRoomInputs() {
             let isValid = true;
             
@@ -172,7 +171,6 @@
             return isValid;
         }
 
-        // Lắng nghe sự kiện gõ trên bảng
         document.getElementById('roomTableBody').addEventListener('input', validateRoomInputs);
 
         window.onload = function() { addRoomRow(); }
@@ -234,7 +232,6 @@
         searchInput.addEventListener('focus', function() { renderDropdown(this.value); });
         document.addEventListener('click', function(e) { if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.remove('show'); });
 
-        // CHẶN KHI SUBMIT LỖI
         document.getElementById('stayForm').addEventListener('submit', function(e) {
             if (!hiddenId.value) { 
                 e.preventDefault(); 

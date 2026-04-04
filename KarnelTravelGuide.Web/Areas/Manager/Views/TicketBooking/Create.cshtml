@@ -117,12 +117,10 @@
 
 @section Scripts {
     <script>
-        // ================== LOGIC VALIDATION SỐ ĐIỆN THOẠI ==================
         const walkInPhoneInput = document.getElementById('inputWalkInPhone');
         const phoneErrorMsg = document.getElementById('phoneErrorMsg');
 
         function validatePhone() {
-            // Regex bắt buộc 10 số, đầu số 03, 05, 07, 08, 09
             const phoneRegex = /^(03|05|07|08|09)\d{8}$/;
             const val = walkInPhoneInput.value.trim();
             
@@ -143,13 +141,11 @@
             }
         }
         walkInPhoneInput.addEventListener('input', function() {
-            // Loại bỏ các ký tự không phải số trong lúc gõ
             this.value = this.value.replace(/[^0-9]/g, '');
             validatePhone();
         });
 
 
-        // ================== TÌM KIẾM KHÁCH HÀNG (MEMBER) ==================
         const customers = [
             @foreach(var acc in customersList) { <text>{ id: @acc.AccountId, name: "@Html.Raw(acc.FullName)", phone: "@Html.Raw(acc.PhoneNumber)", email: "@Html.Raw(acc.Email)" },</text> }
         ];
@@ -201,7 +197,6 @@
         }
 
 
-        // ================== DROPDOWN CHO FROM VÀ TO ==================
         const branches = [ @foreach(var b in branchesList) { <text>{ id: @b.BranchId, name: "@Html.Raw(b.BranchName)" },</text> } ];
         const spots = [ @foreach(var s in spotsList) { <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)" },</text> } ];
 
@@ -261,7 +256,6 @@
         });
 
 
-        // ================== LỌC VÀ HIỂN THỊ CHUYẾN XE ==================
         const allRoutes = [
             @foreach(var r in routesList) {
                 <text>
@@ -337,7 +331,6 @@
             });
         }
 
-        // ================== CHỌN GHẾ & SUBMIT ==================
         function selectRoute(id) {
             var isMember = document.getElementById("typeMember").checked;
             if (!isMember) {

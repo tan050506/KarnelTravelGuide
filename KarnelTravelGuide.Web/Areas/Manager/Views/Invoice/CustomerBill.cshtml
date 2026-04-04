@@ -48,7 +48,6 @@
             <tbody>
                 @foreach(var inv in Model) {
                     if (inv.Order?.OrderDetails != null) {
-                        // Nhóm các OrderDetails theo loại dịch vụ để gom ghế nếu là Vé xe
                         var details = inv.Order.OrderDetails.ToList();
                         
                         foreach(var od in details) {

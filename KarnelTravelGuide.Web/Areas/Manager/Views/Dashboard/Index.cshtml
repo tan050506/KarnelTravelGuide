@@ -209,18 +209,17 @@
 
             const ctx = document.getElementById('servicesChart').getContext('2d');
             
-            // Nếu không có dữ liệu nào (toàn 0) thì vẽ biểu đồ trống
             const totalValues = chartData.data.reduce((a, b) => a + b, 0);
 
             const data = {
                 labels: chartData.labels,
                 datasets: [{
-                    data: totalValues === 0 ? [1] : chartData.data, // Fallback if 0 bookings
+                    data: totalValues === 0 ? [1] : chartData.data, 
                     backgroundColor: [
-                        '#0ea5e9', // Stays (Blue)
-                        '#10b981', // Restaurants (Green)
-                        '#ec4899', // Transport (Pink)
-                        '#e5e7eb'  // Empty State (Gray)
+                        '#0ea5e9', 
+                        '#10b981',
+                        '#ec4899', 
+                        '#e5e7eb'  
                     ],
                     borderWidth: 0,
                     hoverOffset: 12,
@@ -228,7 +227,6 @@
                 }]
             };
 
-            // Nếu trống thay đổi nhãn
             if(totalValues === 0) {
                 data.labels = ["No Bookings Yet"];
                 data.datasets[0].backgroundColor = ['#e5e7eb'];

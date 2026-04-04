@@ -2,7 +2,7 @@
 @model IEnumerable<Restaurant>
 @{ 
     ViewData["Title"] = "Find Restaurants"; 
-    ViewData["HeroPage"] = true; // Kích hoạt Navbar trong suốt
+    ViewData["HeroPage"] = true;
     var spotsList = ViewBag.Spots as IEnumerable<TouristSpot> ?? new List<TouristSpot>();
 }
 
@@ -10,7 +10,6 @@
     body { background-color: var(--bg); }
     
     .res-hero {
-        /* Ảnh nền nhà hàng sang trọng */
         background: linear-gradient(rgba(24, 35, 46, 0.5), rgba(24, 35, 46, 0.8)), 
                     url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
         background-size: cover;

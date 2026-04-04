@@ -31,7 +31,6 @@
             font-family: var(--ff-b);
         }
         
-        /* ─── SIDEBAR ─── */
         .k-sidebar { 
             width: 270px; height: 100vh; position: fixed; top: 0; left: 0; 
             background-color: var(--k-sidebar-bg); color: #94a3b8; 
@@ -63,7 +62,6 @@
             margin: 1.5rem 0 0.5rem 1.2rem; 
         }
 
-        /* ─── MAIN WRAPPER ─── */
         .k-main-wrapper { 
             margin-left: 270px; min-height: 100vh; display: flex; flex-direction: column; 
             transition: margin-left 0.3s ease; 
@@ -173,7 +171,6 @@
                 $('#sidebarOverlay').removeClass('show');
             });
 
-            // Tự động highlight menu đang active
             var currentPath = window.location.pathname.toLowerCase();
             
             var isDashboard = currentPath === '/manager' || currentPath === '/manager/' || currentPath.startsWith('/manager/dashboard');

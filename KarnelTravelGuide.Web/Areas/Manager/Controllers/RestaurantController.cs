@@ -31,6 +31,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // Retrieves a paginated, filtered, and sorted list of restaurants including table and feedback data
         public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             ViewData["CurrentFilter"] = searchString;
@@ -44,6 +45,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 .Include(r => r.Feedbacks) 
                 .AsQueryable();
 
+            // Apply search filter for restaurant name or spot name
             if (!string.IsNullOrEmpty(searchString))
             {
                 restaurants = restaurants.Where(r => 
@@ -51,6 +53,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     (r.Spot != null && r.Spot.SpotName != null && r.Spot.SpotName.Contains(searchString)));
             }
 
+            // Apply sorting logic
             switch (sortOrder)
             {
                 case "id_asc": 
@@ -63,6 +66,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var allRestaurants = await restaurants.ToListAsync();
 
+            // Calculate pagination metrics
             int pageSize = 10;
             int totalItems = allRestaurants.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
@@ -80,6 +84,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedRestaurants);
         }
 
+        // Retrieves the detailed view of a specific restaurant and its tables
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -97,6 +102,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View();
         }
 
+        // Handles the creation of a new restaurant, its image upload, and associated table configurations
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Restaurant restaurant, IFormFile? imageFile, string[] TableTypes, decimal[] Prices, int[] Quantities)
@@ -106,6 +112,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             {
                 
                 string requestKey = $"Res_{restaurant.RestaurantName}_{restaurant.SpotId}";
+                // Prevent duplicate form submissions using a concurrent dictionary
                 if (!_inFlightRequests.TryAdd(requestKey, true))
                 {
                     TempData["ErrorMessage"] = "Processing your request... Please avoid double-clicking.";
@@ -115,6 +122,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 try
                 {
                     
+                    // Check if a restaurant with the same name already exists at the selected spot
                     bool isDuplicate = await _context.Restaurants.AnyAsync(r => r.RestaurantName == restaurant.RestaurantName && r.SpotId == restaurant.SpotId);
                     if (isDuplicate)
                     {
@@ -128,6 +136,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     _context.Add(restaurant);
                     await _context.SaveChangesAsync();
 
+                    // Process and add the dynamically submitted table types
                     for (int i = 0; i < TableTypes.Length; i++)
                     {
                         if (!string.IsNullOrEmpty(TableTypes[i]))
@@ -170,6 +179,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(restaurant);
         }
 
+        // Updates restaurant details, manages table inventory (add/edit/delete), and enforces booking constraints
         [HttpPost]
         [ValidateAntiForgeryToken]
         
@@ -182,6 +192,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             {
                 try
                 {
+                    // Replace the old image file if a new one is uploaded
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         DeletePhysicalFile(restaurant.ImageUrl);
@@ -190,12 +201,14 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
                     _context.Update(restaurant);
 
+                    // Identify tables marked for deletion
                     var existingTables = await _context.RestaurantTables.Where(t => t.RestaurantId == id).ToListAsync();
                     var submittedIds = TableIds != null ? TableIds.Where(tid => tid > 0).ToList() : new List<int>();
                     var tablesToDelete = existingTables.Where(t => !submittedIds.Contains(t.TableId)).ToList();
 
                     foreach (var t in tablesToDelete)
                     {
+                        // Prevent deletion of tables that have existing booking records
                         bool isBooked = await _context.RestaurantBookings.AnyAsync(b => b.TableId == t.TableId);
                         if (isBooked)
                         {
@@ -205,6 +218,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                         _context.RestaurantTables.Remove(t);
                     }
 
+                    // Process updates to existing tables or additions of new table types
                     for (int i = 0; i < TableTypes.Length; i++)
                     {
                         if (string.IsNullOrEmpty(TableTypes[i])) continue;
@@ -258,10 +272,12 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(restaurant);
         }
 
+        // Permanently deletes a restaurant and its image, verifying no active/past bookings exist
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            // Data integrity check: Prevent deletion if there are associated booking records
             bool hasBookings = await _context.RestaurantBookings
                 .Include(rb => rb.RestaurantTable)
                 .AnyAsync(rb => rb.RestaurantTable != null && rb.RestaurantTable.RestaurantId == id);
@@ -285,6 +301,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
         private bool RestaurantExists(int id) => _context.Restaurants.Any(e => e.RestaurantId == id);
 
+        // Helper method to assign GUIDs and save uploaded image files
         private async Task<string> UploadFileAsync(IFormFile file)
         {
             string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "restaurants");
@@ -295,6 +312,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return "/images/restaurants/" + uniqueFileName;
         }
 
+        // Helper method to safely delete unused physical image files from the server
         private void DeletePhysicalFile(string? relativePath)
         {
             if (string.IsNullOrEmpty(relativePath)) return;

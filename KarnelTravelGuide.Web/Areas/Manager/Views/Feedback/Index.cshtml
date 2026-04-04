@@ -2,7 +2,6 @@
 @{ 
     ViewData["Title"] = "Customer Reviews"; 
 
-    // TÍNH TOÁN STT DỰA TRÊN PHÂN TRANG VÀ CHIỀU SẮP XẾP
     bool isDescending = string.IsNullOrEmpty(ViewData["CurrentSort"]?.ToString()) || ViewData["CurrentSort"]?.ToString() == "id_desc";
     int totalItems = ViewBag.TotalItems ?? 0;
     int currentPage = ViewBag.CurrentPage ?? 1;
@@ -64,13 +63,11 @@
                 @if (Model != null && Model.Any()) {
                     foreach (var item in Model) {
                         
-                        // FIX LỖI CS8600 TẠI ĐÂY (Thêm ?? "N/A" để đảm bảo không bị null)
                         string serviceName = (item.StayId != null ? item.Stay?.Name : item.Restaurant?.RestaurantName) ?? "N/A";
                         
                         string themeColor = item.StayId != null ? "primary" : "success";
                         string badgeText = item.StayId != null ? "Stay" : "Restaurant";
 
-                        // Tách chuỗi Review (R|Sao|Nội dung)
                         string rawMessage = item.Message ?? "";
                         int fbRating = 0; string fbContent = rawMessage;
                         if (rawMessage.StartsWith("R|") && rawMessage.Contains("|")) {

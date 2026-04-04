@@ -21,7 +21,6 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
     <style>
-        /* ─── TOKENS ─── */
         :root {
             --g1: #3a7d5e;
             --g2: #2a9d8f;
@@ -49,7 +48,6 @@
         a { text-decoration: none; color: inherit; }
         img { display: block; max-width: 100%; }
 
-        /* ─── NAVBAR ─── */
         #site-nav {
             position: absolute;
             top: 0; left: 0; right: 0;
@@ -79,7 +77,6 @@
             gap: 2rem;
         }
 
-        /* brand */
         .nav-brand {
             display: flex;
             align-items: center;
@@ -106,7 +103,6 @@
         }
         .brand-accent { color: var(--g2); margin-left: 1px; }
 
-        /* center links */
         .nav-links {
             display: flex;
             align-items: center;
@@ -131,7 +127,6 @@
         #site-nav.pinned .nav-links a:hover,
         #site-nav.no-hero .nav-links a:hover { color: var(--g1); background: var(--g-lt); }
 
-        /* right auth — ALWAYS single row */
         .nav-auth {
             display: flex;
             align-items: center;
@@ -167,7 +162,6 @@
         }
         .nav-btn-fill:hover { opacity: .9; transform: translateY(-1px); color: #fff; }
 
-        /* user dropdown */
         .nav-avatar {
             width: 32px; height: 32px;
             border-radius: 50%;
@@ -202,7 +196,6 @@
         }
         .dropdown-item:hover { background: var(--g-lt); color: var(--g1); }
 
-        /* mobile toggle */
         .nav-toggle {
             display: none;
             background: none;
@@ -217,7 +210,6 @@
         #site-nav.pinned .nav-toggle,
         #site-nav.no-hero .nav-toggle { color: var(--ink); }
 
-        /* mobile drawer */
         .nav-drawer {
             display: none;
             flex-direction: column;
@@ -240,7 +232,6 @@
             .nav-center-group { display: none !important; }
         }
 
-        /* ─── FOOTER ─── */
         .site-footer {
             background: #111b16;
             color: #5e7a6a;
@@ -297,7 +288,6 @@
         .ft-policy a { font-size: .78rem; color: #3a5040; transition: color .17s; }
         .ft-policy a:hover { color: var(--g2); }
 
-        /* ─── TOASTS ─── */
         .toast { border-radius: 10px !important; font-family: var(--ff-b); }
     </style>
 </head>
@@ -475,12 +465,10 @@
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // toasts
     document.querySelectorAll('.toast').forEach(el =>
         new bootstrap.Toast(el, { autohide: true, delay: 5000 }).show()
     );
 
-    // mobile toggle
     const btn  = document.getElementById('navToggle');
     const drawer = document.getElementById('navDrawer');
     const icon = document.getElementById('navToggleIcon');
@@ -489,7 +477,6 @@ document.addEventListener('DOMContentLoaded', function () {
         icon.className = open ? 'bi bi-x-lg' : 'bi bi-list';
     });
 
-    // scroll pin (hero pages only)
     const nav = document.getElementById('site-nav');
     if (nav && !nav.classList.contains('no-hero')) {
         const pin = () => nav.classList.toggle('pinned', window.scrollY > 40);

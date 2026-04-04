@@ -2,7 +2,6 @@
 @{
     ViewData["Title"] = "Tourist Spot Management";
     
-    // TÍNH TOÁN STT DỰA TRÊN PHÂN TRANG VÀ CHIỀU SẮP XẾP
     bool isDescending = string.IsNullOrEmpty(ViewData["CurrentSort"]?.ToString()) || ViewData["CurrentSort"]?.ToString() == "id_desc";
     int totalItems = ViewBag.TotalItems ?? 0;
     int currentPage = ViewBag.CurrentPage ?? 1;

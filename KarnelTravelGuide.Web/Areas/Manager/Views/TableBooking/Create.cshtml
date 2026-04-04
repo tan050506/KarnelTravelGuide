@@ -109,7 +109,6 @@
 
 @section Scripts {
     <script>
-        // ================== LOGIC VALIDATION SỐ ĐIỆN THOẠI ==================
         const walkInPhoneInput = document.getElementById('inputWalkInPhone');
         const phoneErrorMsg = document.getElementById('phoneErrorMsg');
 
@@ -139,7 +138,6 @@
         });
 
 
-        // 1. TÌM KIẾM KHÁCH HÀNG
         const customers = [
             @foreach(var acc in customersList) { <text>{ id: @acc.AccountId, name: "@Html.Raw(acc.FullName)", phone: "@Html.Raw(acc.PhoneNumber)", email: "@Html.Raw(acc.Email)" },</text> }
         ];
@@ -190,7 +188,6 @@
             document.getElementById("lblMember").classList.toggle("text-primary", isMember);
         }
 
-        // 2. TÌM KIẾM ĐỊA ĐIỂM
         const spotsData = [ @foreach(var s in spotsList) { <text>{ id: @s.SpotId, name: "@Html.Raw(s.SpotName)" },</text> } ];
         const spotInput = document.getElementById('spotSearchInput'); const spotDropdown = document.getElementById('spotDropdown'); const hiddenSpotId = document.getElementById('searchSpot');
         
@@ -223,7 +220,6 @@
         spotInput.addEventListener('focus', function() { renderSpotDropdown(this.value); });
         document.addEventListener('click', function(e) { if (!spotInput.contains(e.target) && !spotDropdown.contains(e.target)) spotDropdown.classList.remove('show'); });
 
-        // 3. LỌC NHÀ HÀNG
         const allRestaurants = [
             @foreach(var r in restaurantsList) {
                 var types = r.RestaurantTables != null ? string.Join(",", r.RestaurantTables.Select(rt => rt.TableType).Distinct()) : "";

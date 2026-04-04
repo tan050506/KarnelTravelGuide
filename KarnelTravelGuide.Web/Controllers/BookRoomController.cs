@@ -19,6 +19,7 @@ namespace KarnelTravelGuide.Web.Controllers
             _context = context;
         }
 
+        // Retrieves and displays a list of available stays, optionally filtered by a specific tourist spot
         public async Task<IActionResult> Index(int? spotId, string? checkIn, string? checkOut)
         {
             ViewBag.Spots = await _context.TouristSpots.ToListAsync();
@@ -41,6 +42,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(await stays.OrderByDescending(s => s.StayId).Take(6).ToListAsync());
         }
 
+        // Displays the room booking interface and calculates real-time room availability for the selected dates
         [HttpGet]
         public async Task<IActionResult> Booking(int? id, string? checkIn, string? checkOut)
         {
@@ -60,6 +62,7 @@ namespace KarnelTravelGuide.Web.Controllers
             DateOnly dateOut = DateOnly.FromDateTime(DateTime.Parse(ViewBag.CheckOut));
             ViewBag.TotalNights = dateOut.DayNumber - dateIn.DayNumber;
 
+            // Calculate remaining available rooms by subtracting active bookings from the total room inventory
             var availableRooms = new Dictionary<int, int>();
             foreach (var room in stay.Rooms)
             {
@@ -78,6 +81,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(stay);
         }
 
+        // Processes the customer's room booking request, generates an order, and creates an unpaid invoice
         [HttpPost]
         public async Task<IActionResult> ConfirmBooking(int stayId, int roomId, string? checkIn, string? checkOut, int numberOfRooms)
         {
@@ -102,10 +106,12 @@ namespace KarnelTravelGuide.Web.Controllers
 
             try
             {
+                // Create the root order record with a Pending status
                 var order = new Order { AccountId = accountId.Value, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Pending" };
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync(); 
 
+                // Create the specific room booking details
                 var roomBooking = new RoomBooking
                 {
                     RoomId = roomId,
@@ -117,9 +123,11 @@ namespace KarnelTravelGuide.Web.Controllers
                 _context.RoomBookings.Add(roomBooking);
                 await _context.SaveChangesAsync(); 
 
+                // Link the room booking to the main order
                 var orderDetail = new OrderDetail { OrderId = order.OrderId, RoomBookingId = roomBooking.RoomBookingId, Price = totalAmount, Quantity = 1 };
                 _context.OrderDetails.Add(orderDetail);
 
+                // Generate an unpaid invoice for the customer's cart
                 var invoice = new Invoice { AccountId = accountId.Value, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, DiscountAmount = 0, FinalTotal = totalAmount, PaymentStatus = "Unpaid" };
                 _context.Invoices.Add(invoice);
 

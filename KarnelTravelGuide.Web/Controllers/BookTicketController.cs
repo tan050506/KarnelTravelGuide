@@ -19,6 +19,7 @@ namespace KarnelTravelGuide.Web.Controllers
             _context = context;
         }
 
+        // Retrieves and filters available transportation routes based on user search criteria (branch, destination, type, time)
         public async Task<IActionResult> Index(int? fromBranchId, int? toSpotId, string? transportType, string? travelDate, string? travelTime)
         {
             ViewBag.Branches = await _context.Branches.ToListAsync();
@@ -52,6 +53,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(await routes.OrderByDescending(t => t.TransportationId).Take(6).ToListAsync());
         }
 
+        // Loads the ticket booking interface for a specific transportation route and date
         public async Task<IActionResult> Booking(int id, string? date)
         {
             var transport = await _context.Transportations
@@ -67,6 +69,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(transport);
         }
 
+        // Processes the ticket reservation, validates selected seats, and generates the pending order and invoice
         [HttpPost]
         public async Task<IActionResult> ConfirmBooking(int transportationId, string? travelDate, string? selectedSeats)
         {
@@ -98,6 +101,7 @@ namespace KarnelTravelGuide.Web.Controllers
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
+                // Create individual ticket records for each selected seat and link them to the main order
                 foreach (var seat in seats)
                 {
                     var ticket = new TicketBooking { TransportationId = transportationId, TravelDate = tDate, Seat = seat, TotalAmount = unitPrice };
@@ -120,6 +124,7 @@ namespace KarnelTravelGuide.Web.Controllers
             }
         }
 
+        // Fetches previously booked seats for the selected route and date via an AJAX request
         [HttpGet]
         public async Task<IActionResult> GetBookedSeats(int transportationId, string? date)
         {

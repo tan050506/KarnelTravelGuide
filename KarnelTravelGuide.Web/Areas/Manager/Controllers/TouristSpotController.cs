@@ -31,6 +31,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // Retrieves the branch associated with the current logged-in manager or creates a fallback branch
         private async Task<Branch> GetCurrentManagerBranchAsync()
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
@@ -51,6 +52,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return fallbackBranch;
         }
 
+        // Retrieves a paginated, filtered, and sorted list of tourist spots specific to the manager's branch
         public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
@@ -110,6 +112,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View();
         }
 
+        // Processes the creation of a new tourist spot, handling the main cover image and multiple gallery images
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("SpotName,Address,Description,BranchId")] TouristSpot spot, IFormFile? CoverFile, List<IFormFile>? GalleryFiles)
@@ -120,6 +123,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             {
                 
                 string requestKey = $"Spot_{spot.SpotName}_{spot.BranchId}";
+                // Prevent duplicate form submissions during processing
                 if (!_inFlightRequests.TryAdd(requestKey, true))
                 {
                     TempData["ErrorMessage"] = "Processing your request... Please avoid double-clicking.";
@@ -128,6 +132,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
                 try
                 {
+                    // Check if a tourist spot with the same name already exists in this branch
                     bool isDuplicate = await _context.TouristSpots.AnyAsync(ts => ts.SpotName == spot.SpotName && ts.BranchId == spot.BranchId);
                     if (isDuplicate)
                     {
@@ -141,6 +146,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     _context.TouristSpots.Add(spot);
                     await _context.SaveChangesAsync(); 
 
+                    // Upload and link multiple gallery images if provided
                     if (GalleryFiles != null && GalleryFiles.Count > 0)
                     {
                         foreach (var file in GalleryFiles)
@@ -184,6 +190,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(spot);
         }
 
+        // Updates the tourist spot details, replaces the cover image, and appends new gallery images
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, TouristSpot spot, IFormFile? CoverFile, List<IFormFile>? GalleryFiles)
@@ -201,6 +208,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 existingSpot.Description = spot.Description;
                 existingSpot.BranchId = spot.BranchId;
 
+                // Replace the main cover image and delete the old physical file
                 if (CoverFile != null && CoverFile.Length > 0)
                 {
                     if (!string.IsNullOrEmpty(existingSpot.ImageUrl))
@@ -209,6 +217,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     existingSpot.ImageUrl = await UploadFileAsync(CoverFile);
                 }
 
+                // Append newly uploaded images to the existing gallery
                 if (GalleryFiles != null && GalleryFiles.Count > 0)
                 {
                     foreach (var file in GalleryFiles)
@@ -251,6 +260,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(spot);
         }
 
+        // Permanently deletes a tourist spot, its cover image, and all gallery images, ensuring no linked services exist
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -264,6 +274,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (spot != null)
             {
+                // Data integrity check to prevent breaking existing service dependencies
                 if (spot.Stays.Any() || spot.Restaurants.Any() || spot.Transportations.Any())
                 {
                     TempData["ErrorMessage"] = "Cannot delete! This destination is linked to active Stays, Restaurants, or Transportations. Please remove them first.";
@@ -272,6 +283,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
                 if (!string.IsNullOrEmpty(spot.ImageUrl)) DeletePhysicalFile(spot.ImageUrl);
 
+                // Clean up all physical files associated with the gallery
                 if (spot.TouristSpotImages != null && spot.TouristSpotImages.Any())
                 {
                     foreach (var img in spot.TouristSpotImages)
@@ -288,6 +300,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Deletes a specific gallery image record and its physical file via an AJAX request
         [HttpPost]
         public async Task<IActionResult> DeleteGalleryImage(int imageId)
         {
@@ -302,6 +315,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return Json(new { success = false });
         }
 
+        // Updates the caption for a specific gallery image via an AJAX request
         [HttpPost]
         public async Task<IActionResult> UpdateGalleryImageCaption(int imageId, string? caption)
         {
@@ -315,6 +329,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return Json(new { success = false });
         }
 
+        // Helper method to save uploaded files to the server and return their relative paths
         private async Task<string> UploadFileAsync(IFormFile file)
         {
             string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "touristspots");
@@ -330,6 +345,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return "/images/touristspots/" + uniqueFileName;
         }
 
+        // Helper method to safely delete unused physical image files from the server
         private void DeletePhysicalFile(string? relativePath)
         {
             if (string.IsNullOrEmpty(relativePath)) return;

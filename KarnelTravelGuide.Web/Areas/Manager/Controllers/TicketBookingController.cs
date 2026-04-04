@@ -25,6 +25,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context = context;
         }
 
+        // Retrieves a paginated, filtered, and sorted list of transportation ticket bookings
         public async Task<IActionResult> Index(string? searchString, string? travelDate, string? sortOrder, int page = 1)
         {
             var query = _context.Orders
@@ -80,6 +81,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedOrders);
         }
 
+        // Confirms a pending ticket booking and marks the associated invoice as paid
         [HttpPost]
         public async Task<IActionResult> ConfirmBooking(int orderId)
         {
@@ -96,6 +98,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Cancels an unconfirmed order and releases the booked seats
         [HttpPost]
         public async Task<IActionResult> CancelOrder(int orderId)
         {
@@ -118,6 +121,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Retrieves the detailed breakdown of a specific ticket booking order
         public async Task<IActionResult> Details(int id)
         {
             var order = await _context.Orders
@@ -130,6 +134,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(order);
         }
 
+        // Loads initial form data for managers to manually create a new ticket booking
         public async Task<IActionResult> Create()
         {
             ViewBag.Customers = await _context.Accounts.Where(a => a.RoleId == 3).ToListAsync();
@@ -139,6 +144,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View();
         }
 
+        // Displays the seat selection interface for a chosen transport and travel date
         public async Task<IActionResult> SelectSeat(int transportationId, string? travelDate, string? customerType, int? accountId, string? walkInName, string? walkInPhone)
         {
             if (string.IsNullOrEmpty(travelDate))
@@ -159,6 +165,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(transport);
         }
 
+        // Processes the final ticket booking request, handling walk-in customers and concurrency
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int? AccountId, string? CustomerType, string? WalkInName, string? WalkInPhone, int TransportationId, string? TravelDate, string? SelectedSeats)
@@ -177,6 +184,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             int finalAccountId = 0;
 
+            // Handle account creation logic for unregistered "Walk-in" passengers
             if (CustomerType == "WalkIn")
             {
                 if (string.IsNullOrEmpty(WalkInName) || string.IsNullOrEmpty(WalkInPhone))
@@ -215,6 +223,8 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             decimal totalAmount = unitPrice * selectedSeats.Length;
 
             string requestKey = $"TicketOrder_{finalAccountId}_{TransportationId}_{TravelDate}_{SelectedSeats}";
+            
+            // Prevent duplicate form submissions during processing
             if (!_inFlightRequests.TryAdd(requestKey, true))
             {
                 TempData["ErrorMessage"] = "Processing your booking... Please avoid double-clicking.";
@@ -223,6 +233,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             try
             {
+                // Double-check database to ensure no identical order was created in the last 30 seconds
                 bool isDuplicate = await _context.Orders.AnyAsync(o => 
                     o.AccountId == finalAccountId && 
                     o.TotalAmount == totalAmount && 
@@ -238,6 +249,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
+                // Create individual ticket records for each selected seat
                 foreach (var seat in selectedSeats)
                 {
                     var ticket = new TicketBooking { TransportationId = TransportationId, TravelDate = tDate, Seat = seat, TotalAmount = unitPrice };
@@ -258,6 +270,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             }
         }
 
+        // Fetches the list of currently booked seats for a specific transport route and date via AJAX
         [HttpGet]
         public async Task<IActionResult> GetBookedSeats(int transportationId, string? date)
         {

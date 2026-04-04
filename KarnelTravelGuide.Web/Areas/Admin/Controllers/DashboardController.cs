@@ -19,6 +19,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index(string? filter = "day", string? detail = "")
         {
+            // Aggregate system metrics for the dashboard overview
             ViewBag.TotalBranches = await _context.Branches.CountAsync();
             ViewBag.TotalAccounts = await _context.Accounts.CountAsync();
             var invoices = await _context.Invoices
@@ -30,6 +31,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             List<string> labels = new List<string>();
             List<decimal> dataPoints = new List<decimal>();
 
+            // Group revenue data by Month/Year if the monthly filter is applied
             if (filter == "month")
             {
                 var revenueData = invoices
@@ -45,6 +47,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             }
             else
             {
+                // Group revenue data daily for the last 30 days by default
                 var thirtyDaysAgo = DateTime.Now.AddDays(-30);
                 var revenueData = invoices
                     .Where(i => i.CreatedDate >= thirtyDaysAgo)
@@ -62,6 +65,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             ViewBag.ChartLabels = labels;
             ViewBag.ChartData = dataPoints;
 
+            // Load specific entity datasets for detailed UI tables based on user interaction
             if (detail == "branches")
             {
                 ViewBag.DetailBranches = await _context.Branches.ToListAsync();
@@ -75,6 +79,7 @@ namespace KarnelTravelGuide.Web.Areas.Admin.Controllers
             }
             else if (detail == "invoices")
             {
+                // Fetch the 50 most recent valid invoices for the detailed view
                 ViewBag.DetailInvoices = await _context.Invoices
                     .Include(i => i.Account)
                     .Include(i => i.Order)

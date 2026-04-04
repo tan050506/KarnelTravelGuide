@@ -25,6 +25,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _context = context;
         }
 
+        // Retrieves a paginated, filtered, and sorted list of room booking orders
         public async Task<IActionResult> Index(string? searchString, string? checkInDate, string? sortOrder, int page = 1)
         {
             var query = _context.Orders
@@ -33,6 +34,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 .Where(o => o.OrderDetails!.Any(od => od.RoomBookingId != null) && o.Status != "Pending")
                 .AsQueryable();
 
+            // Apply search filter based on customer phone number or full name
             if (!string.IsNullOrEmpty(searchString))
             {
                 query = query.Where(o => 
@@ -40,6 +42,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     (o.Account!.FullName != null && o.Account!.FullName.Contains(searchString)));
             }
 
+            // Apply filter for specific check-in dates
             if (!string.IsNullOrEmpty(checkInDate) && DateTime.TryParse(checkInDate, out DateTime parsedDate))
             {
                 DateOnly date = DateOnly.FromDateTime(parsedDate);
@@ -52,6 +55,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             ViewData["IdSortParm"] = string.IsNullOrEmpty(sortOrder) ? "id_asc" : "";
 
+            // Apply sorting logic
             switch (sortOrder)
             {
                 case "id_asc": query = query.OrderBy(o => o.OrderId); break;
@@ -62,6 +66,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var uniqueOrders = rawOrders.GroupBy(o => o.OrderId).Select(g => g.First()).ToList();
 
+            // Calculate pagination metrics
             int pageSize = 10;
             int totalItems = uniqueOrders.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
@@ -79,6 +84,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedOrders);
         }
 
+        // Confirms a pending room booking and marks the associated invoice as paid
         [HttpPost]
         public async Task<IActionResult> ConfirmBooking(int orderId)
         {
@@ -95,12 +101,14 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Cancels an unconfirmed order and releases the booked rooms
         [HttpPost]
         public async Task<IActionResult> CancelOrder(int orderId)
         {
             var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
             if (order != null)
             {
+                // Prevent cancellation if the booking is already confirmed/paid
                 if (order.Status == "Confirmed")
                 {
                     TempData["ErrorMessage"] = "Cannot cancel a confirmed booking.";
@@ -117,6 +125,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Retrieves the detailed breakdown of a specific room booking order
         public async Task<IActionResult> Details(int id)
         {
             var order = await _context.Orders
@@ -128,6 +137,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(order);
         }
 
+        // Loads initial form data for managers to manually create a new booking
         public async Task<IActionResult> Create()
         {
             ViewBag.Customers = await _context.Accounts.Where(a => a.RoleId == 3).ToListAsync();
@@ -136,6 +146,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View();
         }
 
+        // Calculates and displays available rooms for a selected stay and date range
         public async Task<IActionResult> SelectRoom(int stayId, string? checkIn, string? checkOut, string? customerType, int? accountId, string? walkInName, string? walkInPhone)
         {
             
@@ -155,6 +166,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             DateOnly dateIn = DateOnly.FromDateTime(DateTime.Parse(checkIn!));
             DateOnly dateOut = DateOnly.FromDateTime(DateTime.Parse(checkOut!));
 
+            // Determine the number of available rooms by subtracting active bookings from total inventory
             var availableRoomsDict = new Dictionary<int, int>();
             foreach (var room in stay.Rooms)
             {
@@ -181,6 +193,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(stay);
         }
 
+        // Processes the final room booking request, handling customer assignment and concurrency
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int? AccountId, string? CustomerType, string? WalkInName, string? WalkInPhone, int StayId, int RoomId, string? CheckIn, string? CheckOut, int NumberOfRooms)
@@ -194,6 +207,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             int finalAccountId = 0;
 
+            // Handle logic for unregistered "Walk-in" customers
             if (CustomerType == "WalkIn")
             {
                 if (string.IsNullOrEmpty(WalkInName) || string.IsNullOrEmpty(WalkInPhone))
@@ -210,6 +224,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 }
                 else
                 {
+                    // Create a new account automatically for the walk-in guest
                     var newGuest = new Account { FullName = WalkInName, PhoneNumber = WalkInPhone, Email = Guid.NewGuid().ToString().Substring(0, 8) + "@walkin.com", RoleId = 3 };
                     _context.Accounts.Add(newGuest);
                     await _context.SaveChangesAsync();
@@ -231,6 +246,8 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             decimal totalAmount = (room.PriceRoom ?? 0) * NumberOfRooms * totalNights;
 
             string requestKey = $"RoomOrder_{finalAccountId}_{RoomId}_{CheckIn}_{CheckOut}";
+            
+            // Prevent duplicate form submissions during processing
             if (!_inFlightRequests.TryAdd(requestKey, true))
             {
                 TempData["ErrorMessage"] = "Processing your booking... Please avoid double-clicking.";
@@ -240,6 +257,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             try
             {
                 
+                // Double-check database to ensure no identical order was created in the last 30 seconds
                 bool isDuplicate = await _context.Orders.AnyAsync(o => 
                     o.AccountId == finalAccountId && 
                     o.TotalAmount == totalAmount && 
@@ -251,14 +269,17 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
+                // Create the root order entity
                 var order = new Order { AccountId = finalAccountId, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Submitted" }; 
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
+                // Create the specific room booking details
                 var roomBooking = new RoomBooking { RoomId = RoomId, CheckInDate = dateIn, CheckOutDate = dateOut, NumberOfRooms = NumberOfRooms, TotalAmount = totalAmount };
                 _context.RoomBookings.Add(roomBooking);
                 await _context.SaveChangesAsync();
 
+                // Link the booking to the order and generate an unpaid invoice
                 _context.OrderDetails.Add(new OrderDetail { OrderId = order.OrderId, RoomBookingId = roomBooking.RoomBookingId, Price = totalAmount, Quantity = 1 });
                 _context.Invoices.Add(new Invoice { AccountId = finalAccountId, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, FinalTotal = totalAmount, PaymentStatus = "Unpaid" }); 
                 

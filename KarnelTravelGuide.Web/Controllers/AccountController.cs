@@ -23,12 +23,14 @@ namespace KarnelTravelGuide.Web.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // Displays the login page
         [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
 
+        // Authenticates the user, sets up session variables, and redirects based on their role (Admin/Manager/Customer)
         [HttpPost]
         public IActionResult Login(LoginViewModel model)
         {
@@ -69,12 +71,14 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(model);
         }
         
+        // Displays the customer registration form
         [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
 
+        // Validates and registers a new customer account, ensuring the email is unique
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
@@ -107,6 +111,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(model);
         }
 
+        // Retrieves and displays the currently logged-in user's profile information
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
@@ -120,6 +125,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(user);
         }
 
+        // Updates the user's profile details, including password changes and avatar image uploads
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Profile(Account model, IFormFile? avatarFile, string? newPassword)
@@ -167,6 +173,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return RedirectToAction("Profile");
         }
 
+        // Clears the current user session and redirects to the home page
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();

@@ -30,6 +30,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // Retrieves the branch associated with the currently logged-in manager, or creates a fallback "Central Branch"
         private async Task<Branch> GetCurrentManagerBranchAsync()
         {
             int? accountId = HttpContext.Session.GetInt32("AccountId");
@@ -52,6 +53,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return fallbackBranch;
         }
 
+        // Retrieves a paginated, filtered, and sorted list of transportation routes managed by the current branch
         public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
@@ -67,6 +69,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 .Where(t => t.FromBranchId == currentBranch.BranchId)
                 .AsQueryable();
 
+            // Apply search filter based on transport type, name, or destination spot
             if (!string.IsNullOrEmpty(searchString))
             {
                 transportations = transportations.Where(s => 
@@ -75,6 +78,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     (s.ToSpot != null && s.ToSpot.SpotName!.Contains(searchString)));
             }
 
+            // Apply sorting logic
             switch (sortOrder)
             {
                 case "id_asc": 
@@ -87,6 +91,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var allTransportations = await transportations.ToListAsync();
 
+            // Calculate pagination metrics
             int pageSize = 10;
             int totalItems = allTransportations.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
@@ -104,6 +109,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedTransportations);
         }
 
+        // Loads initial form data for creating a new transportation route
         public async Task<IActionResult> Create()
         {
             var currentBranch = await GetCurrentManagerBranchAsync();
@@ -116,12 +122,15 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View();
         }
 
+        // Validates and processes the creation of a new transport route, enforcing seat limits and preventing duplicate submissions
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("TransportName,TransportType,FromBranchId,ToSpotId,DepartureTime,PriceTransport,SeatCapacity,Description")] Transportation transportation, IFormFile? imageFile)
         {
             if (imageFile == null || imageFile.Length == 0) ModelState.AddModelError(string.Empty, "Transport image is required.");
             if (transportation.ToSpotId == null) ModelState.AddModelError("ToSpotId", "Please select a destination.");
+            
+            // Enforce logical seat capacity limits based on the transport type
             int maxSeats = transportation.TransportType == "Land" ? 100 : 300;
             if (transportation.SeatCapacity < 1 || transportation.SeatCapacity > maxSeats) ModelState.AddModelError("SeatCapacity", $"Seats must be between 1 and {maxSeats}.");
             
@@ -131,6 +140,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             {
                 
                 string requestKey = $"Trans_{transportation.TransportName}_{transportation.FromBranchId}_{transportation.ToSpotId}";
+                // Prevent duplicate form submissions during processing
                 if (!_inFlightRequests.TryAdd(requestKey, true))
                 {
                     TempData["ErrorMessage"] = "Processing your request... Please avoid double-clicking.";
@@ -140,6 +150,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 try
                 {
                     
+                    // Verify that no identical route already exists to prevent duplicates
                     bool isDuplicate = await _context.Transportations.AnyAsync(t => t.TransportName == transportation.TransportName && t.FromBranchId == transportation.FromBranchId && t.ToSpotId == transportation.ToSpotId);
                     if (isDuplicate)
                     {
@@ -183,6 +194,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(transportation);
         }
 
+        // Updates an existing transportation route, validates seat capacity, and securely replaces the old image file
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("TransportationId,TransportName,TransportType,FromBranchId,ToSpotId,DepartureTime,PriceTransport,SeatCapacity,Description,ImageUrl")] Transportation transportation, IFormFile? imageFile)
@@ -198,6 +210,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             {
                 try
                 {
+                    // Replace the old physical image file if a new one is provided
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         DeletePhysicalFile(transportation.ImageUrl);
@@ -249,6 +262,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(transportation);
         }
 
+        // Permanently removes a transportation route and its image file, ensuring no active ticket bookings are affected
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -259,6 +273,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             if (transportation != null)
             {
+                // Data integrity check to prevent deletion of routes with existing bookings
                 if (transportation.TicketBookings != null && transportation.TicketBookings.Any())
                 {
                     TempData["ErrorMessage"] = "Cannot delete! This route has active ticket bookings.";
@@ -276,6 +291,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
         private bool TransportationExists(int id) => _context.Transportations.Any(e => e.TransportationId == id);
 
+        // Helper method to generate a unique GUID filename and save the uploaded image to the server
         private async Task<string> UploadFileAsync(IFormFile file)
         {
             string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "transportations");
@@ -291,6 +307,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return "/images/transportations/" + uniqueFileName;
         }
 
+        // Helper method to safely delete an unused physical image file from the server
         private void DeletePhysicalFile(string? relativePath)
         {
             if (string.IsNullOrEmpty(relativePath)) return;

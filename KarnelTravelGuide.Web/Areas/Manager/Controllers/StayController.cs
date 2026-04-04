@@ -31,6 +31,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // Retrieves a paginated, filtered, and sorted list of stays including their rooms and feedbacks
         public async Task<IActionResult> Index(string? searchString, string? sortOrder, int page = 1)
         {
             ViewData["CurrentFilter"] = searchString;
@@ -43,6 +44,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 .Include(s => s.Feedbacks) 
                 .AsQueryable();
 
+            // Apply search filter based on stay name or tourist spot name
             if (!string.IsNullOrEmpty(searchString))
             {
                 stays = stays.Where(s => 
@@ -50,6 +52,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     (s.Spot != null && s.Spot.SpotName != null && s.Spot.SpotName.Contains(searchString)));
             }
 
+            // Apply sorting logic
             switch (sortOrder)
             {
                 case "id_asc": stays = stays.OrderBy(s => s.StayId); break;
@@ -58,6 +61,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
 
             var allStays = await stays.ToListAsync();
 
+            // Calculate pagination metrics
             int pageSize = 10;
             int totalItems = allStays.Count;
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
@@ -74,6 +78,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(pagedStays);
         }
 
+        // Retrieves the detailed view of a specific stay and its associated rooms
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -82,12 +87,14 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(stay);
         }
 
+        // Loads initial form data for creating a new stay
         public async Task<IActionResult> Create()
         {
             ViewBag.TouristSpots = await _context.TouristSpots.ToListAsync();
             return View(new Stay { Rooms = new List<Room>() }); 
         }
 
+        // Handles the creation of a new stay, its image upload, and associated room types
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Stay stay, IFormFile? imageFile)
@@ -99,6 +106,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             {
                 
                 string requestKey = $"Stay_{stay.Name}_{stay.SpotId}";
+                // Prevent duplicate form submissions using a concurrent dictionary
                 if (!_inFlightRequests.TryAdd(requestKey, true))
                 {
                     TempData["ErrorMessage"] = "Processing your request... Please avoid double-clicking.";
@@ -108,6 +116,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                 try
                 {
                     
+                    // Check if a stay with the same name already exists at the selected spot
                     bool isDuplicate = await _context.Stays.AnyAsync(s => s.Name == stay.Name && s.SpotId == stay.SpotId);
                     if (isDuplicate)
                     {
@@ -143,6 +152,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(stay);
         }
 
+        // Updates stay details, manages room inventory (add/edit/delete), and handles image replacement
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Stay stay, IFormFile? imageFile)
@@ -164,6 +174,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     existingStay.Address = stay.Address;
                     existingStay.Description = stay.Description;
 
+                    // Replace the old image file if a new one is uploaded
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         DeletePhysicalFile(existingStay.ImageUrl);
@@ -173,9 +184,11 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
                     var submittedRooms = stay.Rooms ?? new List<Room>();
                     var submittedRoomIds = submittedRooms.Select(r => r.RoomId).ToList();
                     
+                    // Identify and remove room types that were deleted in the form
                     var roomsToRemove = existingStay.Rooms.Where(r => !submittedRoomIds.Contains(r.RoomId)).ToList();
                     _context.Rooms.RemoveRange(roomsToRemove);
 
+                    // Process updates to existing room types or additions of new ones
                     foreach (var submittedRoom in submittedRooms)
                     {
                         if (submittedRoom.RoomId == 0) 
@@ -219,11 +232,13 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return View(stay);
         }
 
+        // Permanently deletes a stay, its room types, and image, verifying no active/past bookings exist
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             
+            // Data integrity check: Prevent deletion if there are associated room booking records
             bool hasBookings = await _context.RoomBookings.AnyAsync(rb => rb.Room != null && rb.Room.StayId == id);
             if (hasBookings)
             {
@@ -252,6 +267,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Helper method to assign GUIDs and save uploaded image files
         private async Task<string> UploadFileAsync(IFormFile file)
         {
             string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", "stays");
@@ -262,6 +278,7 @@ namespace KarnelTravelGuide.Web.Areas.Manager.Controllers
             return "/images/stays/" + uniqueFileName;
         }
 
+        // Helper method to safely delete unused physical image files from the server
         private void DeletePhysicalFile(string? relativePath)
         {
             if (string.IsNullOrEmpty(relativePath)) return;

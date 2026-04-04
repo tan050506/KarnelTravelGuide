@@ -15,6 +15,7 @@ namespace KarnelTravelGuide.Web.Controllers
             _context = context;
         }
 
+        // Retrieves and displays a list of tourist destinations, optionally filtered by a search query
         public async Task<IActionResult> Index(string? searchString)
         {
             ViewBag.CurrentSearch = searchString;
@@ -23,6 +24,7 @@ namespace KarnelTravelGuide.Web.Controllers
                 .Include(t => t.TouristSpotImages)
                 .AsQueryable();
 
+            // Apply search filter based on destination name or address
             if (!string.IsNullOrEmpty(searchString))
             {
                 spots = spots.Where(s => 
@@ -33,6 +35,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(await spots.OrderByDescending(t => t.SpotId).ToListAsync());
         }
 
+        // Retrieves the full details of a specific destination, including its image gallery and associated branch
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();

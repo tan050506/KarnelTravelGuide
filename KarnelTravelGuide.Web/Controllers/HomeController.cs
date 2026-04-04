@@ -16,6 +16,7 @@ namespace KarnelTravelGuide.Web.Controllers
             _context = context;
         }
 
+        // Retrieves the top 3 latest tourist spots to display on the landing page
         public async Task<IActionResult> Index()
         {
             

@@ -19,6 +19,7 @@ namespace KarnelTravelGuide.Web.Controllers
             _context = context;
         }
 
+        // Retrieves and displays a list of available restaurants, optionally filtered by a specific tourist spot
         public async Task<IActionResult> Index(int? spotId, string? resDate, string? resTime)
         {
             ViewBag.Spots = await _context.TouristSpots.ToListAsync();
@@ -41,6 +42,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(await restaurants.OrderByDescending(r => r.RestaurantId).Take(6).ToListAsync());
         }
 
+        // Displays the table booking interface and calculates real-time table availability for the selected date and time
         [HttpGet]
         public async Task<IActionResult> Booking(int? id, string? resDate, string? resTime)
         {
@@ -58,6 +60,7 @@ namespace KarnelTravelGuide.Web.Controllers
 
             DateTime resDateTime = DateTime.Parse($"{ViewBag.ResDate} {ViewBag.ResTime}");
 
+            // Calculate remaining available tables by subtracting active bookings from the total table inventory
             var availableTables = new Dictionary<int, int>();
             foreach (var table in restaurant.RestaurantTables)
             {
@@ -76,6 +79,7 @@ namespace KarnelTravelGuide.Web.Controllers
             return View(restaurant);
         }
 
+        // Processes the customer's table reservation, enforces capacity limits, and generates an unpaid invoice
         [HttpPost]
         public async Task<IActionResult> ConfirmBooking(int restaurantId, int tableId, string? resDate, string? resTime, int numberOfTables, int numberOfGuests, string? specialRequest)
         {
@@ -93,6 +97,7 @@ namespace KarnelTravelGuide.Web.Controllers
                 return RedirectToAction("Booking", new { id = restaurantId, resDate = resDate, resTime = resTime });
             }
 
+            // Validate that the total number of guests does not exceed the allowed capacity for the selected tables
             int maxGuestsPerTable = (table.TableType?.ToUpper().Contains("VIP") == true) ? 10 : 4;
             int maxTotalGuests = maxGuestsPerTable * numberOfTables;
             if (numberOfGuests > maxTotalGuests)
@@ -106,10 +111,12 @@ namespace KarnelTravelGuide.Web.Controllers
 
             try
             {
+                // Create the root order record with a Pending status
                 var order = new Order { AccountId = accountId.Value, CreateDate = DateTime.Now, TotalAmount = totalAmount, Status = "Pending" };
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync(); 
 
+                // Create the specific restaurant table booking details
                 var resBooking = new RestaurantBooking
                 {
                     TableId = tableId,
@@ -121,9 +128,11 @@ namespace KarnelTravelGuide.Web.Controllers
                 _context.RestaurantBookings.Add(resBooking);
                 await _context.SaveChangesAsync(); 
 
+                // Link the table reservation to the main order
                 var orderDetail = new OrderDetail { OrderId = order.OrderId, ResBookingId = resBooking.ResBookingId, Price = totalAmount, Quantity = numberOfTables };
                 _context.OrderDetails.Add(orderDetail);
 
+                // Generate an unpaid invoice for the customer's cart
                 var invoice = new Invoice { AccountId = accountId.Value, OrderId = order.OrderId, CreatedDate = DateTime.Now, SubTotal = totalAmount, DiscountAmount = 0, FinalTotal = totalAmount, PaymentStatus = "Unpaid" };
                 _context.Invoices.Add(invoice);
 

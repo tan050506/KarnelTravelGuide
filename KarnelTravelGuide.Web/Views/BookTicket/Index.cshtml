@@ -2,7 +2,7 @@
 @model IEnumerable<Transportation>
 @{
     ViewData["Title"] = "Find Tickets";
-    ViewData["HeroPage"] = true; // Kích hoạt Navbar trong suốt
+    ViewData["HeroPage"] = true; 
     var branchesList = ViewBag.Branches as IEnumerable<Branch> ?? new List<Branch>();
     var spotsList = ViewBag.Spots as IEnumerable<TouristSpot> ?? new List<TouristSpot>();
 }
@@ -11,7 +11,6 @@
     body { background-color: var(--bg); }
     
     .ticket-hero {
-        /* Ảnh nền phương tiện/hành trình */
         background: linear-gradient(rgba(24, 35, 46, 0.5), rgba(24, 35, 46, 0.8)), 
                     url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop') no-repeat center center;
         background-size: cover;

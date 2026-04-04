@@ -106,7 +106,6 @@
 
 @section Scripts {
     <script>
-        // LOGIC VALIDATION ĐỘNG
         const priceInput = document.getElementById('PriceTransport');
         const seatInput = document.getElementById('SeatCapacity');
         const priceError = document.getElementById('priceError');
@@ -151,7 +150,6 @@
         priceInput.addEventListener('input', validatePrice);
         seatInput.addEventListener('input', validateSeats);
 
-        // HÌNH ẢNH VÀ DROPDOWN
         function previewImage(event) {
             const file = event.target.files[0];
             if (file) {
@@ -241,7 +239,6 @@
         searchInput.addEventListener('focus', function() { renderDropdown(this.value); });
         document.addEventListener('click', function(e) { if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.remove('show'); });
 
-        // CHẶN SUBMIT NẾU LỖI
         document.getElementById('transportForm').addEventListener('submit', function(e) {
             const isPriceValid = validatePrice();
             const isSeatsValid = validateSeats();
